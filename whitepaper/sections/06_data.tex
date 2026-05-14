@@ -1,1 +1,155 @@
-% 06_data -- TODO populate during Week 4
+% 06_data.tex --- Section 5: Data (empirical, post-fetch)
+% ---------------------------------------------------------------------------
+\section{Data}
+\label{sec:data}
+
+\subsection{Sources}
+\label{sec:data-sources}
+
+Aave V3 USDC reserve-rate history is pulled from the official Aave
+protocol-subgraphs deployment on TheGraph's decentralized network,
+subgraph ID
+\texttt{Cd2gEDVeqnj\-Bn1hSeqFMitw8Q1\-iiyV9FYUZkLNRcL87g}
+(entity \texttt{reserveParamsHistoryItems}, \texttt{liquidityRate} in
+annualized RAY scaling, $10^{27}$). The Messari Compound V3 subgraph
+indexes per-collateral markets rather than the base supply market;
+USDC base-rate history is therefore reconstructed via batched
+\texttt{eth\_call} on the Comet proxy
+\texttt{0xc3d688B66703\-497DAA19211EEdff47f25384cdc3} at historical
+block numbers, querying the
+\texttt{getUtilization()} and \texttt{getSupplyRate(uint256)} view
+functions. Gas prices come from Dune's \texttt{gas.gas\_price} table
+at hourly median resolution; ETH/USD comes from CoinGecko's free
+hourly close. Kink parameters per protocol per epoch are reconstructed
+from on-chain \texttt{ReservesUpdated} (Aave) and
+\texttt{Configurator} (Compound) events. The \texttt{fractal-defi}
+substrate of \cite{krestenko2026basis} is used as the loader and
+backtest harness.
+
+\subsection{Window and Resampling}
+\label{sec:window}
+
+Eighteen months: 1~November~2024 through 30~April~2026, a
+$13{,}104$-hour grid. The window spans two macro micro-regimes
+(low-volatility H2~2024, normalizing 2025, and the present
+higher-volatility 2026) without overlapping any protocol
+re-deployment event. The Aave subgraph emits an event stream (median
+$\sim 50$ events per hour, $\sim$$6.5\times 10^{5}$ raw rows over the
+window) rather than uniform snapshots; the loader's \texttt{transform()}
+resamples the stream to a right-closed hourly grid via
+\texttt{df.resample("1H", label="right", closed="right").last()},
+yielding \textbf{13{,}096 hourly Aave bars} ($99.9\%$ coverage). The
+Compound RPC-reconstruction yields \textbf{4{,}900 hourly bars}
+($37.4\%$ raw coverage of the same window); the gap is filled
+incrementally as described in \cref{sec:coverage}.
+
+\subsection{Empirical Spread Distribution}
+\label{sec:empirical-spread}
+
+On the $n = 4{,}894$ overlapping hours where both protocols have
+observations, the cross-protocol supply-rate spread
+$s(t) = \mathrm{APR}_{\text{Aave}}(t) - \mathrm{APR}_{\text{Compound}}(t)$
+has the following marginal statistics: median
+$-0.241$~pp, standard deviation $2.341$~pp, range
+$[-13.32, +33.17]$~pp. The Aave-pays-more binary share is $43.4\%$;
+Compound pays more on the typical hour by $0.24$~pp. The individual
+APR distributions are likewise broad: Aave USDC supply APR ranges
+$[1.54\%, 48.38\%]$ with median $3.82\%$; Compound USDC supply APR
+ranges $[2.85\%, 23.65\%]$ with median $4.46\%$ (both quoted as
+annualized continuous-compound rates).
+
+Pooled marginals mask substantial structure. \Cref{tab:regime-quarters}
+partitions the overlapping panel by calendar quarter:
+
+\begin{table}[t]
+\centering
+\caption{Per-quarter cross-protocol spread structure on the overlapping
+panel ($n = 4{,}894$ hours). Spread is
+$\text{APR}_{\text{Aave}} - \text{APR}_{\text{Compound}}$ in
+percentage points; ``Aave $>$ C'' is the share of hours on which Aave
+pays more. The 2025 Q1$\to$Q2 jump from $25\%$ to $55\%$ is the
+empirical regime shift motivating Branch~B of the forecaster.}
+\label{tab:regime-quarters}
+\begin{tabular}{lrrrr}
+\toprule
+Quarter & $n$ & spread median (pp) & spread std (pp) & Aave $>$ C \\
+\midrule
+2024 Q4 &  908 & $+0.10$ & $4.80$ & $51\%$ \\
+2025 Q1 & 1336 & $-0.64$ & $1.43$ & $25\%$ \\
+2025 Q2 & 1458 & $+0.22$ & $0.94$ & $55\%$ \\
+2025 Q3 &  992 & $-0.07$ & $1.30$ & $45\%$ \\
+2025 Q4 &  150 & $-0.15$ & $0.76$ & $39\%$ \\
+2026 Q1 &   50 & $-0.23$ & $0.46$ & $38\%$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The direction-share jump from $25\%$ in 2025 Q1 to $55\%$ in 2025 Q2 is
+a regime shift of the kind a dual-branch architecture with explicit
+cross-protocol residual input is designed to detect; the four-fold
+volatility contraction from $4.80$~pp (2024 Q4) to $0.94$~pp (2025 Q2)
+also supplies natural anchors for the volatility-tertile ablation of
+\cref{sec:regime}. Crucially, the binary direction split is close to
+symmetric across the full panel ($43.4\%$ vs $56.6\%$), so a
+forecast-driven edge cannot come from a structural bias toward either
+protocol --- it must come from anticipating the crossovers, in keeping
+with the cointegration finding of \cite{gudgeon2020defi} and against
+the equilibrium-impossibility framing of \cite{halpern2024fairrates},
+which concerns the existence of a single fair rate, not short-horizon
+predictability of the realized spread.
+
+\subsection{Data Coverage and Limitations}
+\label{sec:coverage}
+
+Raw coverage is asymmetric: Aave $99.9\%$ ($13{,}096 / 13{,}104$
+hourly bars), Compound $37.4\%$ ($4{,}900 / 13{,}104$). The asymmetry
+is structural: the Messari Compound V3 subgraph indexes per-collateral
+markets and exposes \texttt{rates: None} on the base Comet market
+entity, so hourly snapshots must be reconstructed via \texttt{eth\_call}
+on archive RPCs --- and free-tier archive providers impose batch-size
+caps near $100$ calls per request and per-day soft limits in the
+thousands. The fetcher accordingly tops up the panel in an idempotent
+append-mode across multiple free RPC providers (\texttt{publicnode}
+and Ankr) until coverage saturates; the projected post-top-up coverage
+on the joined panel is $\sim 70\%$. For sequence-length-168 forecaster
+training, we restrict to dense subperiods in which both protocols have
+recent observations, and forward-fill missing Compound rows up to a
+$168$-hour ceiling on the joined panel, marking longer gaps as a
+separate regime that is excluded from training and reported as edge
+cases.
+
+\subsection{Cleaning}
+\label{sec:cleaning}
+
+Outliers (rates outside $[0, 50\%]$, single-step relative jumps
+$>5\times$) are flagged as oracle glitches and interpolated. The
+sign-convention invariant
+$\text{borrowing\_rate}\ge\text{lending\_rate}$ is enforced as a test
+fixture (\texttt{tests/test\_sign\_convention.py}) at every timestamp
+on both protocols, not as a trust statement about library version.
+Z-score normalization uses training-split statistics only.
+
+\subsection{Splits}
+\label{sec:splits}
+
+Strict block-number splits, to defend against subgraph-aggregation
+leakage:
+\begin{itemize}[leftmargin=*, itemsep=2pt]
+\item \textbf{Train} (10 months): 2024-11-01 -- 2025-08-31,
+  $\sim$$6{,}700$ hourly bars on both protocols.
+\item \textbf{Validation} (4 months): 2025-09-01 -- 2025-12-31,
+  $\sim$$2{,}920$ hourly bars on Aave but only $\sim$$290$
+  Compound-dense hours pre-top-up; forecaster validation noise on the
+  composite loss is expected to reflect this.
+\item \textbf{Test} (4 months, held out): 2026-01-01 -- 2026-04-30,
+  $\sim$$2{,}876$ hourly bars on Aave, $50$ Compound-real hours
+  pre-top-up; the H1 evaluation on the full test window is
+  Aave-driven in its initial form.
+\end{itemize}
+Real-data Compound sparsity means the H1 Sharpe-improvement claim on
+the full $18$-month window is degraded relative to a fully-dense
+panel; the evaluation protocol of \cref{sec:backtest} therefore
+reports both the full-window result and a restricted result on dense
+subperiods, and uses the Compound-rich 2024 Q4 sub-window
+($n = 908$ overlapping hours, $51\%$ Aave-pays-more share) as an
+additional H1 anchor.

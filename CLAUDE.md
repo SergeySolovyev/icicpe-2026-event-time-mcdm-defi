@@ -81,37 +81,52 @@ plan's prepended block.
     sub-batches of `batch_size` (100) calls to fit within these caps.
     For multi-day fetches: split across days or use multiple endpoints.
 
-## Project regime structure (discovered 2026-05-14)
+## Project regime structure (CORRECTED 2026-05-14 with full 98.5% coverage)
 
-Real Aave-vs-Compound spread analysis on n=4894 overlapping hourly
-observations (from 2024-11 to 2026-04, ~37% coverage on Compound):
+After publicnode `--append` top-up, Compound coverage rose from 37%
+(Ankr-only) to 98.5% (Ankr + publicnode union). The sparse-sample
+analysis was concentrated in cluster regions (Nov-Dec 2024 + Jun-Aug
+2025) and produced a MISLEADING regime-shift narrative ("2025 Q1→Q2
+jump"). The full-coverage analysis shows the true structure.
 
-  Quarter    n_hours  spread_median  spread_std  Aave-pays-more%
-  2024 Q4      908     +0.10pp        4.80pp     51%
-  2025 Q1     1336     -0.64pp        1.43pp     25%   <- Compound dominant
-  2025 Q2     1458     +0.22pp        0.94pp     55%   <- REGIME SHIFT to Aave
-  2025 Q3      992     -0.07pp        1.30pp     45%
-  2025 Q4      150     -0.15pp        0.76pp     39%
-  2026 Q1       50     -0.23pp        0.46pp     38%
+Real Aave-vs-Compound spread on n=12,895 overlapping hours (~98.5%
+coverage of Nov 2024 — Apr 2026):
 
-Overall: 43.4% Aave-pays-more (close to 50/50 split), spread std 2.34pp,
-range -13 to +33pp.
+  Quarter    n_hours  spread_median  spread_std  Aave-higher %
+  2024 Q4    1455     -0.591 pp      5.746 pp    45.4%
+  2025 Q1    2160     -0.725 pp      1.360 pp    24.9%   <- Compound calm-dominant
+  2025 Q2    2184     -0.444 pp      0.883 pp    43.5%   <- Compound mixed
+  2025 Q3    2208     -0.218 pp      1.401 pp    39.9%   <- Compound dominant
+  2025 Q4    2208     +0.183 pp      2.019 pp    56.3%   <- FIRST Aave-dominant Q
+  2026 Q1    1960     -0.240 pp      0.567 pp    27.1%   <- Compound calm
+  2026 Q2     720     +0.063 pp      3.605 pp    61.3%   <- Aave dominant (partial)
 
-**Key findings for whitepaper §5/§9:**
+Overall (full coverage): median -0.232pp, std 2.513pp, 40.7%
+Aave-higher, range [-26.79, +44.89] pp.
 
-1. **REGIME SHIFT 2025 Q1 → Q2:** Aave-pays-more share jumps from 25% to
-   55%. Exactly the regime structure Markov-switching (ablation #4) and
-   DA-BiGRU-CNN Branch B are designed to detect. Empirical existence
-   proof for H2 (architectural detection of regimes).
+**Key findings for whitepaper §5/§9 (CORRECTED):**
 
-2. **VOLATILITY REGIMES:** Q4 2024 std 4.80pp (high-vol) vs Q3 2025 1.30pp
-   (calm) → 4× variation. Plan §6.4's tertile-split (ablation #13) now
-   has natural anchor points.
+1. **REAL REGIME SHIFT 2025 Q3 → Q4:** Aave-pays-more share jumps from
+   39.9% to 56.3% (16-point shift), and median spread crosses zero from
+   -0.22pp to +0.18pp. This is the FIRST quarter where Aave systematically
+   pays more than Compound. The previous "Q1→Q2 jump" reported in
+   sparse-sample analysis was an artifact of cluster sampling.
 
-3. **SYMMETRIC SHARE:** 43.4% Aave-pays-more → profit from TIMING the
-   crossovers, NOT from any structural bias. Random allocator earns 0
-   alpha by design; forecast-driven edge IS anticipating crossovers.
-   Empirical version of plan §16 H1.
+2. **VOLATILITY REGIMES:** Q4 2024 std 5.75pp (high-vol shock period) vs
+   2026 Q1 0.57pp (calm) → ~10× variation. Plan §6.4 tertile-split
+   (ablation #13) has stronger natural anchors than previously thought.
+
+3. **40.7% Aave-higher overall:** profit from TIMING crossovers, not
+   structural bias. Random allocator earns 0 alpha; forecast-driven edge
+   IS anticipating shifts. Empirical H1 of plan §16.
+
+4. **2026 Q2 partial (720h):** test window starts here. Aave-higher 61% =
+   another regime, opposite of 2026 Q1 (27%). Strong test bench for H1.
+
+**Methodology lesson:** sparse-sample analysis can produce false regime
+narratives. Whitepaper §5 must report the full-coverage numbers; earlier
+sparse-sample claims (in commits before this update) should be flagged
+as deprecated in the prose.
 
 4. **Aave V3 loader convention**: APY divided by `(365 * 24) / resolution`
    gives the per-period rate (arithmetic, NOT continuously compounded).

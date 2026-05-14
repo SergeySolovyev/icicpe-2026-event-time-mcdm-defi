@@ -497,53 +497,7 @@ allocator most needs to anticipate.
 % ---------------------------------------------------------------------------
 % 5. DATA
 % ---------------------------------------------------------------------------
-\section{Data}
-\label{sec:data}
-
-\subsection{Sources}
-\label{sec:data-sources}
-
-We pull Aave V3 USDC reserve-rate history from the official TheGraph
-subgraph \texttt{aave-v3-ethereum} (entity
-\texttt{reserveParamsHistoryItems}, RAY scaling $10^{27}$) and
-Compound V3 USDC base-market history from the Messari subgraph for
-cUSDCv3 (entity \texttt{marketHourlySnapshots} at
-\texttt{0xc3d6\dots cdc3}, WAD scaling $10^{18}$). Gas prices come from
-Dune's \texttt{gas.gas\_price} table at hourly median resolution;
-ETH/USD comes from CoinGecko's free hourly close. Kink parameters per
-protocol per epoch are reconstructed from on-chain
-\texttt{ReservesUpdated} (Aave) and \texttt{Configurator} (Compound)
-events.
-
-\subsection{Window}
-\label{sec:window}
-
-Eighteen months: 1~Nov~2024 through 30~Apr~2026. The window spans
-two macro micro-regimes (low-volatility H2~2024, normalizing 2025,
-and the present higher-volatility 2026) without overlapping any
-protocol re-deployment event.
-
-\subsection{Cleaning}
-\label{sec:cleaning}
-
-Outliers (rates outside $[0,50\%]$, single-step relative jumps
-$>5\times$) are flagged as oracle glitches and interpolated.
-Missing data are forward-filled up to six hours; longer gaps mark a
-separate regime that is excluded from training sequences but reported
-as edge cases. Z-score normalization uses training statistics only.
-The sign-convention assertion (\cref{sec:fractal}) is enforced as a
-test fixture rather than as a trust statement about library version.
-
-\subsection{Splits}
-\label{sec:splits}
-
-Strict block-number splits, to defend against subgraph-aggregation
-leakage:
-\begin{itemize}[leftmargin=*, itemsep=2pt]
-\item \textbf{Train} (10 months): 2024-11-01 -- 2025-08-31, $\sim$7{,}300 hourly bars.
-\item \textbf{Validation} (4 months): 2025-09-01 -- 2025-12-31, $\sim$2{,}900 bars.
-\item \textbf{Test} (4 months, held out): 2026-01-01 -- 2026-04-30, $\sim$2{,}900 bars.
-\end{itemize}
+\input{sections/06_data.tex}
 
 % ---------------------------------------------------------------------------
 % 6. CALIBRATION
@@ -719,68 +673,7 @@ $\in [55,65]\%$.
 % ---------------------------------------------------------------------------
 % 9. DISCUSSION
 % ---------------------------------------------------------------------------
-\section{Discussion}
-\label{sec:discussion}
-
-\subsection{Why Dual-Branch with Kink Subtraction Works (or Does Not)}
-\label{sec:why-dual-branch}
-
-Under H1, the dual-branch decomposition outperforms a single-branch
-baseline because it (i) avoids spending model capacity on the
-deterministic kink, (ii) regularizes via the bounded $[0,1]$ support
-of utilization, and (iii) exposes cross-protocol residual spread as a
-direct input feature. Under H0, the rate process is martingale on the
-12-hour horizon conditional on observed utilization, and the kink
-function fully explains the predictable variation; in that case the
-dual-branch architecture neither helps nor hurts, and the contribution
-reduces to (a) the first rigorous mainnet backtest of MCDM-EMA from
-\cite{solovev2026vault}, (b) the falsification of the LOB-to-DeFi
-methodological transfer claim, and (c) the open-source Extra+1 and
-Extra+2 contributions of \cref{sec:contributions-detail}. Each of
-these stands on its own merits.
-
-\subsection{LOB-to-DeFi Methodology Transfer: Where It Generalizes,
-            Where It Fails}
-\label{sec:transfer}
-
-The transfer from \cite{solovev2026lob} succeeds at the level of the
-dual-stream paradigm, the weighted-Pearson loss term, and the
-ranking-oriented evaluation. It is \emph{re-derived}, not
-mechanically copied: LOB volume is unbounded and signed, while
-utilization is bounded and clamped; the kink prior has no LOB
-analogue. The principal risk is overfitting on a comparatively small
-($\sim$7k bar) training set; we mitigate via dropout, walk-forward
-cross-validation, and a deliberately small ($\sim$50k parameter)
-architecture.
-
-\subsection{The Halpern--Pass--Saraf Counter-Argument}
-\label{sec:fair-rates-response}
-
-\cite{halpern2024fairrates} prove that no fair interest rate exists
-in a fully dynamic-repayment lending pool: the borrower's option to
-delay creates a barrier-option payoff structure incompatible with any
-single rate satisfying their fairness axioms. The result is
-equilibrium-theoretic and concerns the existence of a rate, not its
-short-horizon predictability. Our work is operational: we forecast
-the realized rate twelve hours ahead, exploiting cross-protocol
-lead--lag and microstructure dispersion documented in
-\cite{gudgeon2020defi}. Short-horizon predictability is orthogonal to
-long-run fairness; the Halpern--Pass--Saraf impossibility is fully
-compatible with the existence of allocation-relevant edge on our
-horizon.
-
-\subsection{Implications for the \texttt{fractal-defi} Research Program}
-\label{sec:program}
-
-\cite{urusov2024clmm,urusov2025dynlp,krestenko2026basis} cover CLMM
-liquidity provision and spot--perpetual basis trading under the
-\texttt{fractal-defi} substrate. The present work adds the
-\emph{lending} microstructure panel: a third entity-strategy
-configuration in which the state variable (rate) is learned by deep
-neural network and the controller (MCDM allocator) is analytical.
-The triptych --- CLMM, basis, lending --- is intended as a unified
-panel of microstructure-aware DeFi backtesting research on a single
-open substrate.
+\input{sections/10_discussion.tex}
 
 % ---------------------------------------------------------------------------
 % 10. CONCLUSION AND FUTURE WORK
