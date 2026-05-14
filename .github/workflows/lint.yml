@@ -1,0 +1,45 @@
+name: lint
+
+# Lightweight lint job. ruff is advisory for the first commit
+# (continue-on-error: true) — tighten once the repo is ruff-clean.
+# No mypy: too noisy with the optional-types Patterns used across
+# data/, forecaster/, and strategies/.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  lint:
+    name: ruff + black --check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install lint tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install ruff black
+
+      # Catch syntax errors and unused imports. Allowed to fail on the
+      # first commit; remove continue-on-error once warnings are cleared.
+      - name: ruff check
+        continue-on-error: true
+        run: |
+          ruff check data/ forecaster/ strategies/ backtest/ tests/
+
+      # Style check; advisory. We do not auto-format in CI — the author
+      # decides when to run `black .`.
+      - name: black --check
+        continue-on-error: true
+        run: |
+          black --check data/ forecaster/ strategies/ backtest/ tests/
