@@ -209,25 +209,46 @@ class PredictiveMCDMStrategy(BaseLendingAllocationStrategy):
     # Hook implementations
     # ------------------------------------------------------------------
 
-    def compute_criteria_vector(self, entity_name: str) -> np.ndarray:
-        # Refresh the buffer + forecast ONCE per step (on first entity accessed)
-        if entity_name == self._entity_order[0] if self._entity_order else "AAVE":
-            self._ingest_observation()
-            if (
-                len(self._buf_a) >= self._params.SEQUENCE_LENGTH
-                and self._steps_since_refresh % self._params.FORECAST_REFRESH_HOURS == 0
-            ):
-                forecast = self._run_forecaster()
-                if forecast is not None:
-                    self._cached_r_hat = forecast
-            self._steps_since_refresh += 1
+    # ------------------------------------------------------------------
+    # Orchestration: ingest + refresh BEFORE the base class iterates
+    # entities. Keeps compute_criteria_vector pure (no side effects),
+    # so subclass-overrides for ablations don't have to replicate the
+    # ingest-on-first-entity trick.
+    # ------------------------------------------------------------------
 
+    def predict(self) -> "list[ActionToTake]":   # noqa: F821 — forward ref
+        # Lazy init on first call. Tolerate missing ONNX during scaffolding
+        # / warm-up so the strategy degrades to spot-rate without crashing.
+        if self._onnx_session is None:
+            try:
+                self._lazy_init_forecaster()
+            except FileNotFoundError:
+                pass
+
+        # Per-step buffer update + optional forecast refresh
+        self._ingest_observation()
+        if (
+            len(self._buf_a) >= self._params.SEQUENCE_LENGTH
+            and self._onnx_session is not None
+            and self._steps_since_refresh % self._params.FORECAST_REFRESH_HOURS == 0
+        ):
+            forecast = self._run_forecaster()
+            if forecast is not None:
+                self._cached_r_hat = forecast
+        self._steps_since_refresh += 1
+
+        # Delegate to base class for the rest of the cycle. compute_criteria_vector
+        # is now a pure reader of self._cached_r_hat + entity.global_state.
+        return super().predict()
+
+    def compute_criteria_vector(self, entity_name: str) -> np.ndarray:
+        """Pure: read cached forecast (if any) + spot state; return MCDM vector."""
         gs = self.get_entity(entity_name).global_state
         u = float(getattr(gs, "utilization", 0.0))
         gas = float(getattr(gs, "gas_gwei", 30.0))
         delta_tvl = float(getattr(gs, "delta_tvl_24h", 0.0))
 
-        # Use forecast if available; fallback to spot annualised APR during warm-up
+        # Forecast > spot fallback during warm-up
         if entity_name in self._cached_r_hat:
             annual = self._cached_r_hat[entity_name]
         else:
@@ -242,6 +263,7 @@ class PredictiveMCDMStrategy(BaseLendingAllocationStrategy):
         ])
 
     def aggregate_criteria(self, criteria_matrix: np.ndarray) -> np.ndarray:
+        """SAW (Simple Additive Weighting), per Solovev 2026b Eq. 15."""
         weights = np.array([
             self._params.W_APY,
             self._params.W_RISK,

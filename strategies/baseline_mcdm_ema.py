@@ -137,7 +137,14 @@ class MCDMEMAStrategy(BaseLendingAllocationStrategy):
         ])
 
     def aggregate_criteria(self, criteria_matrix: np.ndarray) -> np.ndarray:
-        """Weighted-sum aggregation (TOPSIS-style)."""
+        """Simple Additive Weighting (SAW) — convex combination of criteria.
+
+        NOT TOPSIS (which involves distances from ideal/anti-ideal points).
+        SAW is the aggregator used in Solovev 2026b Eq. 15 — kept here for
+        like-for-like comparison with the prior paper. Future work
+        (whitepaper §10) could swap in TOPSIS / PROMETHEE / VIKOR via the
+        same `aggregate_criteria` hook.
+        """
         weights = np.array([
             self._params.W_APY,
             self._params.W_RISK,

@@ -104,12 +104,29 @@ class BaseLendingAllocationStrategy(BaseStrategy[BaseLendingAllocationParams]):
     abstraction.
     """
 
-    # default is True; subclass can flip when feeds are misaligned
+    # default is True; subclass can flip when feeds are misaligned.
+    # WARNING: with STRICT_OBSERVATIONS=True any observation missing a state
+    # for any registered entity raises ValueError before predict() runs.
+    # Compound V3 / Aave subgraphs are known to have hourly gaps during
+    # network congestion. The companion `data/clean.py` reindexes the
+    # joined dataset to a uniform hourly UTC grid and forward-fills gaps
+    # up to 6 hours; subclasses that bypass `data/clean.py` should consider
+    # setting `STRICT_OBSERVATIONS = False` and reading per-step validity
+    # masks instead.
     STRICT_OBSERVATIONS = True
 
     #: Entity names this allocator manages. Subclasses override to add
     #: more protocols. The default `set_up` registers a `SimpleLendingEntity`
     #: per name. Override `set_up` to use protocol-specific entity classes.
+    #:
+    #: REQUIRED loader contract: when populating the per-step GlobalState
+    #: for each lending entity, the loader MUST set
+    #: `collateral_price = 1.0` for USD-denominated stable-asset lending
+    #: (USDC, USDT, DAI). The default `SimpleLendingGlobalState` initialises
+    #: collateral_price to 0.0, which makes `entity.balance == 0` and
+    #: silently zeros every transfer's amount. The fractal-defi loader
+    #: contract should fill this when the data is built; subclasses can
+    #: also assert it in set_up().
     LENDING_ENTITY_NAMES: tuple[str, ...] = ("AAVE", "COMPOUND")
 
     def __init__(self, *args, **kwargs):
@@ -189,11 +206,16 @@ class BaseLendingAllocationStrategy(BaseStrategy[BaseLendingAllocationParams]):
             if elapsed < timedelta(hours=self._params.COOLDOWN_HOURS):
                 return False
 
-        # Hysteresis: target must beat current by THETA
+        # Hysteresis: target must beat current by STRICTLY MORE than THETA.
+        # Using `<=` rather than `<` keeps equal-to-threshold cases as
+        # "no switch", which prevents oscillation when the score delta
+        # lands exactly on the dead-band edge across consecutive cooldown
+        # boundaries (relevant when HYSTERESIS_THRESHOLD is swept in grid
+        # search).
         cur_idx = self._entity_order.index(current)
         tgt_idx = self._entity_order.index(target)
         delta = float(scores[tgt_idx] - scores[cur_idx])
-        if delta < self._params.HYSTERESIS_THRESHOLD:
+        if delta <= self._params.HYSTERESIS_THRESHOLD:
             return False
 
         return True
@@ -240,14 +262,39 @@ class BaseLendingAllocationStrategy(BaseStrategy[BaseLendingAllocationParams]):
         if not self.should_rebalance(self._current_entity, target, scores):
             return []
 
-        # Capture total balance now (before any actions mutate it)
+        # Capture total balance now (before any actions mutate it).
+        # CRITICAL: the framework resolves callable delegates as `val(self)`
+        # (BaseStrategy.step line 341), passing the strategy instance as a
+        # positional arg. A 0-arg lambda whose default captures the snapshot
+        # would have its `_amt` default overwritten by the strategy instance,
+        # silently producing wrong-type amounts. Use a 2-arg form that
+        # accepts and ignores the strategy positional.
         source = self._current_entity
-        amount_to_move = self.get_entity(source).balance
+        source_entity = self.get_entity(source)
+        amount_to_move = source_entity.balance
+
+        # Defensive: if balance is 0 but we expect funds (have rebalanced
+        # previously OR have made initial deposit), the loader almost
+        # certainly forgot to set collateral_price (default = 0.0 on
+        # SimpleLendingGlobalState). See class docstring on the loader
+        # contract; fail loud rather than silently transferring 0.
+        if amount_to_move <= 0.0 and self._params.INITIAL_BALANCE > 0:
+            raise RuntimeError(
+                f"Source entity {source!r} has zero balance at rebalance "
+                f"time. Likely cause: collateral_price defaulted to 0.0 in "
+                f"the loader output, making balance = collateral * 0 = 0. "
+                f"For USD-denominated stable lending the loader must set "
+                f"collateral_price = 1.0 on every GlobalState. See class "
+                f"docstring for the loader contract."
+            )
+
+        def _amount_delegate(_strategy, _amt: float = amount_to_move) -> float:
+            return _amt
 
         actions = self.transfer(
             from_entity=source,
             to_entity=target,
-            amount_in_notional=lambda _amt=amount_to_move: _amt,
+            amount_in_notional=_amount_delegate,
         )
 
         # Update internal state
