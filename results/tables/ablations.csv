@@ -1,0 +1,2 @@
+ablation,variant,status,total_return,apy,sharpe,calmar,max_dd,vol_annual,worst_day_return,n_rebalances,turnover,gas_spent_usd,gas_pct_of_pnl
+1_no_forecast_ema,MCDMEMA,OK,0.03427834350212988,0.10807244771385038,404.62955267113364,,0.0,0.000253621131660819,0.00017358720142546247,1,1.0,15.231331544021499,0.00044434269535443416

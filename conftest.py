@@ -22,3 +22,14 @@ except Exception as e:                  # pragma: no cover
     # than collection-time crash.
     import warnings
     warnings.warn(f"torch import failed at conftest: {e}")
+
+# Same DLL-order issue affects onnxruntime: its `onnxruntime_pybind11_state`
+# native extension fails to initialise if MKL has been preloaded by numpy
+# before onnxruntime arrives. Preload here so backtest tests that import
+# strategies.predictive_mcdm (which lazy-loads onnxruntime) don't crash
+# during collection or first-fixture setup.
+try:
+    import onnxruntime  # noqa: F401
+except Exception as e:                  # pragma: no cover
+    import warnings
+    warnings.warn(f"onnxruntime import failed at conftest: {e}")
