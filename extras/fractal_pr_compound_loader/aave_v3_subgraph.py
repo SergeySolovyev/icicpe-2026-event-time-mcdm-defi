@@ -169,11 +169,15 @@ class AaveV3ProtocolSubgraphRatesLoader(ArbitrumGraphLoader):
         df = pd.DataFrame(rows)
         df["date"] = pd.to_datetime(df["timestamp"].astype(int), unit="s", utc=True)
 
-        # RAY-per-second -> annualized APR (simple, matching how gateway emits it)
-        # Then divide by (year-hours / resolution-hours) to get per-period.
-        scale_to_period = self._SECS_PER_YEAR / max(self._resolution * 3600, 3600)
-        df["lending_rate"] = df["liquidityRate"].astype(float) / self._RAY * self._SECS_PER_YEAR / scale_to_period
-        df["borrowing_rate"] = df["variableBorrowRate"].astype(float) / self._RAY * self._SECS_PER_YEAR / scale_to_period
+        # CORRECTED 2026-05-14 after empirical mismatch (was returning 47M% APR):
+        # Aave's protocol-subgraph stores `liquidityRate` as
+        # **annualized rate scaled by RAY (1e27)**, NOT per-second. This
+        # matches the gateway-loader convention: rate/RAY is already a
+        # decimal annualized APR (e.g. 4% → 4e25 in subgraph, /1e27 = 0.04).
+        # Divide by (year_hours / resolution_hours) to get per-period rate.
+        scale = (365 * 24) / max(self._resolution, 1)
+        df["lending_rate"] = df["liquidityRate"].astype(float) / self._RAY / scale
+        df["borrowing_rate"] = df["variableBorrowRate"].astype(float) / self._RAY / scale
 
         # utilizationRate is WAD (1e18 = 1.0). Sometimes the subgraph emits it
         # in a different convention; we sanity-clip to [0, 1.05].
@@ -206,6 +210,18 @@ class AaveV3ProtocolSubgraphRatesLoader(ArbitrumGraphLoader):
             df = df[df["date"] >= self.start_time]
         if self.end_time is not None:
             df = df[df["date"] <= self.end_time]
+
+        # Resample event-stream to uniform hourly grid (the subgraph emits
+        # one row per ReserveDataUpdated event; for 18 months we get ~650k
+        # events ≈ 50/hour, but our forecaster expects T=168 BARS = 168
+        # hours). For each hour: take the LAST event in that hour
+        # (matches the "snapshot at hour-end" convention).
+        if not df.empty:
+            df = df.set_index("date").sort_index()
+            hourly = df.resample(f"{self._resolution}h", label="right", closed="right").last()
+            # drop hours with no events at all (NaN); forward-fill is done in clean.py
+            hourly = hourly.dropna(subset=["lending_rate"]).reset_index()
+            df = hourly
 
         # Sign-convention assertion (the v1.4.0 lock-in test)
         if (df["borrowing_rate"] < df["lending_rate"]).any():

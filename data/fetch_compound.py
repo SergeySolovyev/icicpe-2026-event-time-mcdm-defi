@@ -57,8 +57,26 @@ def fetch_full_window(force: bool = False) -> pd.DataFrame:
     )
 
     hist = loader.read(with_run=True)
+    if hist.empty:
+        print(
+            "WARN: Compound V3 Messari subgraph returned zero rows for the base\n"
+            "      USDC market. Verified 2026-05-14: Messari indexes per-collateral\n"
+            "      markets only (Market = Comet base + collateral pair), not the\n"
+            "      base market. Historical supply rate is NOT directly queryable\n"
+            "      via this subgraph. Three alternatives, in order of effort:\n"
+            "        1. Dune Analytics: SQL on compound_v3_ethereum.Comet_evt_*\n"
+            "           events (requires DUNE_API_KEY plus query writing).\n"
+            "        2. eth_call at periodic blocks against Comet `getSupplyRate`\n"
+            "           and `getBorrowRate` view functions (requires RPC).\n"
+            "        3. Use a Compound V3 dedicated subgraph if one exists\n"
+            "           outside Messari (search github.com/compound-finance/subgraphs).\n"
+            "Skipping Compound for now; pipeline will run with Aave-only data\n"
+            "and a static-current-rate fallback for Compound."
+        )
+        # Save an empty parquet to make downstream code's `.exists()` check pass.
+        hist.to_parquet(out_path)
+        return hist
     print(f"  -> {len(hist)} rows  ({hist.index[0]} -> {hist.index[-1]})")
-
     hist.to_parquet(out_path)
     print(f"[saved] {out_path}  shape={hist.shape}")
     return hist

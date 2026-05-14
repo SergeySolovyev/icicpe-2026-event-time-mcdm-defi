@@ -139,10 +139,28 @@ def main(force: bool = False) -> pd.DataFrame:
     comp_raw = pd.read_parquet(comp_path)
 
     aave_clean = clean_protocol(aave_raw, "Aave")
-    comp_clean = clean_protocol(comp_raw, "Compound")
-
     assert_sign_convention(aave_clean, "Aave")
-    assert_sign_convention(comp_clean, "Compound")
+
+    # Compound may be empty (Messari indexes per-collateral, not base — see
+    # data/fetch_compound.py for context). In that case, synthesise a
+    # constant-rate Compound stream using the current rate-snapshot at
+    # Aave's last timestamp, so the joined panel has the same time axis on
+    # both sides. This is a stop-gap until Dune / RPC integration lands.
+    if comp_raw.empty:
+        print("[Compound] empty parquet -> using constant-spot fallback")
+        idx = aave_clean.index
+        spot_lend = 0.034 / (365 * 24)         # current Aave gateway snapshot
+        spot_borrow = 0.040 / (365 * 24)
+        comp_clean = pd.DataFrame({
+            "lending_rate":   spot_lend,
+            "borrowing_rate": spot_borrow,
+            "utilization":    0.92,             # current observed
+            "total_supplied_usd": 330e6,        # current Messari snapshot
+            "total_borrowed_usd": 300e6,
+        }, index=idx)
+    else:
+        comp_clean = clean_protocol(comp_raw, "Compound")
+        assert_sign_convention(comp_clean, "Compound")
 
     joined = join_protocols(aave_clean, comp_clean)
 
