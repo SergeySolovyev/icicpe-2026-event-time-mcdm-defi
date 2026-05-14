@@ -210,23 +210,29 @@ def fetch_hourly_window(rpc: str, start: datetime, end: datetime,
                 {"jsonrpc": "2.0", "id": rid * 10 + 1, "method": "eth_call",
                  "params": [{"to": COMET_USDC, "data": SEL_BORROW_RATE + _encode_uint(u)}, blk_hex]},
             ])
-        try:
-            resps2 = _post(rpc, payload2, timeout=180)
-            if not isinstance(resps2, list):
-                resps2 = [resps2]
-        except Exception as e:
-            print(f"  phase2 batch failed: {e}")
-            continue
-
+        # publicnode has a per-request batch-size limit somewhere around
+        # 100 calls (200-call batches return HTTP 400). Split phase2's
+        # payload into sub-batches of `batch_size` calls each (=batch_size/2
+        # hours per sub-batch).
         rate_map = {}
-        for resp in resps2:
-            rid_back = resp.get("id")
-            if rid_back is None or "result" not in resp:
-                continue
+        SUB_MAX = batch_size           # match phase1's call count
+        for sub_start in range(0, len(payload2), SUB_MAX):
+            sub = payload2[sub_start:sub_start + SUB_MAX]
             try:
-                rate_map[rid_back] = _decode_uint(resp["result"])
-            except Exception:
-                pass
+                sub_resps = _post(rpc, sub, timeout=180)
+                if not isinstance(sub_resps, list):
+                    sub_resps = [sub_resps]
+            except Exception as e:
+                print(f"  phase2 sub-batch failed: {e}")
+                continue
+            for resp in sub_resps:
+                rid_back = resp.get("id")
+                if rid_back is None or "result" not in resp:
+                    continue
+                try:
+                    rate_map[rid_back] = _decode_uint(resp["result"])
+                except Exception:
+                    pass
 
         # Combine: per target, build row
         for slot, t in enumerate(batch):
@@ -311,14 +317,37 @@ if __name__ == "__main__":
                     help="If set, fetch only last N days (smoke test)")
     ap.add_argument("--probe", action="store_true",
                     help="Just smoke-test the RPC connection")
+    ap.add_argument("--rpc", default=None,
+                    help="Override ETHEREUM_RPC_URL (e.g. "
+                         "https://ethereum-rpc.publicnode.com for free archive)")
+    ap.add_argument("--batch-size", type=int, default=100)
+    ap.add_argument("--sleep", type=float, default=0.4,
+                    help="Inter-batch sleep seconds")
     args = ap.parse_args()
 
     load_dotenv(ROOT / ".env")
-    rpc = os.environ.get("ETHEREUM_RPC_URL")
+    rpc = args.rpc or os.environ.get("ETHEREUM_RPC_URL")
     if not rpc:
-        raise SystemExit("ETHEREUM_RPC_URL missing in .env")
+        raise SystemExit(
+            "No RPC endpoint. Set ETHEREUM_RPC_URL in .env or pass --rpc"
+        )
 
+    print(f"Using RPC: {rpc[:48]}{'...' if len(rpc) > 48 else ''}")
     if args.probe:
         probe(rpc)
     else:
-        main(force=args.force, days=args.days)
+        # Override module-level defaults via function args
+        out_path = CACHE_DIR / "compound_v3_usdc_eth_2024-11_to_2026-04.parquet"
+        if out_path.exists() and not args.force:
+            print(f"[cached] {out_path}  ({len(pd.read_parquet(out_path))} rows)")
+        else:
+            if args.days:
+                end = datetime.now(timezone.utc).replace(minute=0, second=0, microsecond=0)
+                start = end - timedelta(days=args.days)
+            else:
+                start, end = WINDOW_START, WINDOW_END
+            df = fetch_hourly_window(rpc, start, end,
+                                     batch_size=args.batch_size,
+                                     inter_batch_sleep=args.sleep)
+            df.to_parquet(out_path)
+            print(f"[saved] {out_path}")
