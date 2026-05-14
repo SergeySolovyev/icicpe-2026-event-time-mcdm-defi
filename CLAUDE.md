@@ -29,8 +29,43 @@ plan's prepended block.
    - Aave V3 Ethereum: `Cd2gEDVeqnjBn1hSeqFMitw8Q1iiyV9FYUZkLNRcL87g`
      (verified against `aave/protocol-subgraphs` README, 2026-05-14).
    - Compound V3 Messari: `AwoxEZbiWLvv6e3QdvdMZw4WDURdGbvPfHmZRc8Dpfz9`
-     (verified against `messari/subgraphs/deployment/deployment.json`).
+     (verified against `messari/subgraphs/deployment/deployment.json`,
+     **but indexes per-collateral markets, not base** — see Discovery 3
+     below).
    Don't replace these without an external-source check.
+
+3a. **Aave subgraph `liquidityRate` is annualized × RAY, NOT per-second × RAY.**
+    Empirically verified 2026-05-14 (first fetch returned 47M% APR until
+    the conversion was fixed). Conversion to per-period rate that
+    matches `AaveV3RatesLoader` (gateway-loader) convention:
+        annualized_apr = liquidityRate / 1e27
+        per_period_rate = annualized_apr / ((365 * 24) / resolution)
+    Same for `variableBorrowRate`.
+
+3b. **Aave subgraph emits event-stream, not hourly snapshots.**
+    ~50 rows/hour over 18 months = 654k raw rows. Loader's `transform()`
+    resamples to uniform hourly grid via `df.resample("Nh", label="right",
+    closed="right").last()` -> 13,096 hourly bars. Sequence-length=168
+    in the forecaster expects "168 HOURS of context", not events.
+
+3c. **Compound V3 Messari `Market` is per-collateral, not per-base.**
+    `Market.id` format is `<comet><collateral>` concatenated.
+    `marketHourlySnapshots` ONLY has rows for collateral markets.
+    The base Comet market (`0xc3d688...`) exists as a `Market` entity
+    BUT has zero hourly snapshots and `rates: None` on the schema.
+    Workaround in `data/fetch_compound_via_rpc.py`: query Comet's view
+    functions (`getUtilization`, `getSupplyRate(u)`, `getBorrowRate(u)`)
+    at historical block numbers via batched eth_call (Alchemy archive
+    access). ~13k hourly bars × 3 calls / 500 per batch ≈ 80 requests,
+    ~3-5 min wall-clock.
+
+3d. **Comet function selectors** (verified via keccak256 in pycryptodome):
+    `getUtilization()` = `0x7eb71131`
+    `getSupplyRate(uint256)` = `0xd955759d`
+    `getBorrowRate(uint256)` = `0x9fa83b5a`
+    These differ from the speculative values previously hardcoded in
+    `data/fetch_kink_params.py`. Sync that file's `SEL` dict against
+    these on next edit.
 
 4. **Aave V3 loader convention**: APY divided by `(365 * 24) / resolution`
    gives the per-period rate (arithmetic, NOT continuously compounded).
