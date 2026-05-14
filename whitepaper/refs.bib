@@ -1,0 +1,221 @@
+% References for "Predictive MCDM Allocation across DeFi Lending Protocols"
+% Curated from DEEP_RESEARCH.md S IX + web-verification additions.
+
+% =====================================================================
+% Author's prior work
+% =====================================================================
+
+@article{solovev2026lob,
+  title  = {When Less Is More: Domain-Aware Dual-Branch Recurrent Networks for
+            Limit Order Book Mid-Price Prediction},
+  author = {Solovev, Sergei},
+  year   = {2026},
+  note   = {Manuscript; code at \url{https://github.com/SergeySolovyev/DA-BiGRU-CNN-LOB}}
+}
+
+@article{solovev2026vault,
+  title  = {AI-Managed ERC-4626 Yield Vault with Multi-Criteria Decision Making:
+            Design, Implementation, and Formal Verification},
+  author = {Solovev, Sergei},
+  year   = {2026},
+  note   = {Manuscript; code at \url{https://github.com/SergeySolovyev/ai-yield-vault}}
+}
+
+% =====================================================================
+% Vega Institute / HSE / Skoltech fractal-defi line (instructor baselines)
+% =====================================================================
+
+@article{urusov2024clmm,
+  title   = {Backtesting Framework for Concentrated Liquidity Market Makers
+             on Uniswap V3 Decentralized Exchange},
+  author  = {Urusov, Aleksei and Berezovskiy, Roman and Yanovich, Yury},
+  journal = {arXiv preprint arXiv:2410.09983},
+  year    = {2024}
+}
+
+@article{urusov2025dynlp,
+  title   = {Dynamic Liquidity Provision in Decentralized Markets:
+             Strategy Optimization and Performance Evaluation in
+             Concentrated Liquidity AMMs},
+  author  = {Urusov, A. and Berezovskiy, R. and Krestenko, A. and
+             Kornilov, A. and Yanovich, Y.},
+  journal = {arXiv preprint arXiv:2505.15338},
+  year    = {2025}
+}
+
+@article{krestenko2026basis,
+  title   = {Dynamic Collateral Control for Permissionless Spot Perpetual
+             Basis Trading},
+  author  = {Krestenko, Anatoly and Butov, M. and Berezovskiy, R. and
+             Bolotin, D.},
+  journal = {arXiv preprint arXiv:2605.05089},
+  year    = {2026}
+}
+
+% =====================================================================
+% DeFi lending: empirical + RL
+% =====================================================================
+
+@article{gudgeon2020defi,
+  title   = {DeFi Protocols for Loanable Funds: Interest Rates,
+             Liquidity and Market Efficiency},
+  author  = {Gudgeon, Lewis and Perez, Daniel and Harz, Dominik and
+             Livshits, Benjamin and Gervais, Arthur},
+  journal = {arXiv preprint arXiv:2006.13922},
+  year    = {2020}
+}
+
+@article{rules2rewards2025,
+  title   = {From Rules to Rewards: Reinforcement Learning for
+             Interest Rate Adjustment in DeFi Lending},
+  journal = {arXiv preprint arXiv:2506.00505},
+  year    = {2025}
+}
+
+@article{agilerate2024,
+  title   = {AgileRate: Bringing Adaptivity and Robustness to DeFi Lending Markets},
+  journal = {arXiv preprint arXiv:2410.13105},
+  year    = {2024}
+}
+
+@article{auto_gov_2023,
+  title   = {Auto.gov: Learning-based Governance for Decentralized Finance},
+  author  = {Xu, J. and Vadgama, N. and others},
+  journal = {arXiv preprint arXiv:2302.09551},
+  year    = {2023}
+}
+
+@article{risk_aware_2025,
+  title   = {Optimal risk-aware interest rates for decentralized lending protocols},
+  journal = {arXiv preprint arXiv:2502.19862},
+  year    = {2025},
+  note    = {Surfaced during plan verification, not in original deep-research report.}
+}
+
+@article{fair_rates_impossible_2024,
+  title   = {Fair Interest Rates Are Impossible for Lending Pools},
+  year    = {2024},
+  note    = {Critical counter-evidence; head-on addressed in whitepaper Section 3.}
+}
+
+@article{automated_risk_aave_compound_2025,
+  title   = {Automated Risk Management Mechanisms in DeFi Lending Protocols:
+             A Crosschain Comparative Analysis of Aave and Compound},
+  journal = {arXiv preprint arXiv:2506.12855},
+  year    = {2025}
+}
+
+@article{bertomeu2024defirisk,
+  title   = {Measuring DeFi risk},
+  author  = {Bertomeu, J. and Martin, X. and Sall, I.},
+  journal = {Finance Research Letters},
+  volume  = {63C},
+  year    = {2024}
+}
+
+% =====================================================================
+% Classical interest-rate models
+% =====================================================================
+
+@article{vasicek1977,
+  title   = {An equilibrium characterization of the term structure},
+  author  = {Vasicek, Oldrich},
+  journal = {Journal of Financial Economics},
+  volume  = {5}, number = {2}, pages = {177--188}, year = {1977}
+}
+
+@article{cir1985,
+  title   = {A Theory of the Term Structure of Interest Rates},
+  author  = {Cox, J. C. and Ingersoll Jr., J. E. and Ross, S. A.},
+  journal = {Econometrica},
+  volume  = {53}, number = {2}, pages = {385--408}, year = {1985}
+}
+
+@article{orlando2020cir,
+  title   = {Forecasting interest rates through Vasicek and CIR models:
+             a partitioning approach},
+  author  = {Orlando, Giuseppe and Mininni, Rosa Maria and Bufalo, Michele},
+  journal = {Journal of Forecasting},
+  volume  = {39}, number = {4}, pages = {569--579}, year = {2020},
+  doi     = {10.1002/for.2642},
+  note    = {Partitioning is data-driven (variance-change), not literal
+             utilization-quintile -- our adaptation is in Section 6.}
+}
+
+@article{nunes2026lstm_yield,
+  title   = {Deep Learning for Bond Yield Forecasting: The LSTM-LagLasso},
+  author  = {Nunes, others},
+  journal = {International Journal of Finance \& Economics},
+  year    = {2026},
+  doi     = {10.1002/ijfe.3116}
+}
+
+% =====================================================================
+% LOB DL and dual-branch architectures
+% =====================================================================
+
+@article{sirignano2016deeplob,
+  title   = {Deep Learning for Limit Order Books},
+  author  = {Sirignano, Justin},
+  journal = {arXiv preprint arXiv:1601.01987},
+  year    = {2016}
+}
+
+@article{wallbridge2020transformer_lob,
+  title   = {Transformers for Limit Order Books},
+  author  = {Wallbridge, J. and others},
+  journal = {arXiv preprint arXiv:2003.00130},
+  year    = {2020}
+}
+
+@inproceedings{simonyan2014twostream,
+  title     = {Two-Stream Convolutional Networks for Action Recognition in Videos},
+  author    = {Simonyan, Karen and Zisserman, Andrew},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
+  year      = {2014}
+}
+
+% =====================================================================
+% MCDM
+% =====================================================================
+
+@book{hwang_yoon_1981_topsis,
+  title     = {Multiple Attribute Decision Making: Methods and Applications},
+  author    = {Hwang, Ching-Lai and Yoon, Kwangsun},
+  publisher = {Springer},
+  year      = {1981}
+}
+
+@book{saaty_1980_ahp,
+  title     = {The Analytic Hierarchy Process},
+  author    = {Saaty, Thomas L.},
+  publisher = {McGraw-Hill},
+  year      = {1980}
+}
+
+@article{hosseinzadeh2023crypto,
+  title   = {An asymmetric PROMETHEE II for cryptocurrency portfolio
+             allocation based on return prediction},
+  author  = {Hosseinzadeh, Sarpoolaki, Hosseinzadeh},
+  journal = {Computers \& Operations Research},
+  year    = {2023}
+}
+
+@article{aljinovic2021crypto,
+  title   = {Cryptocurrency Portfolio Selection -- A Multicriteria Approach},
+  author  = {Aljinovic, Z. and Marasovic, B. and Sestanovic, T.},
+  journal = {Mathematics (MDPI)},
+  volume  = {9}, number = {14}, pages = {1677}, year = {2021}
+}
+
+% =====================================================================
+% Framework
+% =====================================================================
+
+@misc{fractal_defi_2026,
+  title  = {Fractal: A Python Research Library for DeFi Strategies, v1.3.2},
+  author = {Krestenko, Anatoly and {Fractal contributors}},
+  year   = {2026},
+  doi    = {10.5281/zenodo.20049904},
+  note   = {BSD-3-Clause; \url{https://github.com/Logarithm-Labs/fractal-defi}}
+}

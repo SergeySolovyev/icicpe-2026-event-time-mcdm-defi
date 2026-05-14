@@ -1,0 +1,61 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# MLflow
+mlruns/
+mlartifacts/
+results/mlflow/
+
+# Data caches (regenerable, large)
+data/cached/*.parquet
+data/cached/*.csv
+data/cached/*.pkl
+!data/cached/.gitkeep
+
+# Model weights (large; regenerable from train.py)
+forecaster/trained_models/*.onnx
+forecaster/trained_models/*.pt
+forecaster/trained_models/*.cbm
+!forecaster/trained_models/.gitkeep
+
+# Whitepaper build artifacts
+whitepaper/*.aux
+whitepaper/*.log
+whitepaper/*.out
+whitepaper/*.bbl
+whitepaper/*.blg
+whitepaper/*.fdb_latexmk
+whitepaper/*.fls
+whitepaper/*.synctex.gz
+
+# Secrets
+.env
+*.key
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/

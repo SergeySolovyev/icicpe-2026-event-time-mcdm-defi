@@ -1,0 +1,98 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage[round]{natbib}
+\bibliographystyle{plainnat}
+
+\title{Predictive Multi-Criteria Allocation across DeFi Lending Protocols:
+       A Forecast-Driven Extension of the AI-Managed ERC-4626 Vault
+       on the \texttt{fractal-defi} Substrate}
+\author{Sergei Solovev\\
+        Faculty of Computer Science, HSE University, Moscow\\
+        \texttt{sesesolovev@edu.hse.ru}}
+\date{June 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+% TODO Week 4 Day 4 — finalize after results are in.
+We replace the reactive EMA-smoothed supply-rate observation in a 4-factor
+TOPSIS-style MCDM allocator across Aave V3 and Compound V3 USDC markets
+with a 12-hour-ahead dual-branch DA-BiGRU-CNN forecast that decomposes the
+supply rate into a deterministic kink component and a learned residual.
+The strategy is implemented on the \texttt{fractal-defi} research substrate
+and backtested over 18 months of historical mainnet data (Nov 2024 -- Apr 2026).
+Compared to four baselines---buy-and-hold Aave V3, APY-only greedy, reactive
+MCDM-with-EMA (ported from~\citep{solovev2026vault}), and a CIR-calibrated
+classical forecast---the predictive variant achieves a Sharpe improvement
+of \textbf{TODO} ($p = $ \textbf{TODO} via 1000-bootstrap of monthly ratios)
+on the held-out test window (Jan -- Apr 2026). We additionally contribute
+to the open-source ecosystem: a Compound V3 lending loader with uniform
+utilization-field exposure across lending global states, and a
+\texttt{BaseLendingAllocationStrategy} abstraction generalizing the
+multi-protocol allocator pattern beyond this work.
+\end{abstract}
+
+\section{Introduction}
+% Hook: cointegrated Aave-Compound rates create execution-quality alpha;
+% Krestenko et al. 2026 (basis trading) motivates extending the same pattern
+% to lending. Frame as the "lending panel" of the Vega Institute / HSE /
+% Skoltech fractal-defi research program.
+\input{sections/01_introduction}
+
+\section{Background}
+% ERC-4626, MCDM, EIP-712, EMA, CIR, two-stream architectures.
+\input{sections/02_background}
+
+\section{Related Work}
+% Per DEEP_RESEARCH.md S II + S III positioning vs three Vega papers.
+% MUST address "Fair Interest Rates Are Impossible for Lending Pools" head-on.
+\input{sections/03_related_work}
+
+\section{System Architecture}
+% Forecaster + MCDM + fractal-defi entity-strategy contract.
+\input{sections/04_architecture}
+
+\section{Methodology}
+% Dual-branch with kink subtraction; composite loss; decision rule.
+\input{sections/05_methodology}
+
+\section{Data}
+% 18-month window, strict block-number split, RAY/WAD normalization.
+\input{sections/06_data}
+
+\section{Calibration and Backtest Protocol}
+% MLflow grids; gas-cost gate; sign-convention lock-in test.
+\input{sections/07_calibration}
+
+\section{Results}
+% Headline figure: Baseline C vs Predictive on test window.
+% Plus 4-baseline + 15-ablation tables.
+\input{sections/08_results}
+
+\section{Ablations}
+\input{sections/09_ablations}
+
+\section{Discussion and Limitations}
+% H0 explicitly entertained; honest scope-locking; future work.
+\input{sections/10_discussion}
+
+\section{Open-Source Contributions}
+% Compound V3 loader + utilization field (Extra+1).
+% BaseLendingAllocationStrategy (Extra+2).
+\input{sections/11_contributions}
+
+\section{Conclusion}
+\input{sections/12_conclusion}
+
+\bibliography{refs}
+
+\end{document}
