@@ -1,98 +1,889 @@
-\documentclass[11pt]{article}
-\usepackage[margin=1in]{geometry}
+\documentclass[11pt,a4paper]{article}
+
+% ---------------------------------------------------------------------------
+% Geometry and typography
+% ---------------------------------------------------------------------------
+\usepackage[margin=2.5cm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+
+% ---------------------------------------------------------------------------
+% Math, tables, figures
+% ---------------------------------------------------------------------------
 \usepackage{amsmath, amssymb, amsthm}
-\usepackage{graphicx}
 \usepackage{booktabs}
-\usepackage{hyperref}
+\usepackage{graphicx}
 \usepackage{xcolor}
 \usepackage{listings}
-\usepackage{algorithm}
-\usepackage{algpseudocode}
-\usepackage[round]{natbib}
-\bibliographystyle{plainnat}
+\usepackage{tikz}
+\usetikzlibrary{positioning, arrows.meta, fit, shapes.geometric}
+\usepackage{enumitem}
+\usepackage{caption}
 
-\title{Predictive Multi-Criteria Allocation across DeFi Lending Protocols:
-       A Forecast-Driven Extension of the AI-Managed ERC-4626 Vault
-       on the \texttt{fractal-defi} Substrate}
-\author{Sergei Solovev\\
-        Faculty of Computer Science, HSE University, Moscow\\
-        \texttt{sesesolovev@edu.hse.ru}}
+% ---------------------------------------------------------------------------
+% Bibliography (biblatex + biber)
+% ---------------------------------------------------------------------------
+\usepackage[
+  backend=biber,
+  style=numeric-comp,
+  sorting=nyt,
+  maxbibnames=99,
+  giveninits=true,
+  url=true,
+  doi=true,
+  isbn=false
+]{biblatex}
+\addbibresource{refs.bib}
+
+% ---------------------------------------------------------------------------
+% Hyperref + cleveref (must be loaded last among ref-related packages)
+% ---------------------------------------------------------------------------
+\usepackage[
+  colorlinks=true,
+  linkcolor=blue!55!black,
+  citecolor=blue!55!black,
+  urlcolor=blue!55!black,
+  pdftitle={Predictive MCDM Allocation across DeFi Lending Protocols},
+  pdfauthor={Sergei Solovev}
+]{hyperref}
+\usepackage[capitalize, noabbrev]{cleveref}
+
+% ---------------------------------------------------------------------------
+% Listings style (pseudocode)
+% ---------------------------------------------------------------------------
+\lstdefinestyle{algo}{
+  basicstyle=\ttfamily\small,
+  keywordstyle=\bfseries\color{blue!55!black},
+  commentstyle=\itshape\color{gray!70!black},
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  numbersep=8pt,
+  frame=single,
+  framerule=0.4pt,
+  rulecolor=\color{gray!50},
+  breaklines=true,
+  showstringspaces=false,
+  columns=fullflexible,
+  morekeywords={if, else, for, while, return, def, class, in, and, or, not,
+                argmax, supply, withdraw}
+}
+\lstset{style=algo}
+
+% ---------------------------------------------------------------------------
+% Title block
+% ---------------------------------------------------------------------------
+\title{Predictive Multi-Criteria Allocation across DeFi Lending Protocols:\\
+       \large A Forecast-Driven Extension of the AI-Managed ERC-4626 Vault
+              on the \texttt{fractal-defi} Substrate}
+
+\author{Sergei Solovev\thanks{Code and reproducibility artifacts:
+  \url{https://github.com/SergeySolovyev/predictive-mcdm-defi}.
+  This work realizes the methodological transfer outlined in
+  Section~6.4 of \cite{solovev2026lob} and previewed at the
+  Scientific Telegraph Young Researcher Conference,
+  Central University, Moscow, 17 May 2026.}\\
+  \small Faculty of Computer Science, HSE University, Moscow\\
+  \small \texttt{sesesolovev@edu.hse.ru}}
+
 \date{June 2026}
 
+% ===========================================================================
 \begin{document}
+% ===========================================================================
 \maketitle
 
+% ---------------------------------------------------------------------------
 \begin{abstract}
-% TODO Week 4 Day 4 — finalize after results are in.
-We replace the reactive EMA-smoothed supply-rate observation in a 4-factor
-TOPSIS-style MCDM allocator across Aave V3 and Compound V3 USDC markets
-with a 12-hour-ahead dual-branch DA-BiGRU-CNN forecast that decomposes the
-supply rate into a deterministic kink component and a learned residual.
-The strategy is implemented on the \texttt{fractal-defi} research substrate
-and backtested over 18 months of historical mainnet data (Nov 2024 -- Apr 2026).
-Compared to four baselines---buy-and-hold Aave V3, APY-only greedy, reactive
-MCDM-with-EMA (ported from~\citep{solovev2026vault}), and a CIR-calibrated
-classical forecast---the predictive variant achieves a Sharpe improvement
-of \textbf{TODO} ($p = $ \textbf{TODO} via 1000-bootstrap of monthly ratios)
-on the held-out test window (Jan -- Apr 2026). We additionally contribute
-to the open-source ecosystem: a Compound V3 lending loader with uniform
-utilization-field exposure across lending global states, and a
-\texttt{BaseLendingAllocationStrategy} abstraction generalizing the
-multi-protocol allocator pattern beyond this work.
+\noindent
+We study dynamic capital allocation between Aave V3 and Compound V3
+USDC supply markets on Ethereum mainnet and ask whether replacing a
+reactive EMA-smoothed rate observation with a 12-hour-ahead learned
+forecast yields a statistically and economically significant
+improvement in risk-adjusted return. The proposed allocator combines a
+dual-branch DA-BiGRU-CNN forecaster --- decomposing each protocol's
+supply rate into a deterministic kink component and a learned residual
+--- with a four-factor TOPSIS-style multi-criteria decision rule
+inherited from the author's prior ERC-4626 yield vault
+\cite{solovev2026vault}, and is implemented as a concrete subclass of
+a new \texttt{BaseLendingAllocationStrategy} abstraction contributed
+to the \texttt{fractal-defi} research substrate of
+\cite{fractaldefi2026,krestenko2026basis}. Five strategies (buy-and-hold,
+APY-only greedy, reactive MCDM-EMA, CIR-calibrated MCDM, and the
+proposed predictive MCDM) are backtested over an 18-month historical
+window (Nov 2024 -- Apr 2026) with a 10/4/4-month train/validation/test
+split, and fifteen ablations isolate the contribution of each design
+choice. The forecaster design is the lending-rate analogue of the
+dual-branch limit-order-book mid-price predictor of
+\cite{solovev2026lob}, with kink subtraction encoding a hard domain
+prior unavailable in the LOB setting. Forward-looking targets, set
+prior to test-set exposure, are an out-of-sample $R^2$ of $0.15$--$0.40$
+for the 12-hour rate level, $55$--$65\%$ directional accuracy on the
+``Aave $>$ Compound at $t+12\text{h}$'' label, and a Sharpe-ratio
+improvement of $0.2$--$0.5$ over the reactive-EMA baseline; the null
+hypothesis that the forecast adds no value over EMA is entertained
+explicitly and is structurally falsifiable by the design.
 \end{abstract}
 
+% ---------------------------------------------------------------------------
+% 1. INTRODUCTION
+% ---------------------------------------------------------------------------
 \section{Introduction}
-% Hook: cointegrated Aave-Compound rates create execution-quality alpha;
-% Krestenko et al. 2026 (basis trading) motivates extending the same pattern
-% to lending. Frame as the "lending panel" of the Vega Institute / HSE /
-% Skoltech fractal-defi research program.
-\input{sections/01_introduction}
+\label{sec:introduction}
 
-\section{Background}
-% ERC-4626, MCDM, EIP-712, EMA, CIR, two-stream architectures.
-\input{sections/02_background}
+\subsection{Motivation}
+\label{sec:motivation}
 
-\section{Related Work}
-% Per DEEP_RESEARCH.md S II + S III positioning vs three Vega papers.
-% MUST address "Fair Interest Rates Are Impossible for Lending Pools" head-on.
-\input{sections/03_related_work}
+Decentralized lending protocols offer USDC supply-side yield that
+fluctuates with utilization, market demand, and protocol-specific
+governance parameters. Supply rates on Aave V3 and Compound V3 are not
+synchronized: they cross repeatedly over time, and
+\cite{gudgeon2020defi} establish empirically that Compound borrowing
+rates \emph{lead} Aave, with cointegration coefficients implying Aave
+adjusts at speed $0.607$ toward the long-run Compound relationship.
+A capital provider who can anticipate these crossovers and rebalance
+ahead of them captures a yield differential that a reactive observer
+misses. Yet the production-grade DeFi yield aggregators surveyed in
+\cref{sec:related} all act on observed (or EMA-smoothed) rates, and
+the public research literature on \texttt{fractal-defi}-based
+backtesting \cite{urusov2024clmm,urusov2025dynlp,krestenko2026basis}
+covers AMM liquidity provision and basis trading, but not the
+\emph{lending} microstructure panel of the same substrate. This paper
+fills that gap.
 
+The forecasting problem is structurally analogous to high-frequency
+mid-price prediction in limit-order books: noisy multivariate time
+series, regime-dependent dynamics, a weighted-error metric in which
+large moves matter disproportionately, and a discrete decision rule
+(rebalance or hold). The methodological transfer from the author's
+LOB-prediction work \cite{solovev2026lob} to the present DeFi-rate
+setting is the central scientific claim. The transfer is not
+mechanical: a hard domain prior (the protocol-known piecewise-linear
+``kink'' rate function) is available in DeFi and absent in LOBs, and
+the architecture exploits it via residual subtraction.
+
+\subsection{Contributions}
+\label{sec:contributions}
+
+\begin{enumerate}[leftmargin=*, itemsep=2pt]
+\item \textbf{Predictive MCDM allocator.} A 12-hour-ahead forecast
+  replaces the reactive EMA observation in the four-factor TOPSIS-style
+  MCDM rule of \cite{solovev2026vault}, producing the first published
+  forecast-driven multi-criteria USDC allocator across Aave V3 and
+  Compound V3 on mainnet historicals.
+\item \textbf{Dual-branch forecaster with kink subtraction.} A
+  DA-BiGRU-CNN architecture predicts each protocol's utilization and
+  rate residual separately, then reconstructs the rate via the
+  protocol-known kink function. This is the lending-rate analogue of
+  the dual-branch LOB predictor of \cite{solovev2026lob}, with the
+  kink prior as a genuine architectural contribution beyond either
+  prior work.
+\item \textbf{Composite forecast loss.} A weighted combination of
+  MSE, weighted-Pearson correlation, and a quantile-90 term aligns the
+  training objective with allocation-relevant accuracy (large moves and
+  the upper tail of the rate distribution).
+\item \textbf{Open-source contributions to \texttt{fractal-defi}.}
+  Two pull requests of independent utility: a Compound~V3 lending
+  history loader with a uniform \texttt{utilization} field exposed on
+  both Aave and Compound \texttt{GlobalState} objects (Extra+1), and a
+  \texttt{BaseLendingAllocationStrategy} abstraction generalizing the
+  multi-protocol allocator pattern (Extra+2).
+\item \textbf{Honest negative-result protocol.} The null hypothesis
+  (forecast adds no value over EMA on this horizon) is operationalized,
+  pre-registered, and entertained as a publishable outcome; the
+  fifteen-row ablation matrix is structured to attribute any observed
+  effect to forecast, criterion structure, or protocol-pair selection.
+\end{enumerate}
+
+\subsection{Paper Outline}
+\label{sec:outline}
+
+\Cref{sec:background} reviews lending mechanics, MCDM in financial
+allocation, deep-learning rate forecasting, the bridge to LOB
+microstructure, and the recent ``fair interest rates are impossible''
+counter-result \cite{halpern2024fairrates}.
+\Cref{sec:architecture} situates the work on the \texttt{fractal-defi}
+substrate and describes the new \texttt{BaseLendingAllocationStrategy}
+abstraction. \Cref{sec:methodology} develops the dual-branch forecaster
+and decision rule. \Cref{sec:data} and \Cref{sec:calibration} cover the
+18-month data window and hyperparameter calibration.
+\Cref{sec:backtest} states the backtesting protocol;
+\Cref{sec:results} hosts the headline and per-baseline tables (with
+numerical entries deferred to Week~3 execution).
+\Cref{sec:discussion} interprets the findings and addresses the
+Halpern--Pass--Saraf objection.
+\Cref{sec:conclusion} closes with limitations and future work.
+
+% ---------------------------------------------------------------------------
+% 2. BACKGROUND AND RELATED WORK
+% ---------------------------------------------------------------------------
+\section{Background and Related Work}
+\label{sec:background}
+\label{sec:related}
+
+\subsection{DeFi Lending Mechanics: Aave V3 and Compound V3}
+\label{sec:lending-mechanics}
+
+Both Aave V3 and Compound V3 (Comet) implement piecewise-linear
+\emph{kink} rate models: borrow APY rises linearly with utilization
+$u \in [0,1]$ at slope $s_1$ up to an ``optimal'' utilization $u^*$,
+then steeply at slope $s_2$. Supply APY is derived from borrow APY,
+utilization, and a protocol-fixed reserve factor. Despite identical
+functional form, the two protocols differ in parameter calibration,
+governance cadence, and oracle architecture; the result is
+short-horizon dispersion in observed USDC supply rates with periodic
+crossovers, as analyzed empirically in
+\cite{gudgeon2020defi,automatedrisk2025}. The reserve-factor
+adjustment on either side is not learned from data: it is published
+on-chain. This makes the kink function an ideal hard prior for a
+forecast architecture (\cref{sec:methodology}).
+
+\subsection{MCDM in Financial Allocation}
+\label{sec:mcdm-bg}
+
+Multi-criteria decision making originated in operations research with
+SAW (simple additive weighting), TOPSIS \cite{hwang1981topsis},
+AHP \cite{saaty1980ahp}, and PROMETHEE \cite{brans1985promethee}.
+Recent applications to cryptocurrency portfolio allocation include
+\cite{aljinovic2021crypto} and the asymmetric-PROMETHEE-II hybrid of
+\cite{hosseinzadeh2023crypto}. The author's prior vault paper
+\cite{solovev2026vault} adopts a four-factor weighted-sum aggregator
+(APY, risk, cost, stability) with default weights
+$(w_1,\ldots,w_4)=(0.40,0.25,0.20,0.15)$ verified end-to-end on testnet.
+The present work inherits this aggregator unchanged and replaces the
+APY input alone with a forecast, isolating the contribution of
+prediction from criterion design.
+
+\subsection{Deep-Learning Interest-Rate Forecasting}
+\label{sec:rate-forecast-bg}
+
+Three recent works directly motivate the deep-learning treatment of
+DeFi rates. \cite{agilerate2024} demonstrates 3-hour-resolution
+adaptive control of Compound rates, implying that 12-hour-resolution
+forecasting has at least as much signal.
+\cite{rules2rewards2025} formulates DeFi interest-rate adjustment as
+reinforcement learning on a multi-year Aave dataset, including the
+March 2023 USDC depeg as a stress regime that we re-use for
+out-of-distribution testing (\cref{sec:results}, ablation~14).
+\cite{autogov2023} treats governance parameters as the action space.
+Classical baselines descend from the Vasicek
+\cite{vasicek1977} and CIR \cite{cir1985} short-rate models and the
+data-driven partitioning extension of \cite{orlando2020cir}, which we
+adapt as Baseline~D.
+
+\subsection{Bridge to Limit-Order-Book Microstructure}
+\label{sec:lob-bridge}
+
+The dual-branch architecture of the author's LOB paper
+\cite{solovev2026lob} predicts mid-price moves from order-flow and
+volume streams via late fusion, in the lineage of
+\cite{simonyan2014twostream} and the DeepLOB family
+\cite{sirignano2016deeplob,zhang2019deeplob,wallbridge2020transformerlob}.
+The structural similarity to DeFi-rate prediction (multivariate noisy
+series, heteroscedastic moves, ranking-relevant evaluation) is the
+methodological foundation of the present work. The principal
+difference is the availability of the deterministic kink function,
+which we exploit via residual subtraction
+(\cref{sec:dual-branch}).
+
+\subsection{The ``Fair Interest Rates Are Impossible'' Objection}
+\label{sec:fair-rates}
+
+\cite{halpern2024fairrates} prove, by reduction of dynamic-repayment
+lending to barrier-option pricing, that no fair interest rate exists
+in a fully general lending pool with strategic borrowers. We address
+this head-on. Our claim is operational, not equilibrium-theoretic: we
+forecast on a 12-hour horizon and exploit transient
+cross-protocol dispersion, which is orthogonal to the long-run
+existence of a single fair rate. \Cref{sec:fair-rates-response}
+develops this argument in full.
+
+% ---------------------------------------------------------------------------
+% 3. SYSTEM ARCHITECTURE
+% ---------------------------------------------------------------------------
 \section{System Architecture}
-% Forecaster + MCDM + fractal-defi entity-strategy contract.
-\input{sections/04_architecture}
+\label{sec:architecture}
 
+\subsection{The \texttt{fractal-defi} Substrate}
+\label{sec:fractal}
+
+We build on \texttt{fractal-defi} \cite{fractaldefi2026}, the Python
+research library underlying \cite{krestenko2026basis} and the
+liquidity-provision papers \cite{urusov2024clmm,urusov2025dynlp}.
+The library exposes a typed entity--strategy contract: a
+\texttt{BaseLendingEntity} encapsulates per-protocol state
+(\texttt{lending\_rate}, \texttt{borrowing\_rate}, balances, gas
+context), a \texttt{BaseStrategy} consumes the joint state and emits
+typed \texttt{ActionToTake} instructions, and a backtest runner
+sequences entities and strategy under a deterministic execution
+contract. We pin \texttt{fractal-defi==1.3.2}; the project's
+sign-convention lock-in test asserts
+$\text{borrowing\_rate}\ge \text{lending\_rate}$ at every timestamp,
+guarding against the pre-v1.4.0 sign-flip bug.
+
+\subsection{Entity--Strategy Abstraction}
+\label{sec:entities}
+
+Two lending entities are instantiated: the upstream \texttt{AaveEntity}
+and a new \texttt{CompoundV3Entity} introduced by this work
+(\cref{sec:contributions-detail}). Both expose a uniform
+\texttt{utilization} field on their \texttt{GlobalState}, computed
+from \texttt{totalLiquidity} and \texttt{totalCurrentVariableDebt}
+in the subgraph response. The forecaster is loaded as an ONNX module
+inside the strategy and consumes the joint state via a rolling
+buffer of 168 hourly observations.
+
+\subsection{\texttt{BaseLendingAllocationStrategy}: the Extra+2 Contribution}
+\label{sec:basealloc}
+
+Although \texttt{fractal-defi} ships with four lending entities, no
+multi-lending-protocol allocator was provided at the time of this work.
+We contribute \texttt{BaseLendingAllocationStrategy}, an abstract
+template exposing four overridable hooks --- criterion vector
+computation, criterion aggregation, target selection, and the
+rebalance gate --- that any future allocator can subclass. The
+proposed \texttt{PredictiveMCDMStrategy} is the first concrete
+instance; Baselines B, C, and D (\cref{sec:backtest}) are
+implemented as further instances, ensuring apples-to-apples
+comparison.
+
+% ---------------------------------------------------------------------------
+% 4. METHODOLOGY
+% ---------------------------------------------------------------------------
 \section{Methodology}
-% Dual-branch with kink subtraction; composite loss; decision rule.
-\input{sections/05_methodology}
+\label{sec:methodology}
 
+\subsection{Forecast Model: DA-BiGRU-CNN with Kink Subtraction}
+\label{sec:dual-branch}
+
+For each protocol $i\in\{\text{Aave},\text{Compound}\}$ and decision
+time $t$, we observe the rolling window
+$x_i(t)=(r_i(\tau),u_i(\tau),\text{TVL}_i(\tau),\Delta\text{TVL}_i(\tau),
+\text{kink}_i)_{\tau=t-167}^{t}$ and predict $r_i(t+\Delta)$ at
+$\Delta=12$ hours. The architecture decomposes additively:
+
+\begin{itemize}[leftmargin=*, itemsep=2pt]
+\item \textbf{Branch A --- rate residual.} Target
+  $\varepsilon_i(t)=r_i(t)-f_{\text{kink}_i}(u_i(t))$, where
+  $f_{\text{kink}_i}$ is the protocol-known piecewise-linear function;
+  predicted by a 2-layer BiGRU with hidden size 64 over a 168-hour
+  window of residuals plus the cross-protocol residual spread.
+\item \textbf{Branch B --- utilization.} Target $\hat u_i(t+\Delta)$;
+  predicted by a 2-layer BiGRU with hidden size 64 followed by a
+  multi-scale 1-D CNN with kernels $\{3,5,7\}$, over a context window
+  containing $u$, TVL, $\Delta$TVL, gas, and time-of-day features per
+  protocol.
+\item \textbf{Late fusion.} Reconstruct
+  $\hat r_i(t+\Delta)=f_{\text{kink}_i}(\hat u_i(t+\Delta))+
+  \hat\varepsilon_i(t+\Delta)$, with a small MLP head correcting
+  systematic bias in the additive reconstruction.
+\end{itemize}
+
+\Cref{fig:arch} sketches the architecture. The kink function is a
+hard, exact, non-learned prior: the deterministic part of the rate is
+not estimated from data, freeing model capacity for the genuinely
+stochastic residual.
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[
+  node distance=4mm and 8mm,
+  every node/.style={font=\small},
+  block/.style={draw, rounded corners=2pt, minimum height=8mm,
+                minimum width=22mm, align=center},
+  data/.style ={draw, rounded corners=8pt, fill=gray!10,
+                minimum height=8mm, minimum width=22mm, align=center},
+  op/.style   ={draw, circle, minimum size=6mm, inner sep=0pt},
+  arrow/.style={-{Stealth[length=2mm]}, thick}
+]
+% inputs
+\node[data] (resid)  {residuals $\varepsilon_i$};
+\node[data, below=of resid] (util) {util., TVL, gas};
+% branches
+\node[block, right=of resid]  (gruA) {BiGRU-A};
+\node[block, right=of util]   (gruB) {BiGRU-B};
+\node[block, right=of gruB]   (cnn)  {Conv1d\\$\{3,5,7\}$};
+% fusion
+\node[block, right=10mm of gruA] (mlp) {MLP head};
+\node[op,    right=8mm  of mlp]  (plus) {$+$};
+\node[block, right=of plus]      (kink) {$f_{\text{kink}}$};
+\node[data,  right=of kink]      (out)  {$\hat r_i(t+\Delta)$};
+% arrows
+\draw[arrow] (resid) -- (gruA);
+\draw[arrow] (util)  -- (gruB);
+\draw[arrow] (gruB)  -- (cnn);
+\draw[arrow] (gruA.east) -- ++(0.5,0) |- (mlp.west);
+\draw[arrow] (cnn.east)  -- ++(0.5,0) |- (mlp.west);
+\draw[arrow] (mlp)  -- node[above, font=\scriptsize] {$\hat\varepsilon$} (plus);
+\draw[arrow] (kink) -- (out);
+\draw[arrow] (plus) -- (kink);
+\draw[arrow] (mlp.south) -- ++(0,-0.6) -| node[pos=0.25, below, font=\scriptsize] {$\hat u$} (kink.south);
+\end{tikzpicture}
+\caption{Dual-branch forecaster with kink subtraction. Branch~A
+predicts the rate residual after removing the deterministic kink
+contribution; Branch~B predicts utilization; late fusion reconstructs
+the rate via the protocol-known $f_{\text{kink}}$.}
+\label{fig:arch}
+\end{figure}
+
+\subsection{MCDM Scoring}
+\label{sec:mcdm}
+
+We inherit the four-factor SAW aggregator of \cite{solovev2026vault}.
+For protocol $i$ at time $t$,
+\begin{equation}
+\mathrm{Score}_i(t) \;=\;
+w_1\,f_{\mathrm{APY}}\!\bigl(\hat r_i(t+\Delta)\bigr) +
+w_2\,f_{\mathrm{Risk}}\!\bigl(u_i(t)\bigr) +
+w_3\,f_{\mathrm{Cost}}\!\bigl(g(t)\bigr) +
+w_4\,f_{\mathrm{Stab}}\!\bigl(\Delta\mathrm{TVL}_i(t)\bigr),
+\label{eq:mcdm}
+\end{equation}
+with sub-factors
+\begin{align*}
+f_{\mathrm{APY}}(\hat r) &= \mathrm{clamp}(\hat r/\mathrm{APY}_{\max},0,1),
+  & f_{\mathrm{Risk}}(u) &= 1-\mathrm{clamp}(u,0,1),\\
+f_{\mathrm{Cost}}(g) &= 1-\mathrm{clamp}(gG/g_{\max},0,1),
+  & f_{\mathrm{Stab}}(\Delta\mathrm{TVL}) &=
+  1-\mathrm{clamp}(|\Delta\mathrm{TVL}|/0.30,0,1),
+\end{align*}
+default weights $(w_1,\ldots,w_4)=(0.40,0.25,0.20,0.15)$, gas budget
+$G=200{,}000$, $g_{\max}=0.01$~ETH, and APY normalization
+$\mathrm{APY}_{\max}=0.20$. The single critical departure from
+\cite{solovev2026vault} is the substitution of the forecast
+$\hat r_i(t+\Delta)$ for the EMA-smoothed spot $S_i(t)$ in
+$f_{\mathrm{APY}}$.
+
+\subsection{Decision Rule: Hysteresis, Cooldown, Gas Gate}
+\label{sec:decision}
+
+The strategy executes the three-gate rebalance protocol in
+\cref{alg:rebalance}: hysteresis $\theta=0.05$ on the score delta,
+cooldown $\tau=1$~h between actions, and a gas-cost gate that
+requires the expected uplift over the forecast horizon to exceed the
+realized gas spend.
+
+\begin{lstlisting}[caption={Predictive MCDM rebalance step (per hourly tick).},
+  label={alg:rebalance}, captionpos=b]
+def step(t):
+    s_a = mcdm_score("AAVE",     forecast_a, util_a, gas, dTVL_a)
+    s_c = mcdm_score("COMPOUND", forecast_c, util_c, gas, dTVL_c)
+    target, s_target = argmax((s_a, "AAVE"), (s_c, "COMPOUND"))
+    if (s_target - s_current(t)) <= THETA:           return []
+    if (t - last_rebalance_time)   <  TAU_COOLDOWN:  return []
+    if expected_uplift * (horizon - t) * NOTIONAL
+                                  <  gas_cost(t):    return []
+    return [withdraw(current), supply(target)]
+\end{lstlisting}
+
+\subsection{Loss Function: Composite Objective}
+\label{sec:loss}
+
+Training minimizes the composite loss
+\begin{equation}
+\mathcal L = \alpha \cdot \mathrm{MSE}(r,\hat r)
+           + \beta  \cdot \bigl(1-\mathrm{WPearson}(r,\hat r)\bigr)
+           + \gamma \cdot \mathrm{QuantileLoss}_{0.9}(r,\hat r),
+\label{eq:loss}
+\end{equation}
+with defaults $(\alpha,\beta,\gamma)=(0.4,0.5,0.1)$ tuned by
+validation grid search. The weighted-Pearson term carries over
+verbatim from \cite{solovev2026lob}, where it dominates MSE alone on
+allocation-relevant accuracy; the quantile term penalizes
+underprediction of large positive moves --- exactly the moves the
+allocator most needs to anticipate.
+
+% ---------------------------------------------------------------------------
+% 5. DATA
+% ---------------------------------------------------------------------------
 \section{Data}
-% 18-month window, strict block-number split, RAY/WAD normalization.
-\input{sections/06_data}
+\label{sec:data}
 
-\section{Calibration and Backtest Protocol}
-% MLflow grids; gas-cost gate; sign-convention lock-in test.
-\input{sections/07_calibration}
+\subsection{Sources}
+\label{sec:data-sources}
 
+We pull Aave V3 USDC reserve-rate history from the official TheGraph
+subgraph \texttt{aave-v3-ethereum} (entity
+\texttt{reserveParamsHistoryItems}, RAY scaling $10^{27}$) and
+Compound V3 USDC base-market history from the Messari subgraph for
+cUSDCv3 (entity \texttt{marketHourlySnapshots} at
+\texttt{0xc3d6\dots cdc3}, WAD scaling $10^{18}$). Gas prices come from
+Dune's \texttt{gas.gas\_price} table at hourly median resolution;
+ETH/USD comes from CoinGecko's free hourly close. Kink parameters per
+protocol per epoch are reconstructed from on-chain
+\texttt{ReservesUpdated} (Aave) and \texttt{Configurator} (Compound)
+events.
+
+\subsection{Window}
+\label{sec:window}
+
+Eighteen months: 1~Nov~2024 through 30~Apr~2026. The window spans
+two macro micro-regimes (low-volatility H2~2024, normalizing 2025,
+and the present higher-volatility 2026) without overlapping any
+protocol re-deployment event.
+
+\subsection{Cleaning}
+\label{sec:cleaning}
+
+Outliers (rates outside $[0,50\%]$, single-step relative jumps
+$>5\times$) are flagged as oracle glitches and interpolated.
+Missing data are forward-filled up to six hours; longer gaps mark a
+separate regime that is excluded from training sequences but reported
+as edge cases. Z-score normalization uses training statistics only.
+The sign-convention assertion (\cref{sec:fractal}) is enforced as a
+test fixture rather than as a trust statement about library version.
+
+\subsection{Splits}
+\label{sec:splits}
+
+Strict block-number splits, to defend against subgraph-aggregation
+leakage:
+\begin{itemize}[leftmargin=*, itemsep=2pt]
+\item \textbf{Train} (10 months): 2024-11-01 -- 2025-08-31, $\sim$7{,}300 hourly bars.
+\item \textbf{Validation} (4 months): 2025-09-01 -- 2025-12-31, $\sim$2{,}900 bars.
+\item \textbf{Test} (4 months, held out): 2026-01-01 -- 2026-04-30, $\sim$2{,}900 bars.
+\end{itemize}
+
+% ---------------------------------------------------------------------------
+% 6. CALIBRATION
+% ---------------------------------------------------------------------------
+\section{Calibration}
+\label{sec:calibration}
+
+\subsection{Forecaster Hyperparameter Grid}
+\label{sec:fcst-grid}
+
+A grid search is tracked in MLflow under selection criterion
+``validation weighted-Pearson plus directional accuracy $\ge 55\%$''.
+The grid varies hidden dimension $\{32,64,96,128\}$, BiGRU layers
+$\{1,2\}$, CNN kernels $\{[3,5,7],[3,5],[5]\}$, dropout
+$\{0.0,0.1,0.2\}$, learning rate $\{10^{-3},2\!\cdot\!10^{-3},
+5\!\cdot\!10^{-3}\}$, batch size $\{16,32,64\}$, sequence length
+$\{72,168,336\}$ hours, and a three-point grid over the loss weights
+$(\alpha,\beta,\gamma)$. Defaults are reported in
+\cref{sec:dual-branch} and \cref{sec:loss}; the full grid is logged
+in \cref{app:grids}.
+
+\subsection{Strategy Hyperparameter Grid}
+\label{sec:strat-grid}
+
+A second grid tunes hysteresis $\theta\in\{0.02,0.05,0.08,0.10\}$,
+cooldown $\tau\in\{0.5,1,2,6\}$~h, forecast horizon
+$\Delta\in\{6,12,24\}$~h, APY normalization
+$\mathrm{APY}_{\max}\in\{0.10,0.15,0.20,0.25\}$, and MCDM weight
+vector under twenty Dirichlet samples plus the
+$(0.40,0.25,0.20,0.15)$ baseline. Selection criterion: validation
+Sharpe under the turnover constraint
+$\text{turnover} < 2\times\text{best baseline turnover}$.
+
+% ---------------------------------------------------------------------------
+% 7. BACKTESTING PROTOCOL
+% ---------------------------------------------------------------------------
+\section{Backtesting Protocol}
+\label{sec:backtest}
+
+\subsection{Execution Assumptions}
+\label{sec:exec}
+
+Decision cadence is hourly; block time 12~s; supply and withdraw
+operations are protocol-level and incur no slippage; transaction cost
+is $200{,}000$~gas $\times$ historical hourly median
+\texttt{gas\_price\_gwei} $\times 10^{-9}\times$ ETH/USD per rebalance.
+The withdraw-then-supply atomicity gap of approximately 12~s is
+modelled as zero yield on the migrating notional. Yield accrues
+continuously per hour at the active protocol's supply rate. The
+initial notional is $\$1{,}000{,}000$ USDC, large enough that gas
+costs are a meaningful but not dominant component of net return.
+
+\subsection{Regime Split}
+\label{sec:regime}
+
+Post-hoc, we partition test hours into volatility tertiles
+(low/medium/high) of $\sigma(r)$ on a rolling 24-hour window, and
+report all headline metrics per tertile and pooled. Two event-flagged
+sub-windows are reported separately: in-window governance events
+changing kink parameters (breakpoint reports) and the out-of-window
+March 2023 USDC depeg, drawn from the
+\cite{rules2rewards2025} dataset and used as the OOD ablation
+(\cref{tab:ablations}, row~14).
+
+% ---------------------------------------------------------------------------
+% 8. RESULTS
+% ---------------------------------------------------------------------------
 \section{Results}
-% Headline figure: Baseline C vs Predictive on test window.
-% Plus 4-baseline + 15-ablation tables.
-\input{sections/08_results}
+\label{sec:results}
 
-\section{Ablations}
-\input{sections/09_ablations}
+This section is the placeholder skeleton for results that will arrive
+in Week~3 of the execution timeline (1--7~June~2026). The targets
+quoted are forward-looking under the pre-registered hypotheses of
+\Cref{sec:methodology}.
 
-\section{Discussion and Limitations}
-% H0 explicitly entertained; honest scope-locking; future work.
-\input{sections/10_discussion}
+\subsection{Headline: Predictive vs Reactive MCDM-EMA}
+\label{sec:headline}
 
-\section{Open-Source Contributions}
-% Compound V3 loader + utilization field (Extra+1).
-% BaseLendingAllocationStrategy (Extra+2).
-\input{sections/11_contributions}
+The primary hypothesis is a Sharpe-ratio improvement of $0.2$--$0.5$
+of the predictive variant over the reactive MCDM-EMA baseline of
+\cite{solovev2026vault}, with statistical significance assessed via
+a $1000$-replicate bootstrap of monthly Sharpe ratios. A
+single-panel equity-curve overlay (predictive vs reactive,
+$\$1$M notional, Jan--Apr~2026 test window) will form the
+title-page headline figure.
 
-\section{Conclusion}
-\input{sections/12_conclusion}
+\subsection{Per-Baseline Comparison}
+\label{sec:per-baseline}
 
-\bibliography{refs}
+\Cref{tab:baselines} lays out the five-strategy by six-metric grid.
+Entries marked TBD will be populated from the
+\texttt{backtest/run\_baselines.py} and \texttt{run\_main.py}
+artifacts.
+
+\begin{table}[t]
+\centering
+\caption{Per-baseline test-window comparison ($\$1$M USDC, 4-month
+held-out test window 2026-01-01 -- 2026-04-30). Numerical entries
+populated post-execution.}
+\label{tab:baselines}
+\begin{tabular}{lcccccc}
+\toprule
+Strategy & Net APY & Sharpe & MaxDD & Calmar & Turnover & Gas (\$) \\
+\midrule
+A. Buy-and-hold Aave V3       & TBD & TBD & TBD & TBD & TBD & TBD \\
+B. APY-only greedy            & TBD & TBD & TBD & TBD & TBD & TBD \\
+C. Reactive MCDM-EMA          & TBD & TBD & TBD & TBD & TBD & TBD \\
+D. CIR-calibrated MCDM        & TBD & TBD & TBD & TBD & TBD & TBD \\
+\textbf{E. Predictive MCDM (ours)} & TBD & TBD & TBD & TBD & TBD & TBD \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Ablations}
+\label{sec:ablations}
+
+\Cref{tab:ablations} lists the fifteen ablation rows. Rows~1--5
+isolate the contribution of \emph{any} forecast over EMA; rows~6--8
+attribute remaining gains to architectural choices (single-branch vs
+dual-branch, kink subtraction, ranking loss); rows~9--11 examine the
+MCDM aggregator (equal weights, single-protocol fallback, greedy vs
+TOPSIS); rows~12--13 stress-test gas regime and sliding-window
+stability; rows~14--15 cover OOD-depeg and forecast horizon sweep.
+
+\begin{table}[t]
+\centering
+\caption{Ablation matrix (15 rows). All metrics on test window.
+Numerical entries populated post-execution.}
+\label{tab:ablations}
+\small
+\begin{tabular}{rlcccc}
+\toprule
+\# & Ablation & Sharpe & DirAcc & WPearson & Turnover \\
+\midrule
+1  & No-forecast EMA baseline (=Baseline C)               & TBD & TBD & TBD & TBD \\
+2  & Naive last-observation forecast                      & TBD & TBD & TBD & TBD \\
+3  & CIR-calibrated forecast (=Baseline D)                & TBD & TBD & TBD & TBD \\
+4  & Markov-switching short rate (2-state)                & TBD & TBD & TBD & TBD \\
+5  & CatBoost on hand-crafted features                    & TBD & TBD & TBD & TBD \\
+6  & Single-branch DA-GRU (no CNN, no decomp.)            & TBD & TBD & TBD & TBD \\
+7  & Dual-branch \emph{without} kink subtraction          & TBD & TBD & TBD & TBD \\
+8  & Forecast with ranking loss only                      & TBD & TBD & TBD & TBD \\
+9  & MCDM equal weights vs tuned weights                  & TBD & TBD & TBD & TBD \\
+10 & Single-protocol benchmark (Aave/Compound only)       & TBD & TBD & TBD & TBD \\
+11 & Greedy max-forecast vs TOPSIS-MCDM                   & TBD & TBD & TBD & TBD \\
+12 & Zero-gas vs realistic-gas                            & TBD & TBD & TBD & TBD \\
+13 & Sliding-window stability (14-d windows)              & TBD & TBD & TBD & TBD \\
+14 & OOD test on USDC depeg week (Mar 2023)               & TBD & TBD & TBD & TBD \\
+15 & Forecast horizon sweep (3/6/12/24~h)                 & TBD & TBD & TBD & TBD \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Regime-Conditional Breakdown}
+\label{sec:regime-results}
+
+The predictive-vs-reactive Sharpe delta and forecast direction
+accuracy are reported per volatility tertile. We pre-register the
+expectation that the forecast edge concentrates in medium and high
+tertiles, where cross-protocol dispersion is largest and the EMA
+baseline lags most.
+
+\subsection{Forecast Quality}
+\label{sec:fcst-quality}
+
+Forecast-only diagnostics ($R^2$ on the rate level, direction
+accuracy on the binary ``Aave $>$ Compound at $t+12\mathrm{h}$''
+label, weighted-Pearson correlation, quantile-90 loss) are reported
+per protocol and pooled. The pre-registered targets are
+$R^2 \in [0.15,0.40]$ on the rate level and directional accuracy
+$\in [55,65]\%$.
+
+% ---------------------------------------------------------------------------
+% 9. DISCUSSION
+% ---------------------------------------------------------------------------
+\section{Discussion}
+\label{sec:discussion}
+
+\subsection{Why Dual-Branch with Kink Subtraction Works (or Does Not)}
+\label{sec:why-dual-branch}
+
+Under H1, the dual-branch decomposition outperforms a single-branch
+baseline because it (i) avoids spending model capacity on the
+deterministic kink, (ii) regularizes via the bounded $[0,1]$ support
+of utilization, and (iii) exposes cross-protocol residual spread as a
+direct input feature. Under H0, the rate process is martingale on the
+12-hour horizon conditional on observed utilization, and the kink
+function fully explains the predictable variation; in that case the
+dual-branch architecture neither helps nor hurts, and the contribution
+reduces to (a) the first rigorous mainnet backtest of MCDM-EMA from
+\cite{solovev2026vault}, (b) the falsification of the LOB-to-DeFi
+methodological transfer claim, and (c) the open-source Extra+1 and
+Extra+2 contributions of \cref{sec:contributions-detail}. Each of
+these stands on its own merits.
+
+\subsection{LOB-to-DeFi Methodology Transfer: Where It Generalizes,
+            Where It Fails}
+\label{sec:transfer}
+
+The transfer from \cite{solovev2026lob} succeeds at the level of the
+dual-stream paradigm, the weighted-Pearson loss term, and the
+ranking-oriented evaluation. It is \emph{re-derived}, not
+mechanically copied: LOB volume is unbounded and signed, while
+utilization is bounded and clamped; the kink prior has no LOB
+analogue. The principal risk is overfitting on a comparatively small
+($\sim$7k bar) training set; we mitigate via dropout, walk-forward
+cross-validation, and a deliberately small ($\sim$50k parameter)
+architecture.
+
+\subsection{The Halpern--Pass--Saraf Counter-Argument}
+\label{sec:fair-rates-response}
+
+\cite{halpern2024fairrates} prove that no fair interest rate exists
+in a fully dynamic-repayment lending pool: the borrower's option to
+delay creates a barrier-option payoff structure incompatible with any
+single rate satisfying their fairness axioms. The result is
+equilibrium-theoretic and concerns the existence of a rate, not its
+short-horizon predictability. Our work is operational: we forecast
+the realized rate twelve hours ahead, exploiting cross-protocol
+lead--lag and microstructure dispersion documented in
+\cite{gudgeon2020defi}. Short-horizon predictability is orthogonal to
+long-run fairness; the Halpern--Pass--Saraf impossibility is fully
+compatible with the existence of allocation-relevant edge on our
+horizon.
+
+\subsection{Implications for the \texttt{fractal-defi} Research Program}
+\label{sec:program}
+
+\cite{urusov2024clmm,urusov2025dynlp,krestenko2026basis} cover CLMM
+liquidity provision and spot--perpetual basis trading under the
+\texttt{fractal-defi} substrate. The present work adds the
+\emph{lending} microstructure panel: a third entity-strategy
+configuration in which the state variable (rate) is learned by deep
+neural network and the controller (MCDM allocator) is analytical.
+The triptych --- CLMM, basis, lending --- is intended as a unified
+panel of microstructure-aware DeFi backtesting research on a single
+open substrate.
+
+% ---------------------------------------------------------------------------
+% 10. CONCLUSION AND FUTURE WORK
+% ---------------------------------------------------------------------------
+\section{Conclusion and Future Work}
+\label{sec:conclusion}
+
+\subsection{Summary of Findings}
+\label{sec:summary}
+
+We have specified, implemented, and pre-registered a forecast-driven
+MCDM allocator for USDC supply between Aave V3 and Compound V3, with
+a dual-branch DA-BiGRU-CNN forecaster exploiting the protocol-known
+kink function as a hard prior, on the \texttt{fractal-defi}
+substrate. The headline pre-registered targets are Sharpe improvement
+$0.2$--$0.5$, $R^2 \in [0.15,0.40]$, and directional accuracy
+$\in [55,65]\%$ over a held-out 4-month test window. The null
+hypothesis is entertained explicitly and is structurally falsifiable
+by ablation~1.
+
+\subsection{Limitations}
+\label{sec:limitations}
+
+The 18-month window covers less than two full macro cycles; the
+two-protocol scope is deliberate but excludes Morpho, Spark, and
+cross-chain venues; the single underlying (USDC) is intentional but
+limits external validity. Gas-cost spikes can dominate forecast edge
+in adversarial regimes (ablation~12 quantifies the break-even gas).
+The forecast is conditional on neither protocol experiencing a
+solvency event during the test window --- a historically valid but
+nontrivial assumption.
+
+\subsection{Future Work}
+\label{sec:future}
+
+Three extensions are immediate. First, Morpho and Spark integration
+would broaden the venue universe and test whether the predictive
+edge scales beyond the Aave--Compound pair. Second, a cross-chain
+extension (Aave on Arbitrum/Base) would expose the strategy to
+bridge friction and a richer execution-risk profile. Third, the
+dual-branch BiGRU--CNN architecture can be upgraded to attention-based
+backbones along the lines of
+\cite{wallbridge2020transformerlob} and
+\cite{nunes2026lstm}. A Panoptic-style options overlay on the supply
+position, hedging tail risk during the high-volatility tertile, is
+under active exploration.
+
+% ---------------------------------------------------------------------------
+% APPENDIX
+% ---------------------------------------------------------------------------
+\appendix
+
+\section{\texttt{fractal-defi} PR Artifacts}
+\label{app:prs}
+\label{sec:contributions-detail}
+
+\textbf{Extra+1: Compound V3 Lending Loader (with uniform utilization
+field).} A new \texttt{CompoundV3LendingLoader} pulls hourly
+\texttt{marketHourlySnapshots} from the Messari subgraph, normalizes
+WAD scaling to the same per-second continuous-compound convention as
+the upstream Aave V3 loader, and emits a \texttt{LendingHistory}
+record. As a uniformity fix, both Aave and Compound \texttt{GlobalState}
+objects gain a \texttt{utilization} field computed from
+\texttt{totalLiquidity} and \texttt{totalCurrentVariableDebt} in the
+existing subgraph response. PR title:
+\emph{``Add Compound V3 lending history loader (Messari subgraph) and
+uniform utilization field on lending \texttt{GlobalState}''}.
+
+\textbf{Extra+2: \texttt{BaseLendingAllocationStrategy}.} A new
+abstract strategy template in \texttt{fractal/strategies/} with four
+overridable hooks (\texttt{compute\_criteria\_vector},
+\texttt{aggregate\_criteria}, \texttt{select\_target},
+\texttt{should\_rebalance}). The proposed
+\texttt{PredictiveMCDMStrategy} is the first concrete subclass.
+PR title: \emph{``Add \texttt{BaseLendingAllocationStrategy}
+for multi-lending-protocol allocators''}.
+
+\section{Hyperparameter Grids}
+\label{app:grids}
+
+Full grids for both the forecaster (\cref{sec:fcst-grid}) and the
+strategy (\cref{sec:strat-grid}) are logged in MLflow under
+\texttt{results/mlflow/}. The defaults reported in the body
+correspond to the configurations that maximize validation
+weighted-Pearson under the directional-accuracy floor and the
+turnover constraint, respectively.
+
+\section{Reproducibility}
+\label{app:repro}
+
+Code is available at
+\url{https://github.com/SergeySolovyev/predictive-mcdm-defi}.
+Python dependencies are pinned in \texttt{requirements.txt}
+(\texttt{fractal-defi==1.3.2}, see ERRATA in \texttt{README.md}).
+Environment variables \texttt{THE\_GRAPH\_API\_KEY},
+\texttt{DUNE\_API\_KEY}, and \texttt{FRACTAL\_DATA\_PATH} configure
+the data fetchers. The full reproduction pipeline is the
+nine-step sequence in \texttt{README.md} \S Quick~start, ending in
+\texttt{latexmk -pdf main.tex}.
+
+% ---------------------------------------------------------------------------
+% References
+% ---------------------------------------------------------------------------
+\printbibliography[heading=bibintoc]
 
 \end{document}

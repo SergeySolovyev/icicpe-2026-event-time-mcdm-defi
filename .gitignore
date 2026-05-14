@@ -42,6 +42,9 @@ whitepaper/*.log
 whitepaper/*.out
 whitepaper/*.bbl
 whitepaper/*.blg
+whitepaper/*.bcf
+whitepaper/*.run.xml
+whitepaper/sections/*.aux
 whitepaper/*.fdb_latexmk
 whitepaper/*.fls
 whitepaper/*.synctex.gz
