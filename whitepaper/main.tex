@@ -100,30 +100,32 @@
 We study dynamic capital allocation between Aave V3 and Compound V3
 USDC supply markets on Ethereum mainnet and ask whether replacing a
 reactive EMA-smoothed rate observation with a 12-hour-ahead learned
-forecast yields a statistically and economically significant
-improvement in risk-adjusted return. The proposed allocator combines a
-dual-branch DA-BiGRU-CNN forecaster --- decomposing each protocol's
-supply rate into a deterministic kink component and a learned residual
---- with a four-factor TOPSIS-style multi-criteria decision rule
-inherited from the author's prior ERC-4626 yield vault
-\cite{solovev2026vault}, and is implemented as a concrete subclass of
-a new \texttt{BaseLendingAllocationStrategy} abstraction contributed
-to the \texttt{fractal-defi} research substrate of
-\cite{fractaldefi2026,krestenko2026basis}. Five strategies (buy-and-hold,
-APY-only greedy, reactive MCDM-EMA, CIR-calibrated MCDM, and the
-proposed predictive MCDM) are backtested over an 18-month historical
-window (Nov 2024 -- Apr 2026) with a 10/4/4-month train/validation/test
-split, and fifteen ablations isolate the contribution of each design
-choice. The forecaster design is the lending-rate analogue of the
-dual-branch limit-order-book mid-price predictor of
-\cite{solovev2026lob}, with kink subtraction encoding a hard domain
-prior unavailable in the LOB setting. Forward-looking targets, set
-prior to test-set exposure, are an out-of-sample $R^2$ of $0.15$--$0.40$
-for the 12-hour rate level, $55$--$65\%$ directional accuracy on the
-``Aave $>$ Compound at $t+12\text{h}$'' label, and a Sharpe-ratio
-improvement of $0.2$--$0.5$ over the reactive-EMA baseline; the null
-hypothesis that the forecast adds no value over EMA is entertained
-explicitly and is structurally falsifiable by the design.
+forecast yields a significant improvement in risk-adjusted return.
+The proposed allocator combines a dual-branch DA-BiGRU-CNN forecaster
+--- decomposing each protocol's supply rate into a deterministic kink
+component and a learned residual --- with a four-factor TOPSIS-style
+multi-criteria decision rule inherited from the author's prior
+ERC-4626 yield vault \cite{solovev2026vault}, implemented as a
+concrete subclass of a new \texttt{BaseLendingAllocationStrategy}
+abstraction contributed to the \texttt{fractal-defi} research
+substrate \cite{fractaldefi2026,krestenko2026basis}. We assembled an
+18-month hourly panel ($13{,}096$ Aave V3 and $12{,}904$ Compound V3
+bars, Nov 2024 -- Apr 2026); on the $12{,}895$-hour overlap we
+empirically find a cross-protocol spread with median $-0.232$\,pp,
+standard deviation $2.513$\,pp, and an Aave-pays-more share of
+$40.7\%$, and we observe a regime shift between 2025~Q3 and 2025~Q4
+where this share jumps $39.9\% \to 56.3\%$ --- the first quarter on
+the panel where Aave systematically pays more. An initial
+sparse-sample analysis ($37\%$ Compound coverage) had suggested a
+2025 Q1$\to$Q2 shift; the $98.5\%$ full-coverage panel revealed that
+finding to be a cluster-sampling artifact, a methodological lesson we
+report explicitly. Five strategies (buy-and-hold, APY-only greedy,
+MCDM-EMA, CIR-MCDM, predictive MCDM) will be backtested with a
+10/4/4-month split and fifteen ablations. Pre-registered targets are
+out-of-sample $R^2 \in [0.15,0.40]$, $55$--$65\%$ directional accuracy,
+and Sharpe improvement $0.2$--$0.5$ over EMA with bootstrap $p<0.05$;
+the null hypothesis is entertained explicitly and is structurally
+falsifiable.
 \end{abstract}
 
 % ---------------------------------------------------------------------------
@@ -144,13 +146,19 @@ rates \emph{lead} Aave, with cointegration coefficients implying Aave
 adjusts at speed $0.607$ toward the long-run Compound relationship.
 A capital provider who can anticipate these crossovers and rebalance
 ahead of them captures a yield differential that a reactive observer
-misses. Yet the production-grade DeFi yield aggregators surveyed in
-\cref{sec:related} all act on observed (or EMA-smoothed) rates, and
-the public research literature on \texttt{fractal-defi}-based
-backtesting \cite{urusov2024clmm,urusov2025dynlp,krestenko2026basis}
-covers AMM liquidity provision and basis trading, but not the
-\emph{lending} microstructure panel of the same substrate. This paper
-fills that gap.
+misses. On the 18-month Aave V3 / Compound V3 USDC panel assembled for
+this work (\cref{sec:data}), cross-protocol APR spreads cross zero in
+$40.7\%$ of hours, and a regime shift in 2025~Q4 (Aave-pays-more share
+$39.9\% \to 56.3\%$, median spread crossing zero from $-0.218$\,pp to
+$+0.183$\,pp) is the first sub-period on the panel where Aave becomes
+the persistently-dominant payer --- the kind of conditional structure
+that a forecast-driven allocator is designed to exploit. Yet the
+production-grade DeFi yield aggregators surveyed in \cref{sec:related}
+all act on observed (or EMA-smoothed) rates, and the public research
+literature on \texttt{fractal-defi}-based backtesting
+\cite{urusov2024clmm,urusov2025dynlp,krestenko2026basis} covers AMM
+liquidity provision and basis trading, but not the \emph{lending}
+microstructure panel of the same substrate. This paper fills that gap.
 
 The forecasting problem is structurally analogous to high-frequency
 mid-price prediction in limit-order books: noisy multivariate time
@@ -194,6 +202,16 @@ the architecture exploits it via residual subtraction.
   pre-registered, and entertained as a publishable outcome; the
   fifteen-row ablation matrix is structured to attribute any observed
   effect to forecast, criterion structure, or protocol-pair selection.
+\item \textbf{Empirical regime-structure observation on Aave V3 /
+  Compound V3 supply rates that itself constitutes a research artifact.}
+  The $12{,}895$-hour full-coverage panel (\cref{sec:data}) documents
+  a 2025 Q3$\to$Q4 regime shift --- the first quarter in which Aave
+  systematically pays more than Compound --- and a $\sim$$10\times$
+  intra-panel volatility variation. A subsidiary methodological
+  finding (\cref{sec:empirical-spread}): an initial $37\%$-coverage
+  analysis suggested a 2025 Q1$\to$Q2 shift that the full $98.5\%$
+  panel attributes to cluster sampling, an instructive negative
+  result on regime-narrative robustness in sparse DeFi panels.
 \end{enumerate}
 
 \subsection{Paper Outline}

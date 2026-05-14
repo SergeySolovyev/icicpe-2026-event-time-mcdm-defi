@@ -1,21 +1,20 @@
-ablation_id,apy,sharpe,delta_vs_one,oos_r2,dir_acc,w_pearson,q90_loss
-1,0.0,0.0,0.0,0.0,0.0,0.0,0.0
-2,0.0,0.0,0.0,0.0,0.0,0.0,0.0
-3,0.0,0.0,0.0,0.0,0.0,0.0,0.0
-4,0.0,0.0,0.0,0.0,0.0,0.0,0.0
-5,0.0,0.0,0.0,0.0,0.0,0.0,0.0
-6,0.0,0.0,0.0,0.0,0.0,0.0,0.0
-7,0.0,0.0,0.0,0.0,0.0,0.0,0.0
-8,0.0,0.0,0.0,0.0,0.0,0.0,0.0
-9,0.0,0.0,0.0,0.0,0.0,0.0,0.0
-10,0.0,0.0,0.0,0.0,0.0,0.0,0.0
-11,0.0,0.0,0.0,0.0,0.0,0.0,0.0
-12,0.0,0.0,0.0,0.0,0.0,0.0,0.0
-13,0.0,0.0,0.0,0.0,0.0,0.0,0.0
-14,0.0,0.0,0.0,0.0,0.0,0.0,0.0
-15,0.0,0.0,0.0,0.0,0.0,0.0,0.0
-regime_q1_pred,0.0,0.0,0.0,0.0,0.0,0.0,0.0
-regime_q1_ema,0.0,0.0,0.0,0.0,0.0,0.0,0.0
-regime_q2_pred,0.0,0.0,0.0,0.0,0.0,0.0,0.0
-regime_q2_ema,0.0,0.0,0.0,0.0,0.0,0.0,0.0
-forecast_quality,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+ablation_id,ablation_name,strategy_class,n_rebalances,net_apy,sharpe_annual,max_drawdown,gas_usd,status,calmar,turnover_per_month,gas_spent_usd,forecast_hit_rate
+1,no_forecast_ema,MCDMEMAStrategy,1,0.10807244771385038,404.62955267113364,0.0,21.0,OK,,0.2537339353942341,21.0,
+2,naive_forecast,ForecastInjectedMCDM,1,0.10807244771385038,404.62955267113364,0.0,21.0,OK,,0.2537339353942341,21.0,
+3,cir_forecast,ForecastInjectedMCDM,1,0.10805060102487452,404.48044708761563,0.0,21.0,OK,,0.2537339353942341,21.0,
+4,markov_switching,ForecastInjectedMCDM,1,0.10805060102487452,404.48044708761563,0.0,21.0,OK,,0.2537339353942341,21.0,
+5,catboost,ForecastInjectedMCDM,1,0.10807244771385038,404.62955267113364,0.0,21.0,OK,,0.2537339353942341,21.0,
+6,single_branch_da_gru,PredictiveMCDM,0,,,,,SKIPPED:needs single-branch ONNX export (branch_b_input_dim=0),,,,
+7,dual_branch_no_kink,PredictiveMCDM,0,,,,,SKIPPED:needs ONNX variant trained on raw r instead of eps,,,,
+8,ranking_loss_only,PredictiveMCDM,0,,,,,"SKIPPED:needs ONNX variant trained with alpha=0,beta=1,gamma=0",,,,
+9a,equal_vs_tuned[tuned],MCDMEMAStrategy,1,0.10807244771385038,404.62955267113364,0.0,21.0,OK,,0.2537339353942341,21.0,
+9b,equal_vs_tuned[equal],MCDMEMAStrategy,1,0.08865112812028753,534.1210441899034,0.0,21.0,OK,,0.2537339353942341,21.0,
+10a,single_protocol[AAVE],BuyAndHoldLending,0,0.15100257014089902,1369.5488350728158,0.0,0.0,OK,,0.0,0.0,
+10b,single_protocol[COMPOUND],BuyAndHoldLending,0,0.08862215115468008,535.3295976905598,0.0,0.0,OK,,0.0,0.0,
+11a,greedy_on_forecast,ForecastedAPYGreedy,0,0.15100257014089902,1369.5488350728158,0.0,0.0,OK,,0.0,0.0,
+11b,mcdm_on_forecast,ForecastInjectedMCDM,1,0.10807244771385038,404.62955267113364,0.0,21.0,OK,,0.2537339353942341,21.0,
+12a,zero_vs_realistic_gas[realistic],MCDMEMAStrategy,1,0.10807244771385038,404.62955267113364,0.0,21.0,OK,,0.2537339353942341,21.0,
+12b,zero_vs_realistic_gas[zero],MCDMEMAStrategy,1,0.10807244771385038,404.62955267113364,0.0,0.0,OK,,0.2537339353942341,0.0,
+13,sliding_window,MCDMEMAStrategy,16,0.10826915997611936,1574.7661061874896,0.0,,OK,0.0834169977962943,0.14945857355726683,0.07854215542913745,
+14,ood_usdc_depeg,PredictiveMCDM,0,,,,,SKIPPED:Mar-2023 OOD dataset not provisioned in this repo,,,,
+15,horizon_sweep,PredictiveMCDM,0,,,,,SKIPPED:needs ONNX variants at horizons 3h/6h/24h (only 12h export exists),,,,
