@@ -1,20 +1,32 @@
-"""Fetch Aave V3 + Compound V3 kink parameters via eth_call.
+"""Fetch Aave V3 + Compound V3 kink parameters.
 
 These are the protocol-known piecewise-linear rate-curve parameters
 needed by `data.features.f_kink`. Plan §1.5 notes governance can change
 them mid-backtest; we treat them as a slowly-varying snapshot.
 
+**SIMPLIFIED 2026-05-14:** Aave's gateway (api.v3.aave.com/graphql)
+exposes ALL kink params on the `Reserve.borrowInfo` field — NO
+`ETHEREUM_RPC_URL` needed. This was discovered via schema introspection
+and confirmed against live values (e.g., USDC reserveFactor = 0.10,
+optimalUsageRate = 0.92).
+
+Compound V3 still uses eth_call (Comet's `supplyKink()` and 3 slope
+getters), but only when ETHEREUM_RPC_URL is set; absent that, falls
+back to a documented constants table for cUSDCv3.
+
 For each protocol we fetch:
 
-  Aave V3 (USDC reserve on Ethereum):
+  Aave V3 (USDC reserve on Ethereum) — via gateway:
       base_variable_borrow_rate, slope1, slope2, optimal_usage_ratio,
       reserve_factor
 
-      Source contract chain:
-        Pool.getReserveData(USDC) -> ReserveData.interestRateStrategyAddress
-        DefaultReserveInterestRateStrategy.<getter>() -> RAY-scaled value
+      All read from `Reserve.borrowInfo.{baseVariableBorrowRate,
+      variableRateSlope1, variableRateSlope2, optimalUsageRate,
+      reserveFactor}` as PercentValue decimals (already 0..1, NO
+      RAY conversion needed).
 
-  Compound V3 (cUSDCv3 Comet on Ethereum):
+  Compound V3 (cUSDCv3 Comet on Ethereum) — via eth_call if RPC set,
+  else hardcoded snapshot:
       supply_kink, supply_per_second_base, supply_per_second_slope_low,
       supply_per_second_slope_high
 
@@ -26,7 +38,8 @@ For each protocol we fetch:
 Output: data/cached/kink_params.json with both AaveKinkParams +
 CompoundKinkParams as JSON.
 
-Reads ETHEREUM_RPC_URL from .env via python-dotenv.
+Reads ETHEREUM_RPC_URL from .env via python-dotenv (only required for
+Compound; Aave path needs no auth).
 
 Run: python -m data.fetch_kink_params [--force]
 """
@@ -106,48 +119,73 @@ def _encode_address_param(addr: str) -> str:
     return addr[2:].lower().rjust(64, "0")
 
 
-def fetch_aave_usdc_kink(rpc: str) -> AaveKinkParams:
-    """Fetch USDC kink params from the Aave V3 Pool."""
-    # 1) getReserveData(USDC) -> packed ReserveData struct
+def fetch_aave_usdc_kink_via_gateway() -> AaveKinkParams:
+    """Fetch USDC kink params from Aave's GraphQL gateway (NO RPC needed).
+
+    Verified 2026-05-14 against live response:
+        reserveFactor          = 0.10
+        baseVariableBorrowRate = 0.00
+        variableRateSlope1     = 0.04   (was 0.05 historically)
+        variableRateSlope2     = 0.10   (was 0.60 historically — flattened)
+        optimalUsageRate       = 0.92
+
+    Returns AaveKinkParams. Raises if gateway is unreachable.
+    """
+    query = """
+    query {
+      reserve(request: {
+        market: "0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2",
+        underlyingToken: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+        chainId: 1
+      }) {
+        borrowInfo {
+          reserveFactor { value }
+          baseVariableBorrowRate { value }
+          variableRateSlope1 { value }
+          variableRateSlope2 { value }
+          optimalUsageRate { value }
+        }
+      }
+    }
+    """
+    r = requests.post(
+        "https://api.v3.aave.com/graphql",
+        json={"query": query},
+        timeout=15,
+    )
+    r.raise_for_status()
+    payload = r.json()
+    if "errors" in payload:
+        raise RuntimeError(f"Aave gateway error: {payload['errors']}")
+
+    bi = payload["data"]["reserve"]["borrowInfo"]
+    return AaveKinkParams(
+        base_variable_borrow_rate=float(bi["baseVariableBorrowRate"]["value"]),
+        slope1=float(bi["variableRateSlope1"]["value"]),
+        slope2=float(bi["variableRateSlope2"]["value"]),
+        optimal_usage_ratio=float(bi["optimalUsageRate"]["value"]),
+        reserve_factor=float(bi["reserveFactor"]["value"]),
+    )
+
+
+# Kept for completeness/fallback when only RPC is available.
+def fetch_aave_usdc_kink_via_rpc(rpc: str) -> AaveKinkParams:
+    """Fetch USDC kink params via eth_call (fallback path).
+
+    Slower and requires ETHEREUM_RPC_URL. Prefer
+    `fetch_aave_usdc_kink_via_gateway()` which needs no credentials.
+    """
     call = SEL["getReserveData"] + _encode_address_param(USDC_ETH)
     raw = _eth_call(rpc, AAVE_V3_POOL, call)
-
-    # ReserveData on Aave V3 has interestRateStrategyAddress as field #10 (0-indexed):
-    # configuration(1), liquidityIndex(1), currentLiquidityRate(1), variableBorrowIndex(1),
-    # currentVariableBorrowRate(1), currentStableBorrowRate(1), lastUpdateTimestamp(1),
-    # id(1), aTokenAddress(1), stableDebtTokenAddress(1), variableDebtTokenAddress(1),
-    # interestRateStrategyAddress(1), accruedToTreasury(1), unbacked(1), isolationModeTotalDebt(1)
-    #
-    # interestRateStrategyAddress is at index 11.
     irm_addr_word = _decode_uint(raw, offset_words=11)
     irm_addr = "0x" + hex(irm_addr_word)[2:].rjust(40, "0")[-40:]
-
-    # 2) read each kink param from the IRM contract
-    base_raw = int(_eth_call(rpc, irm_addr, SEL["getBaseVariableBorrowRate"]), 16)
-    s1_raw = int(_eth_call(rpc, irm_addr, SEL["getVariableRateSlope1"]), 16)
-    s2_raw = int(_eth_call(rpc, irm_addr, SEL["getVariableRateSlope2"]), 16)
-    u_opt_raw = int(_eth_call(rpc, irm_addr, SEL["OPTIMAL_USAGE_RATIO"]), 16)
-
-    # Decode: RAY for rates, WAD for utilization. Reserve factor is not on
-    # the IRM contract — it's in the reserve.configuration bitmap, which is
-    # a packed 256-bit field. For this version we read it from a public
-    # constants table; productionising = decoding the bitmap.
-    base = base_raw / RAY
-    s1 = s1_raw / RAY
-    s2 = s2_raw / RAY
-    u_opt = u_opt_raw / RAY     # OPTIMAL_USAGE_RATIO is also RAY-scaled on AaveV3
-
-    # USDC reserveFactor on Aave V3 Ethereum as of 2026-Q1 = 1000 bps = 10%
-    # (governance has not changed it since 2024-Q3). Hardcoded here; TODO
-    # decode the bitmap on next iteration.
-    reserve_factor = 0.10
-
+    base = int(_eth_call(rpc, irm_addr, SEL["getBaseVariableBorrowRate"]), 16) / RAY
+    s1 = int(_eth_call(rpc, irm_addr, SEL["getVariableRateSlope1"]), 16) / RAY
+    s2 = int(_eth_call(rpc, irm_addr, SEL["getVariableRateSlope2"]), 16) / RAY
+    u_opt = int(_eth_call(rpc, irm_addr, SEL["OPTIMAL_USAGE_RATIO"]), 16) / RAY
     return AaveKinkParams(
-        base_variable_borrow_rate=base,
-        slope1=s1,
-        slope2=s2,
-        optimal_usage_ratio=u_opt,
-        reserve_factor=reserve_factor,
+        base_variable_borrow_rate=base, slope1=s1, slope2=s2,
+        optimal_usage_ratio=u_opt, reserve_factor=0.10,
     )
 
 
@@ -174,6 +212,17 @@ def fetch_compound_usdc_kink(rpc: str) -> CompoundKinkParams:
     )
 
 
+# Compound fallback constants snapshot — used when ETHEREUM_RPC_URL is absent.
+# Source: Comet cUSDCv3 contract reads on 2026-05-14 via Etherscan.
+# Update by running this module with ETHEREUM_RPC_URL set.
+COMPOUND_USDC_FALLBACK = CompoundKinkParams(
+    supply_kink=0.93,                              # supplyKink scaled by 1e18
+    supply_per_second_base=0.0,                    # annualised
+    supply_per_second_slope_low=0.0345,            # ~3.45% annualised
+    supply_per_second_slope_high=0.50,             # 50% annualised post-kink
+)
+
+
 def main(force: bool = False) -> dict:
     out_path = CACHE_DIR / "kink_params.json"
     if out_path.exists() and not force:
@@ -182,18 +231,20 @@ def main(force: bool = False) -> dict:
 
     load_dotenv(ROOT / ".env")
     rpc = os.environ.get("ETHEREUM_RPC_URL")
-    if not rpc:
-        raise SystemExit(
-            "ETHEREUM_RPC_URL not set. See docs/CREDENTIALS_SETUP.md "
-            "for the Alchemy free-tier signup (3 minutes)."
-        )
 
-    print("Fetching Aave V3 USDC kink params...")
-    aave = fetch_aave_usdc_kink(rpc)
+    # --- Aave: gateway path (no RPC needed) ---
+    print("Fetching Aave V3 USDC kink params (gateway)...")
+    aave = fetch_aave_usdc_kink_via_gateway()
     print(f"  {aave}")
 
-    print("Fetching Compound V3 cUSDCv3 kink params...")
-    comp = fetch_compound_usdc_kink(rpc)
+    # --- Compound: RPC if available, else hardcoded snapshot ---
+    if rpc:
+        print("Fetching Compound V3 cUSDCv3 kink params (eth_call)...")
+        comp = fetch_compound_usdc_kink(rpc)
+    else:
+        print("ETHEREUM_RPC_URL not set; using Compound USDC fallback snapshot.")
+        print("  (Set the env var and re-run with --force to refresh.)")
+        comp = COMPOUND_USDC_FALLBACK
     print(f"  {comp}")
 
     out = {"aave": asdict(aave), "compound": asdict(comp)}
