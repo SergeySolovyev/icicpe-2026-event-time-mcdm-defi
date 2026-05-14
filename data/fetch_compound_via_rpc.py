@@ -138,8 +138,14 @@ def probe(rpc: str) -> dict:
 
 def fetch_hourly_window(rpc: str, start: datetime, end: datetime,
                         batch_size: int = 100,
-                        inter_batch_sleep: float = 0.4) -> pd.DataFrame:
+                        inter_batch_sleep: float = 0.4,
+                        skip_existing: set | None = None) -> pd.DataFrame:
     """Fetch hourly utilization + supply/borrow rates over [start, end].
+
+    Args:
+        skip_existing: set of UTC datetime hour-rounded timestamps already
+            fetched in a previous run. Targets in this set are skipped
+            (lets idempotent append-mode fill only missing hours).
 
     Returns DataFrame with UTC hourly index, columns:
         lending_rate (per-hour decimal), borrowing_rate (per-hour),
@@ -148,10 +154,26 @@ def fetch_hourly_window(rpc: str, start: datetime, end: datetime,
     now_bn, now_ts = fetch_current_block(rpc)
     print(f"Anchor: block {now_bn} @ {datetime.fromtimestamp(now_ts, timezone.utc)}")
 
-    # Build target timestamps (hourly, inclusive both ends)
-    n_hours = int((end - start).total_seconds() / 3600) + 1
-    targets = [start + timedelta(hours=i) for i in range(n_hours)]
-    print(f"Window: {start} -> {end}  =  {n_hours} hourly targets")
+    # Build target timestamps (hourly, inclusive both ends), filtering out
+    # already-fetched hours when skip_existing is provided.
+    n_hours_total = int((end - start).total_seconds() / 3600) + 1
+    all_targets = [start + timedelta(hours=i) for i in range(n_hours_total)]
+    if skip_existing:
+        targets = [t for t in all_targets if t not in skip_existing]
+        print(
+            f"Window: {start} -> {end}  =  {n_hours_total} hourly targets total; "
+            f"{n_hours_total - len(targets)} already have data ({len(targets)} to fetch)"
+        )
+    else:
+        targets = all_targets
+        print(f"Window: {start} -> {end}  =  {n_hours_total} hourly targets")
+    n_hours = len(targets)
+    if n_hours == 0:
+        print("Nothing to fetch (all targets already covered).")
+        return pd.DataFrame(columns=[
+            "lending_rate", "borrowing_rate", "utilization",
+            "total_supplied_usd", "total_borrowed_usd",
+        ])
 
     rows = []
     # Phase 1: getUtilization at each target block (1 call per hour)
@@ -285,18 +307,34 @@ def fetch_hourly_window(rpc: str, start: datetime, end: datetime,
     return df
 
 
-def main(force: bool = False, days: int = None) -> pd.DataFrame:
+def main(force: bool = False, days: int = None,
+         append: bool = False, rpc_override: str | None = None,
+         batch_size: int = 100, sleep: float = 0.4) -> pd.DataFrame:
+    """Fetch or top-up the Compound USDC hourly parquet.
+
+    Modes (mutually exclusive):
+      force=True:  delete existing parquet, fetch from scratch.
+      append=True: load existing parquet, fetch ONLY hours not yet present,
+                   merge results and re-save. Idempotent — repeat runs against
+                   different RPC providers fill remaining gaps.
+      (default):   if parquet exists and is non-empty, return it as-is.
+    """
     out_path = CACHE_DIR / "compound_v3_usdc_eth_2024-11_to_2026-04.parquet"
-    if out_path.exists() and not force:
+
+    existing = pd.DataFrame()
+    if out_path.exists():
         existing = pd.read_parquet(out_path)
+
+    if not force and not append:
         if not existing.empty:
             print(f"[cached] {out_path}  ({len(existing)} rows)")
             return existing
 
     load_dotenv(ROOT / ".env")
-    rpc = os.environ.get("ETHEREUM_RPC_URL")
+    rpc = rpc_override or os.environ.get("ETHEREUM_RPC_URL")
     if not rpc:
-        raise SystemExit("ETHEREUM_RPC_URL missing in .env")
+        raise SystemExit("ETHEREUM_RPC_URL missing in .env (or pass --rpc)")
+    print(f"Using RPC: {rpc[:30]}***{rpc[-6:] if len(rpc) > 36 else ''}")
 
     if days:
         end = datetime.now(timezone.utc).replace(minute=0, second=0, microsecond=0)
@@ -304,15 +342,47 @@ def main(force: bool = False, days: int = None) -> pd.DataFrame:
     else:
         start, end = WINDOW_START, WINDOW_END
 
-    df = fetch_hourly_window(rpc, start, end)
-    df.to_parquet(out_path)
-    print(f"[saved] {out_path}")
-    return df
+    # Build skip-set from existing parquet for append mode
+    skip_existing: set | None = None
+    if append and not existing.empty:
+        # Normalise existing index to hourly UTC for set membership tests
+        idx = pd.to_datetime(existing.index, utc=True)
+        skip_existing = set(idx.to_pydatetime().tolist())
+        print(f"[append] Existing parquet has {len(skip_existing)} hours; "
+              f"fetching only the gaps.")
+
+    df_new = fetch_hourly_window(
+        rpc, start, end,
+        batch_size=batch_size, inter_batch_sleep=sleep,
+        skip_existing=skip_existing,
+    )
+
+    if append and not existing.empty and not df_new.empty:
+        # Merge: existing rows take precedence on duplicates (shouldn't happen
+        # because we skipped, but defensive).
+        combined = pd.concat([existing, df_new]).sort_index()
+        combined = combined[~combined.index.duplicated(keep="first")]
+        df_out = combined
+        print(f"[merged] {len(existing)} existing + {len(df_new)} new = {len(df_out)} total")
+    elif append and not existing.empty and df_new.empty:
+        # Nothing new fetched (all targets already covered, or RPC silent).
+        df_out = existing
+        print(f"[append] No new rows; keeping existing {len(existing)}.")
+    else:
+        df_out = df_new
+
+    df_out.to_parquet(out_path)
+    print(f"[saved] {out_path}  ({len(df_out)} rows)")
+    return df_out
 
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("--force", action="store_true")
+    ap.add_argument("--force", action="store_true",
+                    help="Delete existing parquet and refetch from scratch")
+    ap.add_argument("--append", action="store_true",
+                    help="Load existing parquet, fetch ONLY gaps, merge. "
+                         "Idempotent across multiple runs / different RPC providers.")
     ap.add_argument("--days", type=int, default=None,
                     help="If set, fetch only last N days (smoke test)")
     ap.add_argument("--probe", action="store_true",
@@ -325,29 +395,13 @@ if __name__ == "__main__":
                     help="Inter-batch sleep seconds")
     args = ap.parse_args()
 
-    load_dotenv(ROOT / ".env")
-    rpc = args.rpc or os.environ.get("ETHEREUM_RPC_URL")
-    if not rpc:
-        raise SystemExit(
-            "No RPC endpoint. Set ETHEREUM_RPC_URL in .env or pass --rpc"
-        )
-
-    print(f"Using RPC: {rpc[:48]}{'...' if len(rpc) > 48 else ''}")
     if args.probe:
+        load_dotenv(ROOT / ".env")
+        rpc = args.rpc or os.environ.get("ETHEREUM_RPC_URL")
+        if not rpc:
+            raise SystemExit("No RPC endpoint. Set ETHEREUM_RPC_URL in .env or pass --rpc")
+        print(f"Using RPC: {rpc[:48]}{'...' if len(rpc) > 48 else ''}")
         probe(rpc)
     else:
-        # Override module-level defaults via function args
-        out_path = CACHE_DIR / "compound_v3_usdc_eth_2024-11_to_2026-04.parquet"
-        if out_path.exists() and not args.force:
-            print(f"[cached] {out_path}  ({len(pd.read_parquet(out_path))} rows)")
-        else:
-            if args.days:
-                end = datetime.now(timezone.utc).replace(minute=0, second=0, microsecond=0)
-                start = end - timedelta(days=args.days)
-            else:
-                start, end = WINDOW_START, WINDOW_END
-            df = fetch_hourly_window(rpc, start, end,
-                                     batch_size=args.batch_size,
-                                     inter_batch_sleep=args.sleep)
-            df.to_parquet(out_path)
-            print(f"[saved] {out_path}")
+        main(force=args.force, days=args.days, append=args.append,
+             rpc_override=args.rpc, batch_size=args.batch_size, sleep=args.sleep)
