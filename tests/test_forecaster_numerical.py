@@ -3,8 +3,11 @@ parameter count, determinism, and loss ordering.
 
 Run: pytest tests/test_forecaster_numerical.py -v
 """
-from __future__ import annotations
-
+# IMPORTANT: import torch BEFORE numpy/pandas to avoid WinError 1114
+# (c10.dll initialization fails when MKL has been preloaded by numpy via
+# fractal-defi or other fixtures). See forecaster/train.py for the same
+# workaround. Do NOT add `from __future__ import annotations` to this
+# file — it would have to precede this import.
 import torch
 
 from forecaster.losses import CompositeForecastLoss, quantile_loss, weighted_pearson

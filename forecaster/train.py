@@ -20,6 +20,13 @@ schema, runs 2 training epochs, asserts val loss decreased.
 """
 from __future__ import annotations
 
+# NOTE: torch MUST be imported before numpy/pandas on Windows — otherwise
+# pandas pulls in an MKL build that conflicts with torch's bundled DLLs
+# (OSError WinError 1114 on c10.dll). Confirmed on this env (torch 2.12 CPU).
+import torch
+import torch.nn as nn
+from torch.utils.data import DataLoader, Dataset
+
 import json
 import math
 import tempfile
@@ -29,9 +36,6 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
-import torch
-import torch.nn as nn
-from torch.utils.data import DataLoader, Dataset
 
 from data.features import (
     AaveKinkParams,
