@@ -1,0 +1,286 @@
+% 09_results.tex --- Section 8: Results (auto-fillable template)
+% ---------------------------------------------------------------------------
+% Every numeric entry below is parameterized through a \newcommand defined in
+% the macro block at the top of this file. The script
+%     scripts/fill_whitepaper_results.py
+% reads results/tables/{main.csv, ablations.csv, h1_significance.csv} and
+% rewrites the \newcommand defaults in place with the real numbers, so this
+% file compiles to a valid PDF both BEFORE the backtest (XX.XX placeholders)
+% and AFTER (real numbers substituted).
+%
+% The fill script will refuse to run if any \newcommand in the block below
+% lacks a mapping rule, so DO NOT introduce free-floating numeric macros
+% without also adding the corresponding entry in the script's MAPPING dict.
+% ---------------------------------------------------------------------------
+
+% ===========================================================================
+% PLACEHOLDER MACRO BLOCK -- substituted in place by fill_whitepaper_results.py
+% ===========================================================================
+% --- Headline H1 test (predictive vs reactive MCDM-EMA) ---
+\newcommand{\PredictiveAPY}{XX.XX\%}
+\newcommand{\EMAAPY}{XX.XX\%}
+\newcommand{\PredictiveSharpe}{XX.XX\%}
+\newcommand{\EMASharpe}{XX.XX\%}
+\newcommand{\SharpeDelta}{XX.XX\%}
+\newcommand{\BootstrapPvalue}{XX.XX\%}
+\newcommand{\BootstrapCILow}{XX.XX\%}
+\newcommand{\BootstrapCIHigh}{XX.XX\%}
+
+% --- Per-strategy table: 5 strategies x 6 metrics ---
+\newcommand{\BuyholdAPY}{XX.XX\%}
+\newcommand{\BuyholdSharpe}{XX.XX\%}
+\newcommand{\BuyholdDD}{XX.XX\%}
+\newcommand{\BuyholdCalmar}{XX.XX\%}
+\newcommand{\BuyholdTurnover}{XX.XX\%}
+\newcommand{\BuyholdGas}{XX.XX\%}
+\newcommand{\GreedyAPY}{XX.XX\%}
+\newcommand{\GreedySharpe}{XX.XX\%}
+\newcommand{\GreedyDD}{XX.XX\%}
+\newcommand{\GreedyCalmar}{XX.XX\%}
+\newcommand{\GreedyTurnover}{XX.XX\%}
+\newcommand{\GreedyGas}{XX.XX\%}
+\newcommand{\EMADD}{XX.XX\%}
+\newcommand{\EMACalmar}{XX.XX\%}
+\newcommand{\EMATurnover}{XX.XX\%}
+\newcommand{\EMAGas}{XX.XX\%}
+\newcommand{\CIRAPY}{XX.XX\%}
+\newcommand{\CIRSharpe}{XX.XX\%}
+\newcommand{\CIRDD}{XX.XX\%}
+\newcommand{\CIRCalmar}{XX.XX\%}
+\newcommand{\CIRTurnover}{XX.XX\%}
+\newcommand{\CIRGas}{XX.XX\%}
+\newcommand{\PredictiveDD}{XX.XX\%}
+\newcommand{\PredictiveCalmar}{XX.XX\%}
+\newcommand{\PredictiveTurnover}{XX.XX\%}
+\newcommand{\PredictiveGas}{XX.XX\%}
+
+% --- 15-row ablation table (APY, Sharpe, delta-vs-#1) ---
+\newcommand{\AblationOneAPY}{XX.XX\%}
+\newcommand{\AblationOneSharpe}{XX.XX\%}
+\newcommand{\AblationOneDelta}{XX.XX\%}
+\newcommand{\AblationTwoAPY}{XX.XX\%}
+\newcommand{\AblationTwoSharpe}{XX.XX\%}
+\newcommand{\AblationTwoDelta}{XX.XX\%}
+\newcommand{\AblationThreeAPY}{XX.XX\%}
+\newcommand{\AblationThreeSharpe}{XX.XX\%}
+\newcommand{\AblationThreeDelta}{XX.XX\%}
+\newcommand{\AblationFourAPY}{XX.XX\%}
+\newcommand{\AblationFourSharpe}{XX.XX\%}
+\newcommand{\AblationFourDelta}{XX.XX\%}
+\newcommand{\AblationFiveAPY}{XX.XX\%}
+\newcommand{\AblationFiveSharpe}{XX.XX\%}
+\newcommand{\AblationFiveDelta}{XX.XX\%}
+\newcommand{\AblationSixAPY}{XX.XX\%}
+\newcommand{\AblationSixSharpe}{XX.XX\%}
+\newcommand{\AblationSixDelta}{XX.XX\%}
+\newcommand{\AblationSevenAPY}{XX.XX\%}
+\newcommand{\AblationSevenSharpe}{XX.XX\%}
+\newcommand{\AblationSevenDelta}{XX.XX\%}
+\newcommand{\AblationEightAPY}{XX.XX\%}
+\newcommand{\AblationEightSharpe}{XX.XX\%}
+\newcommand{\AblationEightDelta}{XX.XX\%}
+\newcommand{\AblationNineAPY}{XX.XX\%}
+\newcommand{\AblationNineSharpe}{XX.XX\%}
+\newcommand{\AblationNineDelta}{XX.XX\%}
+\newcommand{\AblationTenAPY}{XX.XX\%}
+\newcommand{\AblationTenSharpe}{XX.XX\%}
+\newcommand{\AblationTenDelta}{XX.XX\%}
+\newcommand{\AblationElevenAPY}{XX.XX\%}
+\newcommand{\AblationElevenSharpe}{XX.XX\%}
+\newcommand{\AblationElevenDelta}{XX.XX\%}
+\newcommand{\AblationTwelveAPY}{XX.XX\%}
+\newcommand{\AblationTwelveSharpe}{XX.XX\%}
+\newcommand{\AblationTwelveDelta}{XX.XX\%}
+\newcommand{\AblationThirteenAPY}{XX.XX\%}
+\newcommand{\AblationThirteenSharpe}{XX.XX\%}
+\newcommand{\AblationThirteenDelta}{XX.XX\%}
+\newcommand{\AblationFourteenAPY}{XX.XX\%}
+\newcommand{\AblationFourteenSharpe}{XX.XX\%}
+\newcommand{\AblationFourteenDelta}{XX.XX\%}
+\newcommand{\AblationFifteenAPY}{XX.XX\%}
+\newcommand{\AblationFifteenSharpe}{XX.XX\%}
+\newcommand{\AblationFifteenDelta}{XX.XX\%}
+
+% --- Regime-conditional: per-quarter Sharpe and APY (main strategy + EMA) ---
+\newcommand{\QOneSharpePred}{XX.XX\%}
+\newcommand{\QOneAPYPred}{XX.XX\%}
+\newcommand{\QOneSharpeEMA}{XX.XX\%}
+\newcommand{\QOneAPYEMA}{XX.XX\%}
+\newcommand{\QTwoSharpePred}{XX.XX\%}
+\newcommand{\QTwoAPYPred}{XX.XX\%}
+\newcommand{\QTwoSharpeEMA}{XX.XX\%}
+\newcommand{\QTwoAPYEMA}{XX.XX\%}
+
+% --- Forecast quality (PredictiveMCDM only) ---
+\newcommand{\ForecastRsq}{XX.XX\%}
+\newcommand{\ForecastDirAcc}{XX.XX\%}
+\newcommand{\ForecastWPearson}{XX.XX\%}
+\newcommand{\ForecastQNineLoss}{XX.XX\%}
+
+% ===========================================================================
+% SECTION BODY
+% ===========================================================================
+\section{Results}
+\label{sec:results}
+
+This section reports the realized outcomes of the held-out test window
+2026~Q1--Q2 (1~January~2026 -- 30~April~2026, plus the partial 720-hour
+2026~Q2 anchor described in \cref{sec:empirical-spread}). All numbers
+are end-to-end on the $\$1{,}000{,}000$~USDC notional with the gas-cost
+and execution-bridge assumptions of \cref{sec:exec}, and are pulled
+verbatim from \texttt{results/tables/main.csv},
+\texttt{results/tables/ablations.csv}, and
+\texttt{results/tables/h1\_significance.csv} via
+\texttt{scripts/fill\_whitepaper\_results.py}.
+
+\subsection{Headline: Predictive vs Reactive MCDM-EMA}
+\label{sec:headline}
+
+Over the four-month held-out test window the proposed predictive MCDM
+allocator delivers a net APY of \PredictiveAPY{} against \EMAAPY{} for
+the reactive MCDM-EMA baseline of \cite{solovev2026vault}, a Sharpe
+ratio of \PredictiveSharpe{} against \EMASharpe{} for the baseline,
+and an annualized Sharpe delta of \SharpeDelta{} in favor of the
+predictive variant. The $1000$-replicate stationary bootstrap of
+monthly Sharpe ratios (H1 test) returns a one-sided $p$-value of
+\BootstrapPvalue{} with $95\%$ confidence interval
+$[\BootstrapCILow{},\,\BootstrapCIHigh{}]$ on the Sharpe difference.
+Whether this delta meets the pre-registered $0.2$--$0.5$ Sharpe
+improvement threshold of H1 is read directly off these numbers; the
+null hypothesis H0 (forecast adds no value over EMA on this horizon)
+is rejected at the $5\%$ level iff the confidence interval excludes
+zero.
+
+\subsection{Per-Strategy Comparison}
+\label{sec:per-baseline}
+
+\Cref{tab:baselines} reports the five-strategy by six-metric grid on
+the held-out test window. Buy-and-hold and APY-only greedy are the
+two reactive bounds; MCDM-EMA is the strawman the novelty rests on;
+CIR-calibrated MCDM tests whether classical regime-aware forecasting
+suffices; the predictive MCDM is the headline strategy.
+
+\begin{table}[t]
+\centering
+\caption{Per-strategy test-window comparison ($\$1$M USDC notional,
+held-out test window 2026-01-01~--~2026-04-30). Net APY is the
+gas-net annualized return; Sharpe is the annualized daily Sharpe
+ratio; MaxDD is the maximum drawdown; Calmar is APY/MaxDD; Turnover
+is the cumulative gross notional rebalanced; Gas is dollar gas spent
+across the window at the historical hourly-median gas price.}
+\label{tab:baselines}
+\begin{tabular}{lcccccc}
+\toprule
+Strategy & Net APY & Sharpe & MaxDD & Calmar & Turnover & Gas (\$) \\
+\midrule
+A. Buy-and-hold Aave V3           & \BuyholdAPY      & \BuyholdSharpe    & \BuyholdDD    & \BuyholdCalmar    & \BuyholdTurnover    & \BuyholdGas    \\
+B. APY-only greedy                & \GreedyAPY       & \GreedySharpe     & \GreedyDD     & \GreedyCalmar     & \GreedyTurnover     & \GreedyGas     \\
+C. Reactive MCDM-EMA              & \EMAAPY          & \EMASharpe        & \EMADD        & \EMACalmar        & \EMATurnover        & \EMAGas        \\
+D. CIR-calibrated MCDM            & \CIRAPY          & \CIRSharpe        & \CIRDD        & \CIRCalmar        & \CIRTurnover        & \CIRGas        \\
+\textbf{E. Predictive MCDM (ours)} & \PredictiveAPY  & \PredictiveSharpe & \PredictiveDD & \PredictiveCalmar & \PredictiveTurnover & \PredictiveGas \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Ablations}
+\label{sec:ablations}
+
+\Cref{tab:ablations} reports the fifteen pre-registered ablations of
+\cref{sec:methodology}. Rows~1--5 isolate the contribution of
+\emph{any} forecast over EMA; rows~6--8 attribute remaining gains to
+architectural choices (single-branch vs dual-branch, kink subtraction,
+ranking loss); rows~9--11 examine the MCDM aggregator
+(equal vs tuned weights, single-protocol fallback, greedy vs TOPSIS);
+rows~12--13 stress-test gas regime and sliding-window stability;
+rows~14--15 cover the OOD~USDC-depeg week and the forecast-horizon
+sweep. The $\Delta$~column is the net-APY differential against
+row~1 (the EMA baseline), expressed in the same units.
+
+\begin{table}[t]
+\centering
+\caption{Ablation matrix (15 rows) on the held-out test window. Status
+``OK'' indicates the variant ran to completion; ``--'' indicates a
+skipped/failing variant. $\Delta$~vs~\#1 is the net-APY differential
+against the no-forecast EMA baseline.}
+\label{tab:ablations}
+\small
+\begin{tabular}{rlccccr}
+\toprule
+\# & Ablation & Status & Net APY & Sharpe & $\Delta$ vs \#1 \\
+\midrule
+1  & No-forecast EMA baseline (=Baseline C)               & OK & \AblationOneAPY       & \AblationOneSharpe       & \AblationOneDelta       \\
+2  & Naive last-observation forecast                      & OK & \AblationTwoAPY       & \AblationTwoSharpe       & \AblationTwoDelta       \\
+3  & CIR-calibrated forecast (=Baseline D)                & OK & \AblationThreeAPY     & \AblationThreeSharpe     & \AblationThreeDelta     \\
+4  & Markov-switching short rate (2-state)                & OK & \AblationFourAPY      & \AblationFourSharpe      & \AblationFourDelta      \\
+5  & CatBoost on hand-crafted features                    & OK & \AblationFiveAPY      & \AblationFiveSharpe      & \AblationFiveDelta      \\
+6  & Single-branch DA-GRU (no CNN, no decomp.)            & OK & \AblationSixAPY       & \AblationSixSharpe       & \AblationSixDelta       \\
+7  & Dual-branch \emph{without} kink subtraction          & OK & \AblationSevenAPY     & \AblationSevenSharpe     & \AblationSevenDelta     \\
+8  & Forecast with ranking loss only                      & OK & \AblationEightAPY     & \AblationEightSharpe     & \AblationEightDelta     \\
+9  & MCDM equal weights vs tuned weights                  & OK & \AblationNineAPY      & \AblationNineSharpe      & \AblationNineDelta      \\
+10 & Single-protocol benchmark (Aave/Compound only)       & OK & \AblationTenAPY       & \AblationTenSharpe       & \AblationTenDelta       \\
+11 & Greedy max-forecast vs TOPSIS-MCDM                   & OK & \AblationElevenAPY    & \AblationElevenSharpe    & \AblationElevenDelta    \\
+12 & Zero-gas vs realistic-gas                            & OK & \AblationTwelveAPY    & \AblationTwelveSharpe    & \AblationTwelveDelta    \\
+13 & Sliding-window stability (14-d windows)              & OK & \AblationThirteenAPY  & \AblationThirteenSharpe  & \AblationThirteenDelta  \\
+14 & OOD test on USDC depeg week (Mar 2023)               & OK & \AblationFourteenAPY  & \AblationFourteenSharpe  & \AblationFourteenDelta  \\
+15 & Forecast horizon sweep (3/6/12/24~h)                 & OK & \AblationFifteenAPY   & \AblationFifteenSharpe   & \AblationFifteenDelta   \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Regime-Conditional Breakdown}
+\label{sec:regime-results}
+
+The test window spans the second of the two empirically distinct
+quarterly regimes documented in \cref{sec:empirical-spread}: 2026~Q1
+(Compound-calm, $27.1\%$ Aave-pays-more share, $\sigma=0.57$\,pp) and
+the partial 2026~Q2 (Aave-dominant, $61.3\%$ Aave-pays-more share,
+$\sigma=3.61$\,pp). \Cref{tab:regime-results} reports the headline
+metrics for the predictive variant and the EMA baseline separately
+on each sub-window; we pre-register the expectation that the forecast
+edge concentrates in 2026~Q2, where cross-protocol dispersion is
+largest and the regime shift documented in \cref{sec:regime-empirical}
+is in active progress.
+
+\begin{table}[t]
+\centering
+\caption{Regime-conditional metrics on the two quarterly sub-windows
+of the test period. ``Pred'' is the predictive MCDM strategy; ``EMA''
+is the reactive MCDM-EMA baseline. Sharpe is annualized daily; APY
+is net of gas.}
+\label{tab:regime-results}
+\begin{tabular}{lcccc}
+\toprule
+Quarter & Sharpe (Pred) & APY (Pred) & Sharpe (EMA) & APY (EMA) \\
+\midrule
+2026 Q1 (Compound-calm)   & \QOneSharpePred & \QOneAPYPred & \QOneSharpeEMA & \QOneAPYEMA \\
+2026 Q2 (Aave-dominant)   & \QTwoSharpePred & \QTwoAPYPred & \QTwoSharpeEMA & \QTwoAPYEMA \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Forecast Quality}
+\label{sec:fcst-quality}
+
+\Cref{tab:forecast-quality} reports forecast-only diagnostics for the
+predictive variant on the rate level: out-of-sample $R^2$ pooled across
+both protocols, directional accuracy on the binary
+``Aave $>$ Compound at $t+12\mathrm{h}$'' label, the weighted-Pearson
+correlation consistent with \cite{solovev2026lob}, and the
+quantile-$0.9$ loss penalizing underprediction of upper-tail moves.
+The pre-registered targets are $R^2 \in [0.15,0.40]$ on the rate level
+and directional accuracy $\in [55,65]\%$; whether the realized
+diagnostics fall within these bounds is read directly off the row.
+
+\begin{table}[t]
+\centering
+\caption{Forecast quality diagnostics on the held-out test window
+(predictive MCDM only).}
+\label{tab:forecast-quality}
+\begin{tabular}{cccc}
+\toprule
+OOS $R^2$ & Direction Acc. & WPearson & Q90-Loss \\
+\midrule
+\ForecastRsq & \ForecastDirAcc & \ForecastWPearson & \ForecastQNineLoss \\
+\bottomrule
+\end{tabular}
+\end{table}

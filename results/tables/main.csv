@@ -1,0 +1,6 @@
+strategy,apy,sharpe,max_dd,calmar,turnover,gas_spent_usd
+BuyAndHold,0.0,0.0,0.0,0.0,0.0,0.0
+APYGreedy,0.0,0.0,0.0,0.0,0.0,0.0
+MCDMEMA,0.0,0.0,0.0,0.0,0.0,0.0
+CIRMCDM,0.0,0.0,0.0,0.0,0.0,0.0
+PredictiveMCDM,0.0,0.0,0.0,0.0,0.0,0.0
