@@ -36,6 +36,9 @@ forecaster/trained_models/*.pt
 forecaster/trained_models/*.cbm
 !forecaster/trained_models/.gitkeep
 
+# Colab upload bundle (regenerable via scripts/prepare_colab_artifacts.py)
+predictive-mcdm-defi-artifacts.zip
+
 # Whitepaper build artifacts
 whitepaper/*.aux
 whitepaper/*.log
