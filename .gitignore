@@ -25,6 +25,9 @@ results/mlflow/
 data/cached/*.parquet
 data/cached/*.csv
 data/cached/*.pkl
+data/cached/*.json
+data/cached/fractal_data/
+fractal_data/                    # fractal-defi loader cache when DATA_PATH unset
 !data/cached/.gitkeep
 
 # Model weights (large; regenerable from train.py)
