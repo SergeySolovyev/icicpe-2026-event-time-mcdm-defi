@@ -7,11 +7,18 @@
 
 ## Motivation
 
-Repo state (verified 14 May 2026): `fractal/strategies/` contains
-`BasisTradingStrategy`, `HyperliquidBasis`, `TauResetStrategy`, but **no
-multi-lending-protocol allocator** despite four lending entities being
+Repo state (verified 14 May 2026 against v1.3.2 source): `fractal/strategies/`
+contains `BasisTradingStrategy`, `HyperliquidBasis`, `TauResetStrategy`, but
+**no multi-lending-protocol allocator** despite four lending entities being
 available (`AaveEntity`, `MorphoEntity`, `SimpleLendingEntity`, etc.).
 This is the gap this PR fills.
+
+**Crucially: no cooldown / hysteresis infrastructure exists in `BaseStrategy`.**
+The existing strategies handle "act-when-state-crosses-threshold" via simple
+booleans (`_deposited`, `deposited_initial_funds`) and gap-based hysteresis
+(`MIN_LEVERAGE` / `MAX_LEVERAGE` bracketing). For a multi-protocol allocator
+this is insufficient — we need a proper time-based cooldown AND score-delta
+hysteresis. So this PR is genuinely additive abstraction, not duplication.
 
 ## Proposed abstraction
 
