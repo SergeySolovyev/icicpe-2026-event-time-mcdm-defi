@@ -137,7 +137,8 @@ def probe(rpc: str) -> dict:
 
 
 def fetch_hourly_window(rpc: str, start: datetime, end: datetime,
-                        batch_size: int = 500) -> pd.DataFrame:
+                        batch_size: int = 100,
+                        inter_batch_sleep: float = 0.4) -> pd.DataFrame:
     """Fetch hourly utilization + supply/borrow rates over [start, end].
 
     Returns DataFrame with UTC hourly index, columns:
@@ -253,7 +254,12 @@ def fetch_hourly_window(rpc: str, start: datetime, end: datetime,
                 "total_borrowed_usd": 0.0,
             })
 
-        if (batch_start // batch_size) % 5 == 0:
+        # Throttle: stay under Alchemy free-tier rate limits. Each batch is
+        # ~2-3 calls/hour × batch_size = up to 300 calls; with 0.4s pause
+        # we keep ~200 RPC calls/sec effective load.
+        time.sleep(inter_batch_sleep)
+
+        if (batch_start // batch_size) % 10 == 0:
             print(f"  progress: {batch_start + len(batch):>5}/{n_hours} hours processed, "
                   f"{len(rows)} rows so far")
 

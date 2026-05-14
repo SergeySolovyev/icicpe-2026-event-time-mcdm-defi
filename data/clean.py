@@ -73,12 +73,18 @@ def _ffill_with_limit(df: pd.DataFrame, limit_hours: int = FFILL_HOURS) -> pd.Da
     return df.ffill(limit=limit_hours)
 
 
-def clean_protocol(df: pd.DataFrame, name: str, rate_col: str = "lending_rate") -> pd.DataFrame:
+def clean_protocol(
+    df: pd.DataFrame,
+    name: str,
+    rate_col: str = "lending_rate",
+    ffill_hours: int = FFILL_HOURS,
+) -> pd.DataFrame:
     n0 = len(df)
     df1, n_drop = _drop_outliers(df, rate_col)
     df2, n_jumps = _interp_jumps(df1, rate_col)
-    df3 = _ffill_with_limit(df2)
-    print(f"[{name}] {n0} -> {len(df3)} rows; dropped {n_drop} outliers, smoothed {n_jumps} jumps")
+    df3 = _ffill_with_limit(df2, limit_hours=ffill_hours)
+    print(f"[{name}] {n0} -> {len(df3)} rows; dropped {n_drop} outliers, "
+          f"smoothed {n_jumps} jumps, ffill_limit={ffill_hours}h")
     return df3
 
 
@@ -159,7 +165,13 @@ def main(force: bool = False) -> pd.DataFrame:
             "total_borrowed_usd": 300e6,
         }, index=idx)
     else:
-        comp_clean = clean_protocol(comp_raw, "Compound")
+        # Compound data is sparse (Alchemy free-tier rate-limited eth_call's),
+        # so use a more permissive ffill horizon (1 week instead of 6h) to
+        # bridge gaps. The forecaster reads the resulting panel; for hours
+        # without real data within 168h we forward-fill the last observed
+        # rate, which is a reasonable proxy because Compound USDC rates
+        # change slowly under normal regimes.
+        comp_clean = clean_protocol(comp_raw, "Compound", ffill_hours=168)
         assert_sign_convention(comp_clean, "Compound")
 
     joined = join_protocols(aave_clean, comp_clean)
