@@ -169,6 +169,49 @@ def test_extract_features_eps_close_to_zero_for_on_curve_synth():
     assert np.allclose(out["eps_compound"].values, 0.0, atol=1e-10)
 
 
+# ----------------------------------------------------------------------------
+# Markov-switching baseline (forecaster/baseline_markov.py)
+# ----------------------------------------------------------------------------
+
+def test_markov_forecaster_transition_matrix_rows_sum_to_one():
+    """Sanity: any valid Markov transition matrix has rows summing to 1."""
+    from forecaster.baseline_markov import MarkovSwitchingForecaster
+
+    rng = np.random.default_rng(0)
+    n = 200
+    u = np.clip(rng.beta(5, 2, n), 0.05, 0.99)
+    # Synthetic: rate proportional to u, with regime-dependent noise
+    r = 0.02 + 0.05 * u + 0.005 * rng.standard_normal(n)
+
+    rate = pd.Series(r, index=pd.date_range("2026-01-01", periods=n, freq="1h", tz="UTC"))
+    util = pd.Series(u, index=rate.index)
+
+    fc = MarkovSwitchingForecaster(n_regimes=2).fit(rate, util)
+    P = fc.fit_result.transition_matrix
+    assert P.shape == (2, 2), f"transition matrix shape {P.shape}, expected (2, 2)"
+    row_sums = P.sum(axis=1)
+    assert np.allclose(row_sums, 1.0, atol=1e-6), (
+        f"rows do not sum to 1: {row_sums}"
+    )
+
+
+def test_markov_forecaster_predict_returns_scalar():
+    """predict() must return a single float, not an array."""
+    from forecaster.baseline_markov import MarkovSwitchingForecaster
+
+    rng = np.random.default_rng(1)
+    n = 200
+    u = np.clip(rng.beta(5, 2, n), 0.05, 0.99)
+    r = 0.02 + 0.05 * u + 0.005 * rng.standard_normal(n)
+    rate = pd.Series(r, index=pd.date_range("2026-01-01", periods=n, freq="1h", tz="UTC"))
+    util = pd.Series(u, index=rate.index)
+
+    fc = MarkovSwitchingForecaster(n_regimes=2).fit(rate, util)
+    out = fc.predict(rate.tail(168), util.tail(168), horizon=12)
+    assert isinstance(out, float), f"expected float, got {type(out).__name__}: {out!r}"
+    assert np.isfinite(out), f"forecast must be finite, got {out}"
+
+
 def test_extract_features_tod_cyclical_encoding():
     """tod_sin^2 + tod_cos^2 == 1 for every row."""
     df = _synthetic_joined_df(48)
