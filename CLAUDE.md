@@ -67,6 +67,52 @@ plan's prepended block.
     `data/fetch_kink_params.py`. Sync that file's `SEL` dict against
     these on next edit.
 
+3e. **Free public archive RPCs have batch-size caps ~100 calls/request.**
+    Empirically discovered 2026-05-14:
+      Alchemy free:                  no documented limit, but
+                                     rate-limited drop ~85% of calls
+      publicnode (anon):             100 calls/req hard cap, otherwise
+                                     fast and reliable (27ms/call)
+      Ankr free (authenticated):     100 calls/req hard cap, slightly
+                                     faster than publicnode (19ms/call),
+                                     but ~7000 successful eth_call/day
+                                     soft limit before throttling kicks
+    Our `fetch_compound_via_rpc.py` splits phase-2 (200 calls) into
+    sub-batches of `batch_size` (100) calls to fit within these caps.
+    For multi-day fetches: split across days or use multiple endpoints.
+
+## Project regime structure (discovered 2026-05-14)
+
+Real Aave-vs-Compound spread analysis on n=4894 overlapping hourly
+observations (from 2024-11 to 2026-04, ~37% coverage on Compound):
+
+  Quarter    n_hours  spread_median  spread_std  Aave-pays-more%
+  2024 Q4      908     +0.10pp        4.80pp     51%
+  2025 Q1     1336     -0.64pp        1.43pp     25%   <- Compound dominant
+  2025 Q2     1458     +0.22pp        0.94pp     55%   <- REGIME SHIFT to Aave
+  2025 Q3      992     -0.07pp        1.30pp     45%
+  2025 Q4      150     -0.15pp        0.76pp     39%
+  2026 Q1       50     -0.23pp        0.46pp     38%
+
+Overall: 43.4% Aave-pays-more (close to 50/50 split), spread std 2.34pp,
+range -13 to +33pp.
+
+**Key findings for whitepaper §5/§9:**
+
+1. **REGIME SHIFT 2025 Q1 → Q2:** Aave-pays-more share jumps from 25% to
+   55%. Exactly the regime structure Markov-switching (ablation #4) and
+   DA-BiGRU-CNN Branch B are designed to detect. Empirical existence
+   proof for H2 (architectural detection of regimes).
+
+2. **VOLATILITY REGIMES:** Q4 2024 std 4.80pp (high-vol) vs Q3 2025 1.30pp
+   (calm) → 4× variation. Plan §6.4's tertile-split (ablation #13) now
+   has natural anchor points.
+
+3. **SYMMETRIC SHARE:** 43.4% Aave-pays-more → profit from TIMING the
+   crossovers, NOT from any structural bias. Random allocator earns 0
+   alpha by design; forecast-driven edge IS anticipating crossovers.
+   Empirical version of plan §16 H1.
+
 4. **Aave V3 loader convention**: APY divided by `(365 * 24) / resolution`
    gives the per-period rate (arithmetic, NOT continuously compounded).
    The Compound loader MUST match this convention so cross-protocol
