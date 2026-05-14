@@ -1,6 +1,7 @@
 % 10_discussion.tex -- Section 9 Discussion, populated with empirical
-% findings from the 2026-05-14 real-data fetch (4894 hourly Aave/Compound
-% USDC observations, 2024-11 to 2026-04).
+% findings from the 2026-05-14 full-coverage real-data panel (12,895
+% hourly Aave/Compound USDC overlapping observations, 98.5% joint
+% coverage of 2024-11 to 2026-04).
 
 \section{Discussion}
 \label{sec:discussion}
@@ -20,8 +21,10 @@ post-kink slope $s_2 = 0.10$, sharply lower than the
 historical $s_2 \approx 0.60$ that prevailed for most of the training
 window. Cross-referencing on-chain
 \texttt{ReserveInterestRateStrategyChanged} events places the change
-in the Aave DAO's autumn 2025 risk-parameter cycle. The consequence
-for forecasting is striking: subtracting
+in the Aave DAO's autumn 2025 risk-parameter cycle --- temporally
+coincident with the 2025~Q3$\to$Q4 cross-protocol regime shift
+documented in \cref{sec:regime-empirical}. The consequence for
+forecasting is striking: subtracting
 $f_{\text{kink}}(u;\theta_{\text{current}})$ from the realized supply
 rate on the full 13{,}096-bar panel using
 \emph{current} parameters explains only $21.3\%$ of supply-rate
@@ -47,28 +50,31 @@ loader are the natural follow-up extension.
 \subsection{Empirical Regime Structure Confirms Architectural Choice}
 \label{sec:regime-empirical}
 
-Quarterly aggregation of the cross-protocol spread on the 4{,}894-hour
-overlap reveals a regime shift between 2025~Q1 and 2025~Q2 that is
-inconsistent with stationary dynamics. The Aave-pays-more share moves
-from $25\%$ in Q1 (Compound-dominant; spread median $-0.64$\,pp) to
-$55\%$ in Q2 (Aave-dominant; spread median $+0.22$\,pp), a thirty
-percentage-point jump in conditional mean and a sign flip in spread.
-Per-quarter spread standard deviation across the panel ranges
-$0.46$--$4.80$\,pp; the Q1-to-Q2 shift in conditional mean is several
-multiples of the within-quarter scale. The panel additionally
-exhibits a volatility regime split: $\sigma=4.80$\,pp in 2024~Q4
-versus $\sigma=1.30$\,pp in 2025~Q3, a fourfold variation that
-provides the natural anchor for the tertile-conditional reporting of
-\cref{sec:regime}. These findings constitute an empirical existence
-proof for the H2 architectural claim: regime structure that
-single-state models cannot capture is statistically present in the
-data, and a Markov-switching baseline along the lines of
-\cite{hamilton1989regimeswitching} (ablation~4) should show its
-largest gains over the EMA baseline precisely on the
-Q1--Q2~2025 transition window. The dual-branch DA-BiGRU-CNN
+Quarterly aggregation of the cross-protocol spread on the
+$12{,}895$-hour full-coverage overlap reveals a regime shift between
+2025~Q3 and 2025~Q4 that is inconsistent with stationary dynamics.
+The Aave-pays-more share moves from $39.9\%$ in Q3 (still
+Compound-dominant; spread median $-0.218$\,pp) to $56.3\%$ in Q4
+(Aave-dominant; spread median $+0.183$\,pp), a sixteen
+percentage-point jump in conditional mean and the first sign flip of
+the median spread on the panel --- the first quarter in which Aave
+systematically pays more than Compound. Per-quarter spread standard
+deviation across the panel ranges $0.57$--$5.75$\,pp; the Q3-to-Q4
+shift in conditional mean is several multiples of the within-quarter
+scale. The panel additionally exhibits a strong volatility regime
+split: $\sigma=5.75$\,pp in 2024~Q4 (high-vol shock period) versus
+$\sigma=0.57$\,pp in 2026~Q1 (calm), an approximately tenfold
+variation that provides the natural anchor for the
+tertile-conditional reporting of \cref{sec:regime}. These findings
+constitute an empirical existence proof for the H2 architectural
+claim: regime structure that single-state models cannot capture is
+statistically present in the data, and a Markov-switching baseline
+along the lines of \cite{hamilton1989regimeswitching} (ablation~4)
+should show its largest gains over the EMA baseline precisely on the
+Q3--Q4~2025 transition window. The dual-branch DA-BiGRU-CNN
 architecture inherited from \cite{solovev2026lob} is designed for
 exactly this kind of regime-dependent multivariate dynamics; the
-Q1-to-Q2 shift makes the architectural choice empirically motivated
+Q3-to-Q4 shift makes the architectural choice empirically motivated
 rather than merely transferred.
 
 \subsection{Response to Halpern--Pass--Saraf on Short-Horizon Predictability}
@@ -79,24 +85,26 @@ lending to barrier-option pricing, that no \emph{fair} interest rate
 --- in the sense of no-arbitrage under strategic borrowers who may
 delay repayment --- exists for a realistic lending pool. They argue
 on the strength of this result that time-series forecasting of pool
-rates is methodologically misplaced. The 4{,}894-hour cross-protocol
-panel sharpens the response. The realized Aave-pays-more share is
-$43.4\%$, against $56.6\%$ for Compound; the unconditional spread
-standard deviation is $2.34$\,pp, with extremes $[-13, +33]$\,pp.
-A market in which cross-venue rate inequality reverses on a roughly
-even split, with material per-hour dispersion, is by construction
-\emph{not} short-horizon efficient: persistent allocation edge is
-available to a forecaster that anticipates the crossovers ahead of
-the EMA-smoothed observer. The Halpern--Pass--Saraf theorem operates
-at the equilibrium-existence level and bounds the long-run fairness
-of any single rate; the predictive MCDM operates at the
-trade-timing level and exploits transient disequilibrium between two
-co-existing venues. The two claims are orthogonal: the impossibility
-of a fair equilibrium rate is fully compatible with, and in our panel
-empirically coexists with, an exploitable short-horizon structure.
-The $43/57$ split with $2.34$\,pp standard deviation is, in our
-reading, a directly measured instance of the residual disequilibrium
-their result leaves untouched.
+rates is methodologically misplaced. The $12{,}895$-hour
+full-coverage cross-protocol panel sharpens the response. The
+realized Aave-pays-more share is $40.7\%$, against $59.3\%$ for
+Compound; the unconditional spread standard deviation is $2.51$\,pp,
+with extremes $[-26.79, +44.89]$\,pp. A market in which cross-venue
+rate inequality reverses on roughly a $41/59$ split, with material
+per-hour dispersion and a documented intra-panel regime shift
+(2025~Q3$\to$Q4), is by construction \emph{not} short-horizon
+efficient: persistent allocation edge is available to a forecaster
+that anticipates the crossovers ahead of the EMA-smoothed observer.
+The Halpern--Pass--Saraf theorem operates at the equilibrium-existence
+level and bounds the long-run fairness of any single rate; the
+predictive MCDM operates at the trade-timing level and exploits
+transient disequilibrium between two co-existing venues. The two
+claims are orthogonal: the impossibility of a fair equilibrium rate
+is fully compatible with, and in our panel empirically coexists with,
+an exploitable short-horizon structure. The $41/59$ split with
+$2.51$\,pp standard deviation is, in our reading, a directly measured
+instance of the residual disequilibrium their result leaves
+untouched.
 
 \subsection{Limits of the LOB-to-DeFi Methodology Transfer}
 \label{sec:transfer}

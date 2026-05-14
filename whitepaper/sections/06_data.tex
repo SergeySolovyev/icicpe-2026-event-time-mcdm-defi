@@ -46,63 +46,78 @@ incrementally as described in \cref{sec:coverage}.
 \subsection{Empirical Spread Distribution}
 \label{sec:empirical-spread}
 
-On the $n = 4{,}894$ overlapping hours where both protocols have
-observations, the cross-protocol supply-rate spread
+On the $n = 12{,}895$ overlapping hours where both protocols have
+observations (the $98.5\%$ full-coverage joined panel; see
+\cref{sec:coverage}), the cross-protocol supply-rate spread
 $s(t) = \mathrm{APR}_{\text{Aave}}(t) - \mathrm{APR}_{\text{Compound}}(t)$
 has the following marginal statistics: median
-$-0.241$~pp, standard deviation $2.341$~pp, range
-$[-13.32, +33.17]$~pp. The Aave-pays-more binary share is $43.4\%$;
-Compound pays more on the typical hour by $0.24$~pp. The individual
+$-0.232$~pp, standard deviation $2.513$~pp, range
+$[-26.79, +44.89]$~pp. The Aave-pays-more binary share is $40.7\%$;
+Compound pays more on the typical hour by $0.23$~pp. The individual
 APR distributions are likewise broad: Aave USDC supply APR ranges
 $[1.54\%, 48.38\%]$ with median $3.82\%$; Compound USDC supply APR
 ranges $[2.85\%, 23.65\%]$ with median $4.46\%$ (both quoted as
-annualized continuous-compound rates).
+annualized continuous-compound rates). An earlier sparse-sample
+analysis on the pre-top-up panel ($n = 4{,}894$, $37\%$ Compound
+coverage) suggested a 2025 Q1$\to$Q2 regime shift in the
+Aave-pays-more share; the $98.5\%$ full-coverage panel reveals that
+that apparent jump was an artifact of cluster sampling around
+Nov--Dec~2024 and Jun--Aug~2025, and we report the corrected
+structure below.
 
 Pooled marginals mask substantial structure. \Cref{tab:regime-quarters}
 partitions the overlapping panel by calendar quarter:
 
 \begin{table}[t]
 \centering
-\caption{Per-quarter cross-protocol spread structure on the overlapping
-panel ($n = 4{,}894$ hours). Spread is
-$\text{APR}_{\text{Aave}} - \text{APR}_{\text{Compound}}$ in
-percentage points; ``Aave $>$ C'' is the share of hours on which Aave
-pays more. The 2025 Q1$\to$Q2 jump from $25\%$ to $55\%$ is the
-empirical regime shift motivating Branch~B of the forecaster.}
+\caption{Per-quarter cross-protocol spread structure on the full-coverage
+overlapping panel ($n = 12{,}895$ hours, $98.5\%$ joint coverage).
+Spread is $\text{APR}_{\text{Aave}} - \text{APR}_{\text{Compound}}$
+in percentage points; ``Aave $>$ C'' is the share of hours on which
+Aave pays more. The 2025 Q3$\to$Q4 jump from $39.9\%$ to $56.3\%$
+(median spread crossing zero from $-0.218$ to $+0.183$\,pp) is the
+empirical regime shift motivating Branch~B of the forecaster: it is
+the first quarter in which Aave systematically pays more than Compound.}
 \label{tab:regime-quarters}
 \begin{tabular}{lrrrr}
 \toprule
 Quarter & $n$ & spread median (pp) & spread std (pp) & Aave $>$ C \\
 \midrule
-2024 Q4 &  908 & $+0.10$ & $4.80$ & $51\%$ \\
-2025 Q1 & 1336 & $-0.64$ & $1.43$ & $25\%$ \\
-2025 Q2 & 1458 & $+0.22$ & $0.94$ & $55\%$ \\
-2025 Q3 &  992 & $-0.07$ & $1.30$ & $45\%$ \\
-2025 Q4 &  150 & $-0.15$ & $0.76$ & $39\%$ \\
-2026 Q1 &   50 & $-0.23$ & $0.46$ & $38\%$ \\
+2024 Q4 & 1455 & $-0.591$ & $5.746$ & $45.4\%$ \\
+2025 Q1 & 2160 & $-0.725$ & $1.360$ & $24.9\%$ \\
+2025 Q2 & 2184 & $-0.444$ & $0.883$ & $43.5\%$ \\
+2025 Q3 & 2208 & $-0.218$ & $1.401$ & $39.9\%$ \\
+2025 Q4 & 2208 & $+0.183$ & $2.019$ & $56.3\%$ \\
+2026 Q1 & 1960 & $-0.240$ & $0.567$ & $27.1\%$ \\
+2026 Q2 &  720 & $+0.063$ & $3.605$ & $61.3\%$ \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-The direction-share jump from $25\%$ in 2025 Q1 to $55\%$ in 2025 Q2 is
-a regime shift of the kind a dual-branch architecture with explicit
-cross-protocol residual input is designed to detect; the four-fold
-volatility contraction from $4.80$~pp (2024 Q4) to $0.94$~pp (2025 Q2)
-also supplies natural anchors for the volatility-tertile ablation of
-\cref{sec:regime}. Crucially, the binary direction split is close to
-symmetric across the full panel ($43.4\%$ vs $56.6\%$), so a
-forecast-driven edge cannot come from a structural bias toward either
-protocol --- it must come from anticipating the crossovers, in keeping
-with the cointegration finding of \cite{gudgeon2020defi} and against
-the equilibrium-impossibility framing of \cite{halpern2024fairrates},
-which concerns the existence of a single fair rate, not short-horizon
-predictability of the realized spread.
+The direction-share jump from $39.9\%$ in 2025 Q3 to $56.3\%$ in
+2025 Q4 --- the first quarter where Aave systematically pays more
+than Compound, with median spread crossing zero from $-0.218$\,pp to
+$+0.183$\,pp --- is a regime shift of the kind a dual-branch
+architecture with explicit cross-protocol residual input is designed
+to detect; the roughly ten-fold volatility variation from $5.75$~pp
+(2024 Q4) to $0.57$~pp (2026 Q1) also supplies natural anchors for
+the volatility-tertile ablation of \cref{sec:regime}. Crucially, the
+binary direction split is far from symmetric in either direction
+across the full panel ($40.7\%$ Aave-higher vs $59.3\%$
+Compound-higher), so a forecast-driven edge cannot come from a
+structural bias toward Aave --- it must come from anticipating the
+crossovers, in keeping with the cointegration finding of
+\cite{gudgeon2020defi} and against the equilibrium-impossibility
+framing of \cite{halpern2024fairrates}, which concerns the existence
+of a single fair rate, not short-horizon predictability of the
+realized spread.
 
 \subsection{Data Coverage and Limitations}
 \label{sec:coverage}
 
-Raw coverage is asymmetric: Aave $99.9\%$ ($13{,}096 / 13{,}104$
-hourly bars), Compound $37.4\%$ ($4{,}900 / 13{,}104$). The asymmetry
+Raw coverage is asymmetric at fetch time: Aave $99.9\%$
+($13{,}096 / 13{,}104$ hourly bars), Compound $37.4\%$
+($4{,}900 / 13{,}104$) on the initial Ankr-only fetch. The asymmetry
 is structural: the Messari Compound V3 subgraph indexes per-collateral
 markets and exposes \texttt{rates: None} on the base Comet market
 entity, so hourly snapshots must be reconstructed via \texttt{eth\_call}
@@ -110,8 +125,8 @@ on archive RPCs --- and free-tier archive providers impose batch-size
 caps near $100$ calls per request and per-day soft limits in the
 thousands. The fetcher accordingly tops up the panel in an idempotent
 append-mode across multiple free RPC providers (\texttt{publicnode}
-and Ankr) until coverage saturates; the projected post-top-up coverage
-on the joined panel is $\sim 70\%$. For sequence-length-168 forecaster
+and Ankr) until coverage saturates; after top-up, Compound coverage
+rises to $98.5\%$ on the joined panel ($12{,}895$ overlapping hours). For sequence-length-168 forecaster
 training, we restrict to dense subperiods in which both protocols have
 recent observations, and forward-fill missing Compound rows up to a
 $168$-hour ceiling on the joined panel, marking longer gaps as a
@@ -146,10 +161,11 @@ leakage:
   pre-top-up; the H1 evaluation on the full test window is
   Aave-driven in its initial form.
 \end{itemize}
-Real-data Compound sparsity means the H1 Sharpe-improvement claim on
-the full $18$-month window is degraded relative to a fully-dense
+Residual Compound sparsity (the $1.5\%$ of the joined panel still
+missing after top-up) means the H1 Sharpe-improvement claim on the
+full $18$-month window is marginally degraded relative to a fully-dense
 panel; the evaluation protocol of \cref{sec:backtest} therefore
 reports both the full-window result and a restricted result on dense
-subperiods, and uses the Compound-rich 2024 Q4 sub-window
-($n = 908$ overlapping hours, $51\%$ Aave-pays-more share) as an
-additional H1 anchor.
+subperiods, and uses the 2025~Q4 regime-shift sub-window
+($n = 2{,}208$ overlapping hours, $56.3\%$ Aave-pays-more share) as
+an additional H1 anchor.

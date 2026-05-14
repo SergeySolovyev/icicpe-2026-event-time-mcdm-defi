@@ -201,9 +201,18 @@ def extract_features(
     for name, arr in spreads.items():
         out[name] = arr
 
-    # TVL momentum (24h relative change)
-    out["dTVL_aave_24h"] = df["tvl_aave"].pct_change(24)
-    out["dTVL_compound_24h"] = df["tvl_compound"].pct_change(24)
+    # TVL momentum (24h relative change). fill_method=None avoids the pandas
+    # FutureWarning about deprecated default. fillna(0) handles:
+    #   (a) leading 24 NaN rows from pct_change shift, and
+    #   (b) constant-zero series (Compound RPC fetcher sets total_supplied_usd
+    #       to 0.0 placeholder until real USD-conversion is wired) which would
+    #       otherwise produce all-NaN via 0/0 division.
+    out["dTVL_aave_24h"] = (
+        df["tvl_aave"].pct_change(24, fill_method=None).fillna(0.0)
+    )
+    out["dTVL_compound_24h"] = (
+        df["tvl_compound"].pct_change(24, fill_method=None).fillna(0.0)
+    )
 
     # Time-of-day cyclical encoding (the funding-rate forecasting baseline does this)
     hour = df.index.hour.values
