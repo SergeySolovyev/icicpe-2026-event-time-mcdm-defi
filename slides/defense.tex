@@ -1,0 +1,297 @@
+% defense.tex --- Project 2 defense deck (Predictive MCDM Allocation across
+% DeFi Lending Protocols). HSE FCS, DeFi-Strategies course.
+%
+% NUMBERS-SWAPPABLE BY DESIGN. Every result figure is a \newcommand from
+% slides/results_macros.tex, the same contract as the whitepaper. Before the
+% Colab GPU run the deck compiles with 0.00 placeholders; after it,
+%     make finish        (or  python -m scripts.fill_whitepaper_results)
+% rewrites results_macros.tex in place from the backtest CSVs and the deck
+% shows the real numbers --- no slide edits needed.
+%
+% Build:  cd slides && pdflatex defense.tex && pdflatex defense.tex
+% ---------------------------------------------------------------------------
+\documentclass[aspectratio=169,11pt]{beamer}
+
+\usetheme{Madrid}
+\usecolortheme{whale}   % beamer-core colortheme (no extra package)
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{caption}[numbered]
+\setbeamertemplate{footline}[frame number]
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{xcolor}
+
+% Shared, auto-fillable numeric macros (same file the fill script rewrites).
+\input{results_macros.tex}
+
+% Small grey marker shown on result slides so a pre-Colab reader knows the
+% figures are placeholders that auto-populate. Harmless to leave in.
+\newcommand{\pending}{\textcolor{gray}{\scriptsize\,[auto-fills via \texttt{make finish}]}}
+
+\title[Predictive MCDM DeFi Allocation]{Predictive MCDM Allocation across\\DeFi Lending Protocols}
+\subtitle{A 12h rate forecast as the allocation signal between Aave V3 and Compound V3}
+\author[S.\,Solovev]{Sergei Solovev}
+\institute[HSE FCS]{Faculty of Computer Science, HSE University\\DeFi-Strategies --- Project 2}
+\date{2026}
+
+\begin{document}
+
+% ---------------------------------------------------------------------------
+\begin{frame}[plain]
+  \titlepage
+  \begin{center}
+    \footnotesize\textcolor{gray}{Built on \texttt{fractal-defi} v1.3.2 \quad$\bullet$\quad
+    18-month mainnet backtest \quad$\bullet$\quad reproducible repo + 2 upstream PRs}
+  \end{center}
+\end{frame}
+
+% ---------------------------------------------------------------------------
+\begin{frame}{Motivation \& research question}
+  \textbf{Setting.} A USDC supplier can sit in Aave V3 or Compound V3. Rates
+  move with utilization and governance; the protocols are cointegrated but
+  lead/lag each other.
+
+  \medskip
+  \textbf{Standard practice} reacts to the \emph{current} (EMA-smoothed)
+  rate spread --- it always lags a regime change.
+
+  \medskip
+  \textbf{Research question.} Does replacing the reactive rate signal with a
+  \textbf{learned 12-hour-ahead forecast} produce a better risk-adjusted
+  allocation?
+
+  \medskip
+  \begin{block}{Pre-registered hypotheses}
+    \begin{itemize}
+      \item \textbf{H1:} predictive MCDM beats reactive MCDM-EMA by
+            $\Delta\text{Sharpe}\ge 0.2$ on the held-out window.
+      \item \textbf{H0:} no improvement --- a \emph{publishable negative
+            result} (methodological-transfer falsification).
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+% ---------------------------------------------------------------------------
+\begin{frame}{The empirical anchor: a real regime shift}
+  Joined hourly panel, \textbf{12{,}895 overlapping hours}, $\sim$98.5\%
+  coverage of Nov 2024 -- Apr 2026 (assembled \emph{before} test-window
+  exposure).
+
+  \medskip
+  \begin{center}
+  \begin{tabular}{lccc}
+    \toprule
+    Quarter & median spread & vol (std) & Aave-pays-more \\
+    \midrule
+    2025 Q3 & $-0.22$ pp & $1.40$ pp & 39.9\% \\
+    \textbf{2025 Q4} & $\mathbf{+0.18}$ \textbf{pp} & $2.02$ pp & \textbf{56.3\%} \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+
+  \medskip
+  \begin{itemize}
+    \item \textbf{First quarter Aave systematically pays more} --- a 16-point
+          regime flip; the median spread crosses zero.
+    \item Volatility regimes vary $\sim$10$\times$ (5.75 pp in Q4'24
+          $\to$ 0.57 pp in Q1'26).
+    \item Only 40.7\% Aave-higher overall $\Rightarrow$ alpha is in
+          \emph{timing crossovers}, not a structural bias --- exactly what a
+          forecast should exploit.
+  \end{itemize}
+\end{frame}
+
+% ---------------------------------------------------------------------------
+\begin{frame}{Methodology I --- the forecaster}
+  \textbf{DA-BiGRU-CNN}, dual-branch, $\sim$319K params (ported from the
+  author's LOB mid-price model):
+
+  \medskip
+  \begin{itemize}
+    \item \textbf{Branch A --- residual.} Subtract the protocol-known kink
+          curve $f_{\text{kink}}(u)$; the net learns only
+          $\varepsilon = r - f_{\text{kink}}(u)$, freeing capacity for the
+          stochastic part.
+    \item \textbf{Branch B --- context.} Utilization, TVL momentum, gas,
+          time-of-day.
+    \item \textbf{Late fusion} via multi-scale Conv1d (kernels 3/5/7),
+          12-hour-ahead head.
+    \item \textbf{Composite loss:}
+          $\alpha\,\text{MSE} + \beta\,(1-\text{WPearson}) +
+           \gamma\,\text{QuantileLoss}_{0.9}$.
+  \end{itemize}
+
+  \medskip
+  \footnotesize\textcolor{gray}{Trained on Colab H100; exported to ONNX with
+  torch$\leftrightarrow$onnxruntime parity verified ($\max|\Delta|\!<\!10^{-7}$).}
+\end{frame}
+
+% ---------------------------------------------------------------------------
+\begin{frame}{Methodology II --- the allocator}
+  \textbf{4-factor MCDM} (SAW), ported from the author's ERC-4626 yield-vault
+  paper:
+  \[
+    \text{Score}_i = 0.40\,f_{\text{APY}} + 0.25\,f_{\text{Risk}}
+                    + 0.20\,f_{\text{Cost}} + 0.15\,f_{\text{Stab}}
+  \]
+  \begin{itemize}
+    \item The \textbf{only} change vs.\ the reactive baseline: $f_{\text{APY}}$
+          is fed the \textbf{forecast} $\hat r_{t+12h}$ instead of the
+          EMA-smoothed spot rate. Everything else is held fixed --- a clean
+          ablation of the forecast signal itself.
+    \item \textbf{Hysteresis + cooldown} rebalance trigger (gas-aware) to
+          suppress churn.
+    \item Implemented as \texttt{PredictiveMCDMStrategy} on a new
+          \texttt{BaseLendingAllocationStrategy} abstraction.
+  \end{itemize}
+\end{frame}
+
+% ---------------------------------------------------------------------------
+\begin{frame}{Experimental design}
+  \begin{columns}[T]
+    \begin{column}{0.52\textwidth}
+      \textbf{Data}
+      \begin{itemize}
+        \item Aave V3 + Compound V3 USDC, hourly, 18 months
+        \item Strict \emph{block-number} train/val/test split
+        \item Test window: 2026 Q1--Q2 (held out)
+      \end{itemize}
+      \medskip
+      \textbf{Significance}
+      \begin{itemize}
+        \item 1000-iter paired \emph{monthly-Sharpe} bootstrap
+        \item McNemar on directional calls
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \textbf{Comparators}
+      \begin{itemize}
+        \item 4 baselines: buy-hold, APY-greedy, MCDM-EMA, MCDM-CIR
+        \item \textbf{15 ablations} (no-forecast, single-branch,
+              no-kink, loss terms, horizon sweep, OOD depeg, \dots)
+        \item Regime-conditional reporting (per-quarter)
+      \end{itemize}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ---------------------------------------------------------------------------
+\begin{frame}{Headline result --- H1 test \pending}
+  \begin{center}
+  \begin{tabular}{lcc}
+    \toprule
+    & Net APY & Annual Sharpe \\
+    \midrule
+    Reactive MCDM-EMA            & \EMAAPY        & \EMASharpe \\
+    \textbf{Predictive MCDM}     & \PredictiveAPY & \PredictiveSharpe \\
+    \midrule
+    $\Delta$Sharpe (pred $-$ ema) & \multicolumn{2}{c}{\textbf{\SharpeDelta}} \\
+    Bootstrap $p$-value           & \multicolumn{2}{c}{\BootstrapPvalue} \\
+    95\% CI on $\Delta$Sharpe     & \multicolumn{2}{c}{$[\,\BootstrapCILow,\ \BootstrapCIHigh\,]$} \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+
+  \medskip
+  \IfFileExists{../results/figures/main_vs_ema_equity.png}{%
+    \begin{center}
+      \includegraphics[height=0.36\textheight]{../results/figures/main_vs_ema_equity.png}
+    \end{center}}{%
+    \begin{center}\textcolor{gray}{\footnotesize
+      [equity-curve figure regenerates with the real backtest]\end{center}}}
+
+  \footnotesize\textcolor{gray}{Decision rule: reject H0 iff
+  $\Delta\text{Sharpe}>0.2$ and the bootstrap CI excludes 0.}
+\end{frame}
+
+% ---------------------------------------------------------------------------
+\begin{frame}{Ablations \& regime-conditional behaviour \pending}
+  \textbf{Key ablations} (APY $\Delta$ vs.\ the no-forecast EMA, ablation \#1):
+
+  \begin{center}
+  \begin{tabular}{lcc}
+    \toprule
+    Ablation & Sharpe & $\Delta$ vs.\ \#1 \\
+    \midrule
+    \#1 no-forecast EMA (anchor) & \AblationOneSharpe   & --- \\
+    \#2 naive (persistence)      & \AblationTwoSharpe   & \AblationTwoDelta \\
+    \#5 CatBoost forecaster      & \AblationFiveSharpe  & \AblationFiveDelta \\
+    \#13 sliding-window stability& \AblationThirteenSharpe & \AblationThirteenDelta \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+
+  \medskip
+  \textbf{Regime split} (does the edge survive the Q1$\to$Q2 flip?):
+  \begin{center}
+  \begin{tabular}{lcc}
+    \toprule
+    & 2026 Q1 Sharpe & 2026 Q2 Sharpe \\
+    \midrule
+    Reactive MCDM-EMA        & \QOneSharpeEMA  & \QTwoSharpeEMA \\
+    \textbf{Predictive MCDM} & \QOneSharpePred & \QTwoSharpePred \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+\end{frame}
+
+% ---------------------------------------------------------------------------
+\begin{frame}{Forecast quality \& honest framing \pending}
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \textbf{Does the net actually forecast?}
+      \begin{itemize}
+        \item OOS $R^2$: \ForecastRsq
+        \item 12h direction accuracy: \ForecastDirAcc
+        \item Weighted Pearson: \ForecastWPearson
+        \item Q0.9 pinball loss: \ForecastQNineLoss
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      \textbf{If H0 holds, the project still ships:}
+      \begin{itemize}
+        \item Extra+1 / Extra+2 PRs stand alone
+        \item First rigorous mainnet backtest of MCDM-EMA
+        \item Falsifying LOB\,$\to$\,DeFi transfer is a
+              \emph{publishable negative result}
+      \end{itemize}
+    \end{column}
+  \end{columns}
+
+  \medskip
+  \footnotesize We address the ``Fair Interest Rates Are Impossible for
+  Lending Pools'' impossibility result head-on: it constrains
+  \emph{long-run equilibrium fairness}, not \emph{short-horizon
+  predictability}, which is all the allocator relies on.
+\end{frame}
+
+% ---------------------------------------------------------------------------
+\begin{frame}{Contributions \& conclusion}
+  \begin{itemize}
+    \item \textbf{Method.} A clean, single-signal test of forecast- vs.\
+          reaction-driven cross-protocol allocation, with pre-registered
+          H0/H1 and regime-conditional evaluation.
+    \item \textbf{Empirical.} Documented + corrected a real 2025 Q3$\to$Q4
+          Aave/Compound regime flip on 98.5\%-coverage mainnet data
+          (and a methodological lesson: sparse sampling fabricated a false
+          earlier ``shift'').
+    \item \textbf{Upstream (\texttt{fractal-defi}).}
+      \begin{itemize}
+        \item \textbf{Extra+1:} Compound V3 loader + uniform
+              \texttt{utilization} field on both lending states.
+        \item \textbf{Extra+2:} \texttt{BaseLendingAllocationStrategy}
+              abstraction; \texttt{PredictiveMCDMStrategy} as first subclass.
+      \end{itemize}
+    \item \textbf{Reproducible.} One-command pipeline; numbers on this deck
+          and in the paper flow from the same backtest CSVs.
+  \end{itemize}
+
+  \vfill
+  \begin{center}\small\textcolor{gray}{Thank you --- questions welcome.}\end{center}
+\end{frame}
+
+\end{document}

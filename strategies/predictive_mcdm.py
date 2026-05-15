@@ -83,6 +83,12 @@ class PredictiveMCDMStrategy(BaseLendingAllocationStrategy):
         self._cached_r_hat: dict[str, float] = {}
         self._steps_since_refresh: int = 0
 
+        # Per-refresh forecast log: list of
+        #   {"timestamp": ts, "AAVE": (r_hat, r_spot), "COMPOUND": (r_hat, r_spot)}
+        # Consumed by backtest.run_main._forecast_hit_rate (directional
+        # accuracy, plan §9.3) and the forecast-quality battery (plan §9.4).
+        self._forecast_history: list = []
+
         # Lazy-loaded ONNX session + kink params (initialised on first use)
         self._onnx_session = None
         self._kink_aave: Optional[AaveKinkParams] = None
@@ -235,6 +241,16 @@ class PredictiveMCDMStrategy(BaseLendingAllocationStrategy):
             forecast = self._run_forecaster()
             if forecast is not None:
                 self._cached_r_hat = forecast
+                # Log (r_hat, r_spot) per protocol so the offline forecast
+                # battery can score it against the realized rate h steps ahead.
+                entry = {"timestamp": self._current_timestamp}
+                for _ent in ("AAVE", "COMPOUND"):
+                    if _ent not in forecast:
+                        continue
+                    _gs = self.get_entity(_ent).global_state
+                    _r_spot = float(getattr(_gs, "lending_rate", 0.0)) * 365 * 24
+                    entry[_ent] = (float(forecast[_ent]), _r_spot)
+                self._forecast_history.append(entry)
         self._steps_since_refresh += 1
 
         # Delegate to base class for the rest of the cycle. compute_criteria_vector

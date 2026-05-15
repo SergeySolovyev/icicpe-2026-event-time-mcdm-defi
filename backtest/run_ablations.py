@@ -908,6 +908,184 @@ def _run_forecast_injected(
 
 
 # ---------------------------------------------------------------------------
+# Plan §9.5 regime-conditional + §9.4 forecast-quality rows.
+#
+# These are NOT numbered ablations; they are extra deliverable rows appended
+# to ablations.csv so the whitepaper's regime / forecast-quality macros
+# resolve from the same artifact (run_ablations writes ablations.csv last in
+# the `make finish` order, so emitting here — not in run_main — survives).
+# Regime split = the two quarters of the 2026 test window (Q1 vs Q2), per
+# CLAUDE.md "Project regime structure". Forecast quality = OOS R² /
+# direction-accuracy / weighted-Pearson / quantile-90 loss of the ONNX
+# forecaster vs the realized rate h steps ahead (same r_hat/r_spot log that
+# run_main._forecast_hit_rate consumes).
+# ---------------------------------------------------------------------------
+
+# 2026 test-window quarter boundaries (UTC). Q1 = Jan–Mar, Q2 = Apr (test
+# window ends 2026-04-30 per observations_builder.TEST_END).
+_Q1_END = datetime(2026, 3, 31, 23, 59, 59)
+_FORECAST_QUALITY_COLS = ["oos_r2", "dir_acc", "w_pearson", "q90_loss"]
+
+
+def _regime_row(ablation_id: str, metrics: Optional[Dict[str, float]],
+                err: Optional[str]) -> Dict[str, Any]:
+    """A regime row reuses the OK/NaN row schema (net_apy + sharpe_annual)."""
+    if metrics is None:
+        return _nan_row(ablation_id, f"regime[{ablation_id}]",
+                        "regime_split", err or "no observations in quarter")
+    return _ok_row(ablation_id, f"regime[{ablation_id}]",
+                   "regime_split", metrics)
+
+
+def _quarter_obs(observations: List[Observation], q: str) -> List[Observation]:
+    out: List[Observation] = []
+    for o in observations:
+        ts = o.timestamp
+        ts = ts.replace(tzinfo=None) if ts.tzinfo is not None else ts
+        in_q1 = ts <= _Q1_END
+        if (q == "q1" and in_q1) or (q == "q2" and not in_q1):
+            out.append(o)
+    return out
+
+
+def _regime_rows(test_obs: List[Observation],
+                 cfg: MainRunConfig) -> List[Dict[str, Any]]:
+    """Run PredictiveMCDM + MCDM-EMA on each test quarter; emit 4 rows."""
+    rows: List[Dict[str, Any]] = []
+    have_pred = _HAS_PREDICTIVE and ONNX_PATH.exists()
+    for q in ("q1", "q2"):
+        sub = _quarter_obs(test_obs, q)
+        # EMA leg (always available)
+        if len(sub) >= 2:
+            ema_params = MCDMEMAParams(
+                INITIAL_BALANCE=cfg.initial_balance,
+                DEFAULT_INITIAL_ENTITY="AAVE",
+            )
+            m_ema, _eq, e_ema = _safe_run(MCDMEMAStrategy, ema_params, sub,
+                                          f"regime/{q}/ema", cfg)
+        else:
+            m_ema, e_ema = None, f"only {len(sub)} obs in 2026 {q.upper()}"
+        rows.append(_regime_row(f"regime_{q}_ema", m_ema, e_ema))
+
+        # Predictive leg (NaN row if no ONNX — formatter renders n/a)
+        if have_pred and len(sub) >= 2:
+            p_params = PredictiveMCDMParams(
+                INITIAL_BALANCE=cfg.initial_balance,
+                DEFAULT_INITIAL_ENTITY="AAVE",
+            )
+            m_pred, _eq2, e_pred = _safe_run(PredictiveMCDMStrategy, p_params,
+                                             sub, f"regime/{q}/pred", cfg)
+        else:
+            m_pred = None
+            e_pred = ("no ONNX" if not have_pred
+                      else f"only {len(sub)} obs in 2026 {q.upper()}")
+        rows.append(_regime_row(f"regime_{q}_pred", m_pred, e_pred))
+    return rows
+
+
+def _np_weighted_pearson(y_pred: np.ndarray, y_true: np.ndarray,
+                         eps: float = 1e-8) -> float:
+    """NumPy port of forecaster.losses.weighted_pearson (torch-free here:
+    run_ablations uses `from __future__ import annotations` and must not
+    import torch — see CLAUDE.md hard constraint 6)."""
+    w = np.abs(y_true) + eps
+    w = w / w.sum()
+    mp = float((w * y_pred).sum())
+    mt = float((w * y_true).sum())
+    dp = y_pred - mp
+    dt = y_true - mt
+    cov = float((w * dp * dt).sum())
+    vp = max(float((w * dp ** 2).sum()), eps)
+    vt = max(float((w * dt ** 2).sum()), eps)
+    return cov / (np.sqrt(vp) * np.sqrt(vt))
+
+
+def _np_quantile_loss(y_pred: np.ndarray, y_true: np.ndarray,
+                      q: float = 0.9) -> float:
+    """NumPy port of forecaster.losses.quantile_loss (pinball loss)."""
+    e = y_true - y_pred
+    return float(np.maximum(q * e, (q - 1.0) * e).mean())
+
+
+def _forecast_quality_row(test_obs: List[Observation],
+                          cfg: MainRunConfig) -> Dict[str, Any]:
+    """Score the ONNX forecaster vs realized rate h steps ahead (plan §9.4).
+
+    Replays PredictiveMCDM once to harvest its (r_hat, r_spot) history, then
+    aligns each forecast to the realized annualised rate `horizon` steps
+    later. Metrics pooled across both protocols: OOS R² (vs spot-persistence
+    baseline), directional accuracy, weighted Pearson, quantile-90 loss.
+    """
+    row = _nan_row("forecast_quality", "forecast_quality",
+                   "PredictiveMCDM", "no ONNX / insufficient forecasts")
+    for c in _FORECAST_QUALITY_COLS:
+        row[c] = float("nan")
+
+    if not (_HAS_PREDICTIVE and ONNX_PATH.exists()) or len(test_obs) < 24:
+        return row
+
+    horizon = cfg.forecast_horizon_h
+    try:
+        params = PredictiveMCDMParams(
+            INITIAL_BALANCE=cfg.initial_balance,
+            DEFAULT_INITIAL_ENTITY="AAVE",
+        )
+        strat, _res, _eq = _run_one(PredictiveMCDMStrategy, params, test_obs,
+                                    "forecast_quality/replay")
+    except Exception as exc:                                # noqa: BLE001
+        row["status"] = f"SKIPPED:forecast replay failed: {exc}"
+        return row
+
+    history = getattr(strat, "_forecast_history", None) or []
+    ts_to_idx = {o.timestamp: i for i, o in enumerate(test_obs)}
+    y_pred: List[float] = []
+    y_true: List[float] = []
+    y_spot: List[float] = []
+    for entry in history:
+        ts = entry.get("timestamp")
+        i = ts_to_idx.get(ts)
+        if i is None:
+            continue
+        j = i + horizon
+        if j >= len(test_obs):
+            continue
+        fut = test_obs[j]
+        for ent in ("AAVE", "COMPOUND"):
+            pair = entry.get(ent)
+            if pair is None or ent not in fut.states:
+                continue
+            r_hat, r_spot = pair
+            r_future = float(fut.states[ent].lending_rate) * 365 * 24
+            y_pred.append(float(r_hat))
+            y_true.append(r_future)
+            y_spot.append(float(r_spot))
+
+    if len(y_pred) < 5:
+        row["status"] = f"SKIPPED:only {len(y_pred)} aligned forecast points"
+        return row
+
+    yp = np.asarray(y_pred, dtype=float)
+    yt = np.asarray(y_true, dtype=float)
+    ys = np.asarray(y_spot, dtype=float)
+
+    ss_res = float(np.sum((yt - yp) ** 2))
+    # Baseline = spot persistence (r_hat == r_spot); honest "skill vs naive".
+    ss_base = float(np.sum((yt - ys) ** 2))
+    oos_r2 = 1.0 - ss_res / ss_base if ss_base > 0 else float("nan")
+    dir_acc = float(np.mean(np.sign(yp - ys) == np.sign(yt - ys)))
+    w_pearson = _np_weighted_pearson(yp, yt)
+    q90 = _np_quantile_loss(yp, yt, q=0.9)
+
+    row["status"] = "OK"
+    row["n_rebalances"] = len(yp)
+    row["oos_r2"] = oos_r2
+    row["dir_acc"] = dir_acc
+    row["w_pearson"] = w_pearson
+    row["q90_loss"] = q90
+    return row
+
+
+# ---------------------------------------------------------------------------
 # Top-level orchestration
 # ---------------------------------------------------------------------------
 
@@ -985,9 +1163,18 @@ def run_all(
         else:
             rows.extend(result)
 
+    # Plan §9.5 regime-conditional + §9.4 forecast-quality deliverable rows.
+    # Only on a full run (a single --only N is a numbered-ablation probe).
+    if only is None:
+        logger.info("--- regime-conditional rows (2026 Q1 / Q2) ---")
+        rows.extend(_regime_rows(test_obs, cfg))
+        logger.info("--- forecast-quality row (OOS R2 / dir-acc / wP / q90) ---")
+        rows.append(_forecast_quality_row(test_obs, cfg))
+
     df = pd.DataFrame(rows)
-    # Force column order: required cols first, then debug cols.
-    cols = [c for c in _ALL_COLS if c in df.columns]
+    # Force column order: required cols first, debug cols, then the
+    # forecast-quality-only columns (NaN for every other row).
+    cols = [c for c in _ALL_COLS + _FORECAST_QUALITY_COLS if c in df.columns]
     df = df[cols] if cols else df
 
     _emit_outputs(df, abl1_eq, test_obs, cfg, save_figure=save_figure)

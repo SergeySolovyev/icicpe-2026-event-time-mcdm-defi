@@ -167,8 +167,18 @@ def _validation_metrics(
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--epochs", type=int, default=2)
-    ap.add_argument("--seq-len", type=int, default=72,
-                    help="sequence length (CPU-friendly 72 vs production 168)")
+    ap.add_argument("--seq-len", type=int, default=168,
+                    help="sequence length; defaults to the production 168 so the "
+                         "dummy ONNX matches the strategy/export_onnx contract "
+                         "(use a smaller value only for a non-representative fast run)")
+    ap.add_argument("--max-rows", type=int, default=1500,
+                    help="truncate the panel to the first N rows before the "
+                         "train/val split. The smoke produces a throwaway-weight "
+                         "model whose ONLY job is to validate the pipeline + ONNX "
+                         "contract (seq_len comes from the model config, not the "
+                         "row count), so a small slice keeps CPU wall-time low "
+                         "while still exercising the production seq_len=168. "
+                         "Set 0 to use the full panel.")
     ap.add_argument("--force", action="store_true",
                     help="overwrite existing checkpoint/onnx without asking")
     ap.add_argument("--no-onnx", action="store_true",
@@ -200,6 +210,19 @@ def main() -> int:
     _banner("2. extract_features")
     df_feat = extract_features(df_raw, params_a, params_c)
     print(f"[feat] shape {df_feat.shape}")
+
+    if args.max_rows and len(df_feat) > args.max_rows:
+        # 80/20 split -> the 20% val side is the binding constraint and needs
+        # >= seq_len + horizon(12) + 1 rows, so total >= 5 * (seq_len + 13).
+        min_needed = 5 * (args.seq_len + 12 + 1)  # 12 = forecast_horizon below
+        if args.max_rows < min_needed:
+            print(f"[FATAL] --max-rows {args.max_rows} too small for "
+                  f"seq_len {args.seq_len}: need >= {min_needed} so the 20% "
+                  f"val slice still yields >= {args.seq_len + 13} rows.")
+            return 3
+        df_feat = df_feat.iloc[: args.max_rows]
+        print(f"[feat] truncated to first {args.max_rows} rows for smoke speed "
+              f"(seq_len {args.seq_len} contract preserved): {df_feat.shape}")
 
     # --- 3. Build Dataset / chronological 80-20 split -------------------
     _banner("3. Build Dataset (80/20 chronological split)")

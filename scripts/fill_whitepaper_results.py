@@ -47,6 +47,11 @@ MAIN_CSV = TABLES_DIR / "main.csv"
 ABLATIONS_CSV = TABLES_DIR / "ablations.csv"
 H1_CSV = TABLES_DIR / "h1_significance.csv"
 
+# Defense deck shares the SAME \newcommand contract. Populated additively
+# from the same MAPPING/new_values so the slides auto-update with the paper.
+# No-op if absent (whitepaper path is unaffected either way).
+SLIDES_MACROS_PATH = ROOT / "slides" / "results_macros.tex"
+
 # Sentinel still present in unfilled cells.
 PLACEHOLDER_TOKEN = r"XX.XX\%"
 
@@ -66,67 +71,87 @@ PLACEHOLDER_TOKEN = r"XX.XX\%"
 #                 "money" -> "{:.0f}\\%"
 # ---------------------------------------------------------------------------
 
+# Column names below match the ACTUAL backtest CSV schemas (run_main.py /
+# run_ablations.py): main.csv -> net_apy/sharpe_annual/max_drawdown/
+# turnover_per_month/calmar/gas_spent_usd; h1_significance.csv -> delta/
+# bootstrap_p_value/ci_low/ci_high. The baseline strategies (BuyAndHold,
+# APYGreedy, CIRMCDM) are NOT in main.csv under `make finish` (which runs
+# only run_main + run_ablations, not run_baselines); their equivalents live
+# in ablations.csv: BuyAndHold == single_protocol[AAVE] (10a), APYGreedy ==
+# greedy_on_forecast (11a), CIRMCDM == cir_forecast (3). Sourcing them from
+# ablations keeps the documented finish workflow self-consistent.
 MAPPING: Dict[str, Tuple[str, Dict[str, str], str, str]] = {
     # --- Headline H1 test ---
-    "PredictiveAPY":     ("main", {"strategy": "PredictiveMCDM"}, "apy",        "pct_from_unit"),
-    "EMAAPY":            ("main", {"strategy": "MCDMEMA"},        "apy",        "pct_from_unit"),
-    "PredictiveSharpe":  ("main", {"strategy": "PredictiveMCDM"}, "sharpe",     "raw"),
-    "EMASharpe":         ("main", {"strategy": "MCDMEMA"},        "sharpe",     "raw"),
-    "SharpeDelta":       ("h1",   {},                              "sharpe_delta", "raw"),
-    "BootstrapPvalue":   ("h1",   {},                              "p_value",    "raw"),
-    "BootstrapCILow":    ("h1",   {},                              "ci_low",     "raw"),
-    "BootstrapCIHigh":   ("h1",   {},                              "ci_high",    "raw"),
+    "PredictiveAPY":     ("main", {"strategy": "PredictiveMCDM"}, "net_apy",       "pct_from_unit"),
+    "EMAAPY":            ("main", {"strategy": "MCDMEMA"},        "net_apy",       "pct_from_unit"),
+    "PredictiveSharpe":  ("main", {"strategy": "PredictiveMCDM"}, "sharpe_annual", "raw"),
+    "EMASharpe":         ("main", {"strategy": "MCDMEMA"},        "sharpe_annual", "raw"),
+    "SharpeDelta":       ("h1",   {},                              "delta",        "raw"),
+    "BootstrapPvalue":   ("h1",   {},                              "bootstrap_p_value", "raw"),
+    "BootstrapCILow":    ("h1",   {},                              "ci_low",       "raw"),
+    "BootstrapCIHigh":   ("h1",   {},                              "ci_high",      "raw"),
 
     # --- Per-strategy table: 5 strategies x 6 metrics ---
-    "BuyholdAPY":        ("main", {"strategy": "BuyAndHold"},     "apy",         "pct_from_unit"),
-    "BuyholdSharpe":     ("main", {"strategy": "BuyAndHold"},     "sharpe",      "raw"),
-    "BuyholdDD":         ("main", {"strategy": "BuyAndHold"},     "max_dd",      "pct_from_unit"),
-    "BuyholdCalmar":     ("main", {"strategy": "BuyAndHold"},     "calmar",      "raw"),
-    "BuyholdTurnover":   ("main", {"strategy": "BuyAndHold"},     "turnover",    "raw"),
-    "BuyholdGas":        ("main", {"strategy": "BuyAndHold"},     "gas_spent_usd", "money"),
-    "GreedyAPY":         ("main", {"strategy": "APYGreedy"},      "apy",         "pct_from_unit"),
-    "GreedySharpe":      ("main", {"strategy": "APYGreedy"},      "sharpe",      "raw"),
-    "GreedyDD":          ("main", {"strategy": "APYGreedy"},      "max_dd",      "pct_from_unit"),
-    "GreedyCalmar":      ("main", {"strategy": "APYGreedy"},      "calmar",      "raw"),
-    "GreedyTurnover":    ("main", {"strategy": "APYGreedy"},      "turnover",    "raw"),
-    "GreedyGas":         ("main", {"strategy": "APYGreedy"},      "gas_spent_usd", "money"),
-    "EMADD":             ("main", {"strategy": "MCDMEMA"},        "max_dd",      "pct_from_unit"),
-    "EMACalmar":         ("main", {"strategy": "MCDMEMA"},        "calmar",      "raw"),
-    "EMATurnover":       ("main", {"strategy": "MCDMEMA"},        "turnover",    "raw"),
+    "BuyholdAPY":        ("ablations", {"ablation_id": "10a"},      "net_apy",       "pct_from_unit"),
+    "BuyholdSharpe":     ("ablations", {"ablation_id": "10a"},      "sharpe_annual", "raw"),
+    "BuyholdDD":         ("ablations", {"ablation_id": "10a"},      "max_drawdown",  "pct_from_unit"),
+    "BuyholdCalmar":     ("ablations", {"ablation_id": "10a"},      "calmar",        "raw"),
+    "BuyholdTurnover":   ("ablations", {"ablation_id": "10a"},      "turnover_per_month", "raw"),
+    "BuyholdGas":        ("ablations", {"ablation_id": "10a"},      "gas_spent_usd", "money"),
+    "GreedyAPY":         ("ablations", {"ablation_id": "11a"},      "net_apy",       "pct_from_unit"),
+    "GreedySharpe":      ("ablations", {"ablation_id": "11a"},      "sharpe_annual", "raw"),
+    "GreedyDD":          ("ablations", {"ablation_id": "11a"},      "max_drawdown",  "pct_from_unit"),
+    "GreedyCalmar":      ("ablations", {"ablation_id": "11a"},      "calmar",        "raw"),
+    "GreedyTurnover":    ("ablations", {"ablation_id": "11a"},      "turnover_per_month", "raw"),
+    "GreedyGas":         ("ablations", {"ablation_id": "11a"},      "gas_spent_usd", "money"),
+    "EMADD":             ("main", {"strategy": "MCDMEMA"},        "max_drawdown",  "pct_from_unit"),
+    "EMACalmar":         ("main", {"strategy": "MCDMEMA"},        "calmar",        "raw"),
+    "EMATurnover":       ("main", {"strategy": "MCDMEMA"},        "turnover_per_month", "raw"),
     "EMAGas":            ("main", {"strategy": "MCDMEMA"},        "gas_spent_usd", "money"),
-    "CIRAPY":            ("main", {"strategy": "CIRMCDM"},        "apy",         "pct_from_unit"),
-    "CIRSharpe":         ("main", {"strategy": "CIRMCDM"},        "sharpe",      "raw"),
-    "CIRDD":             ("main", {"strategy": "CIRMCDM"},        "max_dd",      "pct_from_unit"),
-    "CIRCalmar":         ("main", {"strategy": "CIRMCDM"},        "calmar",      "raw"),
-    "CIRTurnover":       ("main", {"strategy": "CIRMCDM"},        "turnover",    "raw"),
-    "CIRGas":            ("main", {"strategy": "CIRMCDM"},        "gas_spent_usd", "money"),
-    "PredictiveDD":      ("main", {"strategy": "PredictiveMCDM"}, "max_dd",      "pct_from_unit"),
-    "PredictiveCalmar":  ("main", {"strategy": "PredictiveMCDM"}, "calmar",      "raw"),
-    "PredictiveTurnover":("main", {"strategy": "PredictiveMCDM"}, "turnover",    "raw"),
+    "CIRAPY":            ("ablations", {"ablation_id": "3"},        "net_apy",       "pct_from_unit"),
+    "CIRSharpe":         ("ablations", {"ablation_id": "3"},        "sharpe_annual", "raw"),
+    "CIRDD":             ("ablations", {"ablation_id": "3"},        "max_drawdown",  "pct_from_unit"),
+    "CIRCalmar":         ("ablations", {"ablation_id": "3"},        "calmar",        "raw"),
+    "CIRTurnover":       ("ablations", {"ablation_id": "3"},        "turnover_per_month", "raw"),
+    "CIRGas":            ("ablations", {"ablation_id": "3"},        "gas_spent_usd", "money"),
+    "PredictiveDD":      ("main", {"strategy": "PredictiveMCDM"}, "max_drawdown",  "pct_from_unit"),
+    "PredictiveCalmar":  ("main", {"strategy": "PredictiveMCDM"}, "calmar",        "raw"),
+    "PredictiveTurnover":("main", {"strategy": "PredictiveMCDM"}, "turnover_per_month", "raw"),
     "PredictiveGas":     ("main", {"strategy": "PredictiveMCDM"}, "gas_spent_usd", "money"),
 }
 
 # --- 15-ablation mapping is built procedurally (45 entries) ---
+# ablation_id N maps to the canonical primary sub-row: ablations 9-12 split
+# into a/b variants (run_ablations.py) where the "a" row is the headline
+# case (tuned / single-protocol-Aave / greedy / realistic-gas); ids 1-8 and
+# 13-15 are plain. Delta is computed in fill() as net_apy minus ablation-1's
+# net_apy (the `delta_vs_abl1` quantity run_ablations prints in its markdown
+# table) -- there is no such CSV column, and deriving it here avoids
+# re-running the ablation battery just to persist a trivially-derived value.
 _ABLATION_ORDINALS = [
     "One", "Two", "Three", "Four", "Five",
     "Six", "Seven", "Eight", "Nine", "Ten",
     "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen",
 ]
+_ABLATION_ID_FOR_ORDINAL = {
+    9: "9a", 10: "10a", 11: "11a", 12: "12a",
+}
 for _idx, _word in enumerate(_ABLATION_ORDINALS, start=1):
-    _filter = {"ablation_id": str(_idx)}
-    MAPPING[f"Ablation{_word}APY"]    = ("ablations", _filter, "apy",          "pct_from_unit")
-    MAPPING[f"Ablation{_word}Sharpe"] = ("ablations", _filter, "sharpe",       "raw")
-    MAPPING[f"Ablation{_word}Delta"]  = ("ablations", _filter, "delta_vs_one", "pct_from_unit")
+    _abl_id = _ABLATION_ID_FOR_ORDINAL.get(_idx, str(_idx))
+    _filter = {"ablation_id": _abl_id}
+    MAPPING[f"Ablation{_word}APY"]    = ("ablations", _filter, "net_apy",       "pct_from_unit")
+    MAPPING[f"Ablation{_word}Sharpe"] = ("ablations", _filter, "sharpe_annual", "raw")
+    MAPPING[f"Ablation{_word}Delta"]  = ("ablations", _filter, "net_apy",       "delta_vs_abl1")
 
 # --- Regime-conditional (Q1 + Q2 of 2026 test window) ---
-MAPPING["QOneSharpePred"] = ("ablations", {"ablation_id": "regime_q1_pred"}, "sharpe", "raw")
-MAPPING["QOneAPYPred"]    = ("ablations", {"ablation_id": "regime_q1_pred"}, "apy",    "pct_from_unit")
-MAPPING["QOneSharpeEMA"]  = ("ablations", {"ablation_id": "regime_q1_ema"},  "sharpe", "raw")
-MAPPING["QOneAPYEMA"]     = ("ablations", {"ablation_id": "regime_q1_ema"},  "apy",    "pct_from_unit")
-MAPPING["QTwoSharpePred"] = ("ablations", {"ablation_id": "regime_q2_pred"}, "sharpe", "raw")
-MAPPING["QTwoAPYPred"]    = ("ablations", {"ablation_id": "regime_q2_pred"}, "apy",    "pct_from_unit")
-MAPPING["QTwoSharpeEMA"]  = ("ablations", {"ablation_id": "regime_q2_ema"},  "sharpe", "raw")
-MAPPING["QTwoAPYEMA"]     = ("ablations", {"ablation_id": "regime_q2_ema"},  "apy",    "pct_from_unit")
+MAPPING["QOneSharpePred"] = ("ablations", {"ablation_id": "regime_q1_pred"}, "sharpe_annual", "raw")
+MAPPING["QOneAPYPred"]    = ("ablations", {"ablation_id": "regime_q1_pred"}, "net_apy",       "pct_from_unit")
+MAPPING["QOneSharpeEMA"]  = ("ablations", {"ablation_id": "regime_q1_ema"},  "sharpe_annual", "raw")
+MAPPING["QOneAPYEMA"]     = ("ablations", {"ablation_id": "regime_q1_ema"},  "net_apy",       "pct_from_unit")
+MAPPING["QTwoSharpePred"] = ("ablations", {"ablation_id": "regime_q2_pred"}, "sharpe_annual", "raw")
+MAPPING["QTwoAPYPred"]    = ("ablations", {"ablation_id": "regime_q2_pred"}, "net_apy",       "pct_from_unit")
+MAPPING["QTwoSharpeEMA"]  = ("ablations", {"ablation_id": "regime_q2_ema"},  "sharpe_annual", "raw")
+MAPPING["QTwoAPYEMA"]     = ("ablations", {"ablation_id": "regime_q2_ema"},  "net_apy",       "pct_from_unit")
 
 # --- Forecast quality (one synthetic row in ablations.csv) ---
 MAPPING["ForecastRsq"]       = ("ablations", {"ablation_id": "forecast_quality"}, "oos_r2",       "raw")
@@ -266,12 +291,30 @@ def fill(dry_run: bool = False) -> int:
     if "h1" in used_kinds:
         frames["h1"] = _load_csv(H1_CSV, "h1")
 
-    # 3. Resolve every macro's new value
+    # 3. Resolve every macro's new value.
+    #    `delta_vs_abl1` is a derived formatter: value minus ablation-1's
+    #    net_apy (run_ablations' `delta_vs_abl1` quantity; no CSV column).
+    abl1_net_apy: Optional[float] = None
+    if "ablations" in frames:
+        try:
+            abl1_net_apy = _lookup(
+                frames["ablations"], {"ablation_id": "1"}, "net_apy",
+                "<delta_vs_abl1 baseline>", "ablations",
+            )
+        except (KeyError, LookupError):
+            abl1_net_apy = None
+
     new_values: Dict[str, str] = {}
     print(f"[fill_whitepaper_results] resolving {len(MAPPING)} macros...")
     for macro, (kind, row_filter, column, formatter) in MAPPING.items():
         df = frames[kind]
         raw = _lookup(df, row_filter, column, macro, kind)
+        if formatter == "delta_vs_abl1":
+            if abl1_net_apy is None or pd.isna(raw):
+                new_values[macro] = _format(float("nan"), "pct_from_unit")
+            else:
+                new_values[macro] = _format(raw - abl1_net_apy, "pct_from_unit")
+            continue
         new_values[macro] = _format(raw, formatter)
 
     # 4. Apply substitutions and emit per-line diffs
@@ -318,6 +361,43 @@ def fill(dry_run: bool = False) -> int:
     else:
         TEX_PATH.write_text(new_text, encoding="utf-8")
         print(f"[fill_whitepaper_results] wrote {TEX_PATH}")
+
+    # 7. ADDITIVE: mirror the SAME resolved values into the defense deck's
+    #    shared macro file. Identical \newcommand contract, so one MAPPING
+    #    drives both paper and slides. Purely additive: the whitepaper logic
+    #    above is unchanged, and a missing slides file is a clean no-op.
+    if SLIDES_MACROS_PATH.exists():
+        slides_text = SLIDES_MACROS_PATH.read_text(encoding="utf-8")
+        # Same strict guard the whitepaper gets: slides macro set == MAPPING.
+        _validate_mapping_against_tex(
+            [name for name, _ in _scan_macros(slides_text)]
+        )
+        s_sub = 0
+        s_lines: List[str] = []
+        for line in slides_text.splitlines(keepends=True):
+            m = _NEWCMD_RE.search(line)
+            if m is None or m.group(1) not in new_values:
+                s_lines.append(line)
+                continue
+            s_lines.append(
+                line[: m.start(2)] + new_values[m.group(1)] + line[m.end(2):]
+            )
+            s_sub += 1
+        s_text = "".join(s_lines)
+        if PLACEHOLDER_TOKEN in s_text:
+            bad = [ln for ln in s_text.splitlines() if PLACEHOLDER_TOKEN in ln]
+            raise RuntimeError(
+                "[fill_whitepaper_results] slides post-substitution FAILED: "
+                f"{len(bad)} placeholders remain.\n  " + "\n  ".join(bad[:5])
+            )
+        print(f"[fill_whitepaper_results] slides: {s_sub}/{len(MAPPING)} "
+              f"macros resolved; placeholder check OK")
+        if dry_run:
+            print("[fill_whitepaper_results] DRY RUN: slides file not written")
+        else:
+            SLIDES_MACROS_PATH.write_text(s_text, encoding="utf-8")
+            print(f"[fill_whitepaper_results] wrote {SLIDES_MACROS_PATH}")
+
     return substituted
 
 

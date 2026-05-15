@@ -52,6 +52,18 @@ whitepaper/*.fdb_latexmk
 whitepaper/*.fls
 whitepaper/*.synctex.gz
 
+# Defense deck build artifacts (defense.pdf is tracked, like main.pdf)
+slides/*.aux
+slides/*.log
+slides/*.out
+slides/*.nav
+slides/*.snm
+slides/*.toc
+slides/*.vrb
+slides/*.fdb_latexmk
+slides/*.fls
+slides/*.synctex.gz
+
 # Secrets
 .env
 *.key

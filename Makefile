@@ -7,7 +7,7 @@ PY      := .venv/Scripts/python.exe       # Windows; on Linux: .venv/bin/python
 PYTEST  := .venv/Scripts/pytest.exe       # Windows; on Linux: .venv/bin/pytest
 
 .PHONY: help install verify-imports data train backtest ablations whitepaper test clean \
-        preflight smoke-train colab-bundle fill-results finish
+        preflight smoke-train colab-bundle fill-results slides finish
 
 help:
 	@echo "Project pipeline (3-step user finish workflow in FINISH.md):"
@@ -18,7 +18,8 @@ help:
 	@echo "  backtest        run_main + run_ablations on real test window"
 	@echo "  fill-results    substitute real numbers into whitepaper sec 8"
 	@echo "  whitepaper      compile whitepaper PDF (3-pass biber + pdflatex)"
-	@echo "  finish          backtest + fill-results + whitepaper in one go"
+	@echo "  slides          compile defense deck (numbers auto-fill from CSVs)"
+	@echo "  finish          backtest + fill-results + whitepaper + slides in one go"
 	@echo ""
 	@echo "Lower-level targets:"
 	@echo "  install         pip install -r requirements.txt into .venv"
@@ -64,6 +65,13 @@ test:
 whitepaper:
 	cd whitepaper && latexmk -pdf main.tex && latexmk -c
 
+# Defense deck. Numbers come from slides/results_macros.tex, which
+# fill_whitepaper_results.py rewrites from the backtest CSVs (same contract
+# as the whitepaper) -- so this compiles with placeholders pre-Colab and
+# real numbers post-Colab, no slide edits.
+slides:
+	cd slides && latexmk -pdf defense.tex && latexmk -c
+
 clean:
 	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
 	find . -type d -name .pytest_cache -exec rm -rf {} + 2>/dev/null || true
@@ -87,3 +95,4 @@ finish:
 	$(PY) -m backtest.run_ablations
 	$(PY) -m scripts.fill_whitepaper_results
 	cd whitepaper && pdflatex -interaction=nonstopmode main.tex && biber main && pdflatex -interaction=nonstopmode main.tex && pdflatex -interaction=nonstopmode main.tex
+	cd slides && pdflatex -interaction=nonstopmode defense.tex && pdflatex -interaction=nonstopmode defense.tex
