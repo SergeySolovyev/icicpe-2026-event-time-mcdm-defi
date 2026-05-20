@@ -135,13 +135,22 @@ def test_cross_protocol_spread_zero_when_protocols_identical():
 # ----------------------------------------------------------------------------
 
 def _synthetic_joined_df(n_hours: int = 48) -> pd.DataFrame:
-    """Build a tiny synthetic dataframe matching the joined-clean schema."""
+    """Build a tiny synthetic dataframe matching the joined-clean schema.
+
+    Per the joined_clean.parquet convention (verified by the audit on
+    2026-05-20), r_aave / r_compound are PER-HOUR rates. f_kink returns
+    annualized rates, so we divide by HOURS_PER_YEAR here so the synthetic
+    data lies on the kink curve in the same scale as production data.
+    extract_features will multiply back by 8760 internally to produce
+    r_*_annual columns.
+    """
+    HOURS_PER_YEAR = 365 * 24
     rng = np.random.default_rng(0)
     idx = pd.date_range("2026-01-01", periods=n_hours, freq="1h", tz="UTC")
     u_a = np.clip(0.5 + 0.1 * rng.standard_normal(n_hours), 0.0, 0.99)
     u_c = np.clip(0.4 + 0.1 * rng.standard_normal(n_hours), 0.0, 0.99)
-    r_a = np.asarray(f_kink(u_a, AAVE_USDC))
-    r_c = np.asarray(f_kink(u_c, COMP_USDC))
+    r_a = np.asarray(f_kink(u_a, AAVE_USDC)) / HOURS_PER_YEAR
+    r_c = np.asarray(f_kink(u_c, COMP_USDC)) / HOURS_PER_YEAR
     return pd.DataFrame({
         "r_aave": r_a, "r_compound": r_c,
         "u_aave": u_a, "u_compound": u_c,

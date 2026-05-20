@@ -5,11 +5,18 @@ Implements PROJECT_2_PLAN.md §4.4:
 1. Outlier removal:
      - APR outside [0, 50%] -> drop (oracle-glitch removal)
      - rate-jump guard |r(t) - r(t-1)| / r(t-1) > 5 -> linear interpolate
+     - utilization clamp to [0, 1] (Aave invariant: totalDebt <= totalLiquidity).
+       Raw subgraph occasionally emits u_aave > 1 (oracle glitch); we clamp
+       to 1.0 with a print log. Audit finding #8 (2026-05-20).
 2. Missing data:
      - forward-fill <=6h
      - longer gaps -> separate regime, excluded from training sequences
 3. Feature normalisation:
-     - z-score using TRAINING statistics only (no leakage)
+     - z-score using TRAINING statistics only (no leakage). Implemented
+       inside `forecaster.train.DABiGRUCNNDataset.__init__` (computes
+       mean/std on the training window and saves them to
+       `data/cached/feature_stats.json` for ONNX-side reuse). Audit
+       finding #5 (2026-05-20).
 4. Sign-convention lock-in:
      - assert borrowing_rate >= lending_rate for both protocols, all t
 
@@ -99,6 +106,25 @@ def assert_sign_convention(df: pd.DataFrame, name: str) -> None:
         )
 
 
+def _clamp_utilization(df: pd.DataFrame) -> pd.DataFrame:
+    """Clamp utilization columns to [0, 1] (audit finding #8).
+
+    Aave invariant: totalDebt <= totalLiquidity → u in [0, 1]. Raw subgraph
+    occasionally emits u_aave > 1 (oracle glitch on `joined_clean.parquet`
+    had u_aave.max()=1.0149). Compound is fine in practice but we apply the
+    same clamp for symmetry.
+    """
+    for col in ("u_aave", "u_compound"):
+        if col in df.columns:
+            n_high = int((df[col] > 1.0).sum())
+            n_low = int((df[col] < 0.0).sum())
+            if n_high or n_low:
+                print(f"[clean] {col}: clamping {n_high} rows > 1.0 "
+                      f"and {n_low} rows < 0.0 to [0, 1] (finding #8)")
+            df[col] = df[col].clip(lower=0.0, upper=1.0)
+    return df
+
+
 def join_protocols(aave: pd.DataFrame, compound: pd.DataFrame) -> pd.DataFrame:
     a = aave.rename(columns={
         "lending_rate": "r_aave",
@@ -121,6 +147,8 @@ def join_protocols(aave: pd.DataFrame, compound: pd.DataFrame) -> pd.DataFrame:
 
     joined["valid_aave"] = joined["r_aave"].notna()
     joined["valid_compound"] = joined["r_compound"].notna()
+
+    joined = _clamp_utilization(joined)
 
     return joined
 

@@ -29,10 +29,25 @@ from torch.utils.data import DataLoader, Dataset
 
 import json
 import math
+import random
 import tempfile
 from dataclasses import dataclass, field, asdict
 from pathlib import Path
 from typing import Any
+
+
+def _seed_all(seed: int) -> None:
+    """Seed torch + numpy + python `random` + CUDA for reproducibility.
+
+    Audit finding #6 (2026-05-20). Called inside `Trainer.__init__` and
+    `Trainer.fit` so a fresh Trainer with the same `cfg.seed` deterministically
+    reproduces model init, optimizer state, and DataLoader shuffle order.
+    """
+    torch.manual_seed(seed)
+    np.random.seed(seed)
+    random.seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)
 
 import numpy as np
 import pandas as pd
@@ -72,6 +87,8 @@ class TrainConfig:
     quantile_q: float = 0.9
     # CV
     n_splits: int = 1
+    # reproducibility (audit finding #6, 2026-05-20)
+    seed: int = 42
     # output
     checkpoint_path: str = "forecaster/trained_models/da_bigru_cnn.pt"
 
@@ -86,7 +103,10 @@ BRANCH_B_COLS = (
     "dTVL_aave_24h", "dTVL_compound_24h",
     "gas_gwei", "tod_sin", "tod_cos",
 )
-TARGET_COLS = ("r_aave", "r_compound")
+TARGET_COLS = ("r_aave_annual", "r_compound_annual")
+
+
+FEATURE_STATS_PATH = Path("data/cached/feature_stats.json")
 
 
 class DABiGRUCNNDataset(Dataset):
@@ -96,6 +116,14 @@ class DABiGRUCNNDataset(Dataset):
     `data.features.extract_features` (plus gas_gwei).
     y_target is the realised future ANNUALISED rate at t+horizon for both
     protocols (shape: (n_protocols,)).
+
+    Audit finding #5 (2026-05-20): Branch A and Branch B columns are
+    z-scored in-place using either (a) stats computed from THIS dataset's
+    rows (when `stats=None`, used on the training fold) or (b) the
+    `stats` dict passed in (used on val/test folds so the normalization
+    is identical to training — no data leakage). After computing stats
+    on the training fold the caller should write them via
+    `dataset.save_stats(path)` and pass `stats=...` to subsequent folds.
     """
 
     def __init__(
@@ -105,6 +133,7 @@ class DABiGRUCNNDataset(Dataset):
         params_c: CompoundKinkParams,
         input_window: int = 168,
         forecast_horizon: int = 12,
+        stats: dict | None = None,
     ):
         super().__init__()
         # Defensive copy + na-drop on the columns we need.
@@ -114,6 +143,42 @@ class DABiGRUCNNDataset(Dataset):
         self.x_a = df_clean[list(BRANCH_A_COLS)].to_numpy(dtype=np.float32)
         self.x_b = df_clean[list(BRANCH_B_COLS)].to_numpy(dtype=np.float32)
         self.y   = df_clean[list(TARGET_COLS)].to_numpy(dtype=np.float32)
+
+        # --- Audit Finding #5 fix: z-score normalization ----------------
+        # Compute or reuse training-window stats. Std is floored at 1e-8 to
+        # leave constant columns (e.g. gas_gwei stub at 30, dTVL_compound
+        # all-zero) at their original near-zero scale instead of blowing up
+        # by 1/0.
+        if stats is None:
+            x_a_mean = self.x_a.mean(axis=0)
+            x_a_std  = self.x_a.std(axis=0)
+            x_b_mean = self.x_b.mean(axis=0)
+            x_b_std  = self.x_b.std(axis=0)
+        else:
+            x_a_mean = np.asarray(stats["x_a_mean"], dtype=np.float32)
+            x_a_std  = np.asarray(stats["x_a_std"],  dtype=np.float32)
+            x_b_mean = np.asarray(stats["x_b_mean"], dtype=np.float32)
+            x_b_std  = np.asarray(stats["x_b_std"],  dtype=np.float32)
+
+        # For columns with std≈0 (constant features), set std=1 so the
+        # zero-centered column remains zero after normalization rather than
+        # exploding (any std<1e-6 is treated as constant).
+        x_a_std_safe = np.where(x_a_std > 1e-6, x_a_std, 1.0).astype(np.float32)
+        x_b_std_safe = np.where(x_b_std > 1e-6, x_b_std, 1.0).astype(np.float32)
+
+        self.x_a = ((self.x_a - x_a_mean) / x_a_std_safe).astype(np.float32)
+        self.x_b = ((self.x_b - x_b_mean) / x_b_std_safe).astype(np.float32)
+
+        # Persist stats so val/test datasets can be constructed with the same
+        # normalization (call `dataset.save_stats(path)` on the training one).
+        self.stats = {
+            "x_a_mean": x_a_mean.tolist(),
+            "x_a_std":  x_a_std.tolist(),
+            "x_b_mean": x_b_mean.tolist(),
+            "x_b_std":  x_b_std.tolist(),
+            "branch_a_cols": list(BRANCH_A_COLS),
+            "branch_b_cols": list(BRANCH_B_COLS),
+        }
 
         self.input_window = int(input_window)
         self.horizon = int(forecast_horizon)
@@ -126,6 +191,13 @@ class DABiGRUCNNDataset(Dataset):
 
         self.params_a = params_a
         self.params_c = params_c
+
+    def save_stats(self, path: str | Path) -> None:
+        """Persist normalization stats to JSON (for ONNX-side reuse)."""
+        p = Path(path)
+        p.parent.mkdir(parents=True, exist_ok=True)
+        with open(p, "w") as f:
+            json.dump(self.stats, f, indent=2)
 
     def __len__(self) -> int:
         return self.n_samples
@@ -144,25 +216,62 @@ class DABiGRUCNNDataset(Dataset):
 # Reconstruction helper: (u_hat, eps_corr) per protocol -> r_hat
 # ---------------------------------------------------------------------------
 
+def f_kink_torch_aave(u: torch.Tensor, p: AaveKinkParams) -> torch.Tensor:
+    """Pure-torch port of `data.features._aave_supply_rate`, differentiable in u.
+
+    Mirrors the numpy version exactly, using `torch.where` for the kink
+    piecewise selector so gradient flows through `u` end-to-end.
+    """
+    u_opt = float(p.optimal_usage_ratio)
+    below = p.base_variable_borrow_rate + p.slope1 * (u / u_opt)
+    above = (
+        p.base_variable_borrow_rate
+        + p.slope1
+        + p.slope2 * (u - u_opt) / (1.0 - u_opt)
+    )
+    borrow = torch.where(u <= u_opt, below, above)
+    return u * borrow * (1.0 - p.reserve_factor)
+
+
+def f_kink_torch_compound(u: torch.Tensor, p: CompoundKinkParams) -> torch.Tensor:
+    """Pure-torch port of `data.features._compound_supply_rate`."""
+    kink = float(p.supply_kink)
+    below = p.supply_per_second_base + p.supply_per_second_slope_low * u
+    above = (
+        p.supply_per_second_base
+        + p.supply_per_second_slope_low * kink
+        + p.supply_per_second_slope_high * (u - kink)
+    )
+    return torch.where(u <= kink, below, above)
+
+
 def reconstruct_rate(
     model_out: torch.Tensor,                          # (B, 2, 2)
     params_a: AaveKinkParams,
     params_c: CompoundKinkParams,
 ) -> torch.Tensor:
-    """Closed-form r_hat = f_kink(u_hat, params) + eps_corr (numpy roundtrip).
+    """Closed-form r_hat = f_kink(u_hat, params) + eps_corr — fully differentiable.
 
-    Differentiable wrt eps_corr but NOT wrt u_hat (kink is piecewise linear
-    in numpy). For training purposes the gradient signal flowing through
-    eps_corr is sufficient and matches the architecture's intent (kink is
-    a fixed prior, not a learnable transform).
+    Audit Finding #7 + #8 fix (2026-05-20):
+      * The kink is re-implemented in pure torch (`f_kink_torch_aave/compound`)
+        so gradient flows through `u_hat` AS WELL AS `eps_corr`. The previous
+        version did `.detach().cpu().numpy()` on u_hat, which silently killed
+        2 of the 4 model output heads (`u_hat_aave`, `u_hat_compound`).
+      * `u_hat` is squashed via `torch.sigmoid` so f_kink only sees values
+        in (0, 1) — the physical domain of utilization. Without this, raw
+        MLP logits could push f_kink into linear extrapolation territory
+        and produce nonsense rates.
     """
-    u_hat = model_out[..., 0]                         # (B, 2)
+    u_hat_raw = model_out[..., 0]                     # (B, 2)
     eps_corr = model_out[..., 1]                      # (B, 2)
-    u_np = u_hat.detach().cpu().numpy().astype(np.float64)
-    kink_a = f_kink(u_np[:, 0], params_a)
-    kink_c = f_kink(u_np[:, 1], params_c)
-    kink = np.stack([kink_a, kink_c], axis=1).astype(np.float32)
-    kink_t = torch.from_numpy(kink).to(eps_corr.device)
+
+    # Finding #8: constrain u_hat to (0, 1) before passing through f_kink.
+    u_hat = torch.sigmoid(u_hat_raw)
+
+    # Finding #7: pure-torch kink keeps the computation graph intact.
+    kink_a = f_kink_torch_aave(u_hat[:, 0], params_a)
+    kink_c = f_kink_torch_compound(u_hat[:, 1], params_c)
+    kink_t = torch.stack([kink_a, kink_c], dim=1)
     return kink_t + eps_corr
 
 
@@ -198,6 +307,11 @@ class Trainer:
         params_c: CompoundKinkParams,
         mlflow_experiment: str | None = "defi-forecast-train",
     ):
+        # Audit finding #6 (2026-05-20): seed all PRNGs BEFORE constructing
+        # the optimizer / scheduler so AdamW's internal state is also
+        # deterministic across runs with the same `cfg.seed`.
+        _seed_all(cfg.seed)
+
         self.model = model.to(cfg.device)
         self.cfg = cfg
         self.params_a = params_a
@@ -289,6 +403,11 @@ class Trainer:
         )
 
     def fit(self, train_loader: DataLoader, val_loader: DataLoader) -> dict[str, Any]:
+        # Audit finding #6 (2026-05-20): re-seed at the start of fit so that
+        # callers who construct a Trainer once and call fit() multiple times
+        # still get reproducible results, AND so the cuDNN / DataLoader RNGs
+        # are deterministic for this run.
+        _seed_all(self.cfg.seed)
         self._ensure_mlflow()
         best_val = math.inf
         best_state = None
@@ -444,8 +563,13 @@ def main(
               f"train[:{tr_end}]  val[{tr_end}:{val_end}] ===")
         ds_tr = DABiGRUCNNDataset(df.iloc[:tr_end], params_a, params_c,
                                   cfg.input_window, cfg.forecast_horizon)
+        # Finding #5: val/test consume the TRAINING-fold's normalization stats
+        # (no leakage). Persist them to disk so ONNX-side / strategy-side
+        # inference can reuse the exact same scaling.
+        ds_tr.save_stats(FEATURE_STATS_PATH)
         ds_va = DABiGRUCNNDataset(df.iloc[tr_end:val_end], params_a, params_c,
-                                  cfg.input_window, cfg.forecast_horizon)
+                                  cfg.input_window, cfg.forecast_horizon,
+                                  stats=ds_tr.stats)
         tr_loader = DataLoader(ds_tr, batch_size=cfg.batch_size, shuffle=True,
                                num_workers=cfg.num_workers, drop_last=True)
         va_loader = DataLoader(ds_va, batch_size=cfg.batch_size, shuffle=False,

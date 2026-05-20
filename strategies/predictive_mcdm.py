@@ -61,6 +61,7 @@ class PredictiveMCDMParams(BaseLendingAllocationParams):
     # Forecaster
     FORECAST_MODEL_PATH: str = "forecaster/trained_models/dual_branch_kink.onnx"
     KINK_PARAMS_PATH: str = "data/cached/kink_params.json"
+    FEATURE_STATS_PATH: str = "data/cached/feature_stats.json"
     SEQUENCE_LENGTH: int = 168                    # 7-day buffer
     FORECAST_HORIZON: int = 12                    # plan §1.5
     FORECAST_REFRESH_HOURS: int = 1               # how often to call ONNX
@@ -94,6 +95,16 @@ class PredictiveMCDMStrategy(BaseLendingAllocationStrategy):
         self._kink_aave: Optional[AaveKinkParams] = None
         self._kink_compound: Optional[CompoundKinkParams] = None
 
+        # Audit finding #5 (2026-05-20): training applies z-score using
+        # training-window statistics. Inference must apply the SAME stats
+        # for train/inference parity. Stats default to no-op (mean=0,std=1)
+        # if `feature_stats.json` is missing — the strategy will then run
+        # un-normalized, matching the legacy pre-fix behavior.
+        self._x_a_mean: Optional[np.ndarray] = None
+        self._x_a_std: Optional[np.ndarray] = None
+        self._x_b_mean: Optional[np.ndarray] = None
+        self._x_b_std: Optional[np.ndarray] = None
+
     # ------------------------------------------------------------------
     # Lazy initialisation (defers heavy imports to runtime)
     # ------------------------------------------------------------------
@@ -126,6 +137,17 @@ class PredictiveMCDMStrategy(BaseLendingAllocationStrategy):
         kp = json.loads(kink_path.read_text())
         self._kink_aave = AaveKinkParams(**kp["aave"])
         self._kink_compound = CompoundKinkParams(**kp["compound"])
+
+        # Load z-score stats for train/inference parity (finding #5).
+        stats_path = ROOT / self._params.FEATURE_STATS_PATH
+        if stats_path.exists():
+            stats = json.loads(stats_path.read_text())
+            self._x_a_mean = np.asarray(stats["x_a_mean"], dtype=np.float32)
+            self._x_a_std  = np.asarray(stats["x_a_std"],  dtype=np.float32)
+            self._x_b_mean = np.asarray(stats["x_b_mean"], dtype=np.float32)
+            self._x_b_std  = np.asarray(stats["x_b_std"],  dtype=np.float32)
+        # If the stats file is missing, leave attributes None; _run_forecaster
+        # then bypasses normalization (legacy behavior).
 
     def _kink_for(self, entity_name: str):
         if entity_name == "AAVE":
@@ -180,11 +202,28 @@ class PredictiveMCDMStrategy(BaseLendingAllocationStrategy):
         x_a = np.array(self._buf_a, dtype=np.float32)[None, :, :]    # (1, T, 3)
         x_b = np.array(self._buf_b, dtype=np.float32)[None, :, :]    # (1, T, 7)
 
+        # Audit finding #5 fix: apply training-window z-score stats for
+        # train/inference parity. Constant columns (std<=1e-6) are passed
+        # through unchanged (matching DABiGRUCNNDataset's "safe" behavior).
+        if self._x_a_mean is not None:
+            std_a = np.where(self._x_a_std > 1e-6, self._x_a_std, 1.0).astype(np.float32)
+            x_a = ((x_a - self._x_a_mean) / std_a).astype(np.float32)
+        if self._x_b_mean is not None:
+            std_b = np.where(self._x_b_std > 1e-6, self._x_b_std, 1.0).astype(np.float32)
+            x_b = ((x_b - self._x_b_mean) / std_b).astype(np.float32)
+
         inputs = {"x_branch_a": x_a, "x_branch_b": x_b}
         # ONNX session output ordering must be (1, n_protocols, 2)
         out = self._onnx_session.run(None, inputs)[0]                # (1, 2, 2)
-        u_hat = out[0, :, 0]            # (2,)  forecast utilizations
+        u_hat_raw = out[0, :, 0]        # (2,)  raw u_hat logits
         eps_corr = out[0, :, 1]         # (2,)  residual correction
+
+        # Audit finding #8 (2026-05-20): the ONNX model emits RAW logits for
+        # u_hat. Training-side reconstruct_rate applies torch.sigmoid before
+        # passing to f_kink; we must mirror that here for train/inference
+        # parity. Without this, the strategy feeds large logits into f_kink
+        # and gets nonsense rates.
+        u_hat = 1.0 / (1.0 + np.exp(-u_hat_raw))
 
         r_hat_aave = float(f_kink(u_hat[0], self._kink_aave)) + float(eps_corr[0])
         r_hat_compound = float(f_kink(u_hat[1], self._kink_compound)) + float(eps_corr[1])

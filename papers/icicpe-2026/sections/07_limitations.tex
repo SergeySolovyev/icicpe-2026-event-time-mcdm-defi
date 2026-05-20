@@ -1,0 +1,67 @@
+% Limitations of the experimental setup
+% Tracking known data and methodology limitations discovered during the
+% 2026-05-20 audit (docs/research/audit-findings-2026-05-20.md). Items below
+% are documented-as-limitations rather than fixed in this paper's cycle;
+% they are queued for follow-up work.
+
+\section{Limitations and Threats to Validity}
+\label{sec:limitations}
+
+The current results were obtained under several data-availability and
+methodology constraints. We list these explicitly so that downstream readers
+can scope conclusions appropriately and so that reproductions can target
+the same envelope.
+
+\paragraph{Compound TVL is a placeholder (Finding \#3).}
+The Compound V3 RPC fetcher records \texttt{total\_supplied\_usd = 0.0} as a
+placeholder pending wiring of the USDC base-units $\to$ USD conversion.
+Consequently \texttt{tvl\_compound}, \texttt{debt\_compound}, and the
+derived \texttt{dTVL\_compound\_24h} feature column are identically zero
+across all 13{,}105 hourly rows of \texttt{joined\_clean.parquet}. Branch~B
+of the forecaster therefore receives one constant input
+($\approx 14\%$ of its 7-dimensional input capacity), which the model
+ignores after the first few epochs but which represents wasted capacity.
+
+\paragraph{Ethereum gas price is a constant stub (Finding \#4).}
+\texttt{data/fetch\_gas\_eth.py} is currently a stub
+(\texttt{raise NotImplementedError}); the training pipeline fills
+\texttt{gas\_gwei = 30.0} as a constant for the entire data window. As with
+Compound TVL, this is one further constant Branch~B input; the MCDM
+\texttt{f\_cost} factor in the strategy still uses the live spot gas at
+decision time, so live-trading behavior is unaffected, but the
+backtest cost-normalization is identical across the train/val/test
+windows and does not reflect realistic gas variation.
+
+\paragraph{Aggregate-only metrics, no per-quarter breakdown (Finding \#9).}
+The headline metrics in \texttt{backtest/run\_main.py} (net APY, annual
+Sharpe, max drawdown, Calmar, forecast hit-rate) are computed over the
+full test window as a single aggregate. Given the regime structure
+documented in \texttt{CLAUDE.md} (Q4 2024 standard deviation 5.75pp vs
+2026 Q1 0.57pp --- approximately $10\times$ volatility variation), this
+aggregation can mask edge concentration in a single regime. A per-quarter
+breakdown table is queued for the next paper cycle.
+
+\paragraph{Composite-loss components logged in unscaled form (Finding \#10).}
+\texttt{forecaster/losses.py} logs the bare $\textsc{MSE}$,
+$1 - \rho_{w}$, and quantile-loss components to MLflow rather than the
+scaled $\alpha \cdot \textsc{MSE}$, $\beta \cdot (1 - \rho_w)$,
+$\gamma \cdot Q_{90}$ contributions. This made diagnosing the R\textsuperscript{2}
+scale issue (Finding \#1) slower than necessary. Scaled-component logging
+is a low-risk addition deferred to a follow-up.
+
+\paragraph{Tie-break bias in winner-series accounting (Finding \#11).}
+\texttt{backtest/run\_main.py:\_winner\_series} uses
+\texttt{aave >= comp} (rather than strict \texttt{>}), which assigns the
+``winner'' label to Aave on ties. In real data ties occur at machine
+precision only and the effect on \texttt{n\_rebalances} is bounded by
+$\pm 1$; we document this as a convention.
+
+\paragraph{Boundary leakage from 24-hour pct\_change feature (Finding \#12).}
+\texttt{data/features.py} computes
+\texttt{dTVL\_aave\_24h = tvl\_aave.pct\_change(24)} on the full joined
+panel before the train/val/test split is applied, then slices by row
+index. The first 24~rows of each non-training fold therefore use TVL
+inputs from the previous fold. The contamination is bounded at
+$24/2501 \approx 0.96\%$ of test samples; we report it as a
+threat-to-validity rather than re-engineer the feature pipeline
+per-fold for this cycle.

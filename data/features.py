@@ -190,13 +190,33 @@ def extract_features(
     """
     out = df.copy()
 
-    # Per-protocol residuals
-    out["eps_aave"] = rate_residual(df["r_aave"], df["u_aave"], params_a)
-    out["eps_compound"] = rate_residual(df["r_compound"], df["u_compound"], params_c)
+    # --- Audit Finding #1 + #2 fix (2026-05-20) -----------------------------
+    # joined_clean.parquet stores r_aave / r_compound as PER-HOUR rates
+    # (median ~4e-6). The kink function f_kink(u; params) returns ANNUALIZED
+    # rates (~3e-2). Mixing them inside rate_residual produced eps ≈ -f_kink(u)
+    # with a 4-orders-of-magnitude target-scale mismatch (R²=-7e9 on test
+    # despite wPearson=0.61). Solution: explicit `*_annual` columns; residuals
+    # and cross-protocol spreads consume them; TARGET_COLS in forecaster/train.py
+    # also points to *_annual so loss is computed on annualized predictions
+    # vs annualized targets. The strategy already uses `r * 365 * 24` at
+    # inference time, so this brings training into the same convention.
+    # See: docs/research/audit-findings-2026-05-20.md  findings #1 + #2.
+    HOURS_PER_YEAR = 365 * 24
+    out["r_aave_annual"]     = df["r_aave"]     * HOURS_PER_YEAR
+    out["r_compound_annual"] = df["r_compound"] * HOURS_PER_YEAR
 
-    # Cross-protocol spreads
+    # Per-protocol residuals — both inputs are now in annualized scale,
+    # matching f_kink's output (also annualized) and the strategy's runtime
+    # eps formula.
+    out["eps_aave"] = rate_residual(out["r_aave_annual"], df["u_aave"], params_a)
+    out["eps_compound"] = rate_residual(out["r_compound_annual"], df["u_compound"], params_c)
+
+    # Cross-protocol spreads — also routed through annualized rates so the
+    # `rate_spread`, `residual_spread`, and `kink_spread` features carry the
+    # same units across train/inference.
     spreads = cross_protocol_spread(
-        df["r_aave"], df["r_compound"], df["u_aave"], df["u_compound"], params_a, params_c
+        out["r_aave_annual"], out["r_compound_annual"],
+        df["u_aave"], df["u_compound"], params_a, params_c,
     )
     for name, arr in spreads.items():
         out[name] = arr
