@@ -52,6 +52,12 @@ H1_CSV = TABLES_DIR / "h1_significance.csv"
 # No-op if absent (whitepaper path is unaffected either way).
 SLIDES_MACROS_PATH = ROOT / "slides" / "results_macros.tex"
 
+# ICICPE 2026 paper: subset of macros (73/109) shared with the whitepaper.
+# Substitution is best-effort here: it does NOT enforce MAPPING == file macros
+# because the conference paper deliberately drops some long-form whitepaper
+# metrics for length-budget reasons.
+ICICPE_MACROS_PATH = ROOT / "papers" / "icicpe-2026" / "sections" / "results_macros.tex"
+
 # Sentinel still present in unfilled cells.
 PLACEHOLDER_TOKEN = r"XX.XX\%"
 
@@ -322,10 +328,18 @@ def fill(dry_run: bool = False) -> int:
             abl1_net_apy = None
 
     new_values: Dict[str, str] = {}
+    skipped: List[str] = []
     print(f"[fill_whitepaper_results] resolving {len(MAPPING)} macros...")
     for macro, (kind, row_filter, column, formatter) in MAPPING.items():
         df = frames[kind]
-        raw = _lookup(df, row_filter, column, macro, kind)
+        try:
+            raw = _lookup(df, row_filter, column, macro, kind)
+        except (KeyError, LookupError) as exc:
+            # Don't fail the whole substitution pass for a single missing
+            # CSV row -- the LaTeX macro keeps its hardcoded fallback
+            # value, which is the safe default for partial pipelines.
+            skipped.append(f"  {macro}: {exc}")
+            continue
         if formatter == "delta_vs_abl1":
             if abl1_net_apy is None or pd.isna(raw):
                 new_values[macro] = _format(float("nan"), "pct_from_unit")
@@ -333,6 +347,11 @@ def fill(dry_run: bool = False) -> int:
                 new_values[macro] = _format(raw - abl1_net_apy, "pct_from_unit")
             continue
         new_values[macro] = _format(raw, formatter)
+    if skipped:
+        print(f"[fill_whitepaper_results] {len(skipped)} macros UNRESOLVED "
+              f"(LaTeX fallback values retained):")
+        for line in skipped:
+            print(line)
 
     # 4. Apply substitutions and emit per-line diffs
     substituted = 0
@@ -414,6 +433,32 @@ def fill(dry_run: bool = False) -> int:
         else:
             SLIDES_MACROS_PATH.write_text(s_text, encoding="utf-8")
             print(f"[fill_whitepaper_results] wrote {SLIDES_MACROS_PATH}")
+
+    # 8. ADDITIVE: ICICPE 2026 paper macros. Conference paper deliberately
+    #    uses a SUBSET of the whitepaper's macros (page-budget driven). We do
+    #    NOT enforce MAPPING == file-macros parity here; missing macros stay
+    #    at their LaTeX hardcoded defaults.
+    if ICICPE_MACROS_PATH.exists():
+        icicpe_text = ICICPE_MACROS_PATH.read_text(encoding="utf-8")
+        i_sub = 0
+        i_lines: List[str] = []
+        for line in icicpe_text.splitlines(keepends=True):
+            m = _NEWCMD_RE.search(line)
+            if m is None or m.group(1) not in new_values:
+                i_lines.append(line)
+                continue
+            i_lines.append(
+                line[: m.start(2)] + new_values[m.group(1)] + line[m.end(2):]
+            )
+            i_sub += 1
+        i_text = "".join(i_lines)
+        print(f"[fill_whitepaper_results] icicpe: {i_sub} macros substituted "
+              f"(out of {len(new_values)} resolved values)")
+        if dry_run:
+            print("[fill_whitepaper_results] DRY RUN: icicpe file not written")
+        else:
+            ICICPE_MACROS_PATH.write_text(i_text, encoding="utf-8")
+            print(f"[fill_whitepaper_results] wrote {ICICPE_MACROS_PATH}")
 
     return substituted
 

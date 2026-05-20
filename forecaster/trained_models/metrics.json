@@ -1,0 +1,18 @@
+{
+  "val/wpearson_aave": 0.7471040487289429,
+  "val/wpearson_compound": 0.2891830503940582,
+  "val/r2_aave": -2.1248190304105186,
+  "val/r2_compound": 0.1376576628237035,
+  "val/dir_acc_aave_gt_compound": 0.7384503455802109,
+  "val/n_samples": 2749,
+  "train/best_val_loss": 0.4267265113980271,
+  "train/elapsed_min": 21.48642590443293,
+  "test/wpearson_aave": -0.06977493315935135,
+  "test/wpearson_compound": 0.6034338474273682,
+  "test/r2_aave": -0.35627665181334933,
+  "test/r2_compound": -0.6432043828123681,
+  "test/dir_acc_aave_gt_compound": 0.3510595761695322,
+  "test/n_samples": 2501,
+  "onnx_path": "/kaggle/working/trained_models/dual_branch_kink.onnx",
+  "onnx_size_kb": 1259.70703125
+}
