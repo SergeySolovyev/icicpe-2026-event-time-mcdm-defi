@@ -86,6 +86,19 @@ EMA-smoothed reactive baseline over the 4-month test window.
   \end{tabular}
 \end{table}
 
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.95\linewidth]{../../results/figures/main_vs_ema_equity.png}
+  \caption{Cumulative equity curves over the 4-month test window
+    (Jan~--~Apr 2026). The two strategies track each other almost
+    perfectly: PredictiveMCDM (forecast-driven) net APY
+    \PredictiveAPY{} versus MCDMEMA (reactive)
+    \EMAAPY{}. The gap is 8\,bp; on this window the forecast
+    pays its overhead but does not earn it back. \Cref{sec:discussion}
+    decomposes which layer of the transfer hypothesis is responsible.}
+  \label{fig:equity}
+\end{figure}
+
 A 1000-resample paired monthly-Sharpe bootstrap (PredictiveMCDM minus
 MCDMEMA on per-month Sharpe pairs) returns
 $\Delta\textsc{Sharpe}=\SharpeDelta$ with 95\% confidence interval
