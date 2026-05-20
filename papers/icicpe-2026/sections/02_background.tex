@@ -48,6 +48,52 @@ confirm the cointegration persists into 2025.  Our 12,895-hour panel
 regime around 2025-Q3 $\to$ Q4, with the Aave-pays-more share rising from
 $39.9\%$ to $56.3\%$ across that quarter boundary.
 
+\subsubsection{Market structure (April 2026 snapshot)}
+\label{sec:bg-market-structure}
+
+The DeFi lending market is highly concentrated.  As of April 2026, total
+deposits across all lending protocols total approximately
+\$54\,B, with the top ten protocols accounting for roughly $78\%$ of
+that value \cite{defillama2026snapshot}.  \Cref{tab:lending-tvl} reports
+the top-eight breakdown; the two protocols highlighted in bold delimit
+the scope of our empirical study.
+
+\begin{table}[t]
+  \centering
+  \caption{Top-eight DeFi lending protocols by total value locked (TVL),
+           April 2026 \cite{defillama2026snapshot}.  Bold rows mark the
+           subset covered by this paper's empirical study.}
+  \label{tab:lending-tvl}
+  \begin{tabular}{lrr}
+    \toprule
+    Protocol (chain)            & TVL (\$B) & Share \\
+    \midrule
+    \textbf{Aave V3}            & \textbf{19.4} & \textbf{36.0\%} \\
+    Spark (SparkLend)           & 6.8           & 12.6\% \\
+    Morpho Blue                 & 4.9           & 9.1\%  \\
+    \textbf{Compound V3}        & \textbf{2.7}  & \textbf{5.0\%} \\
+    JustLend (Tron)             & 2.4           & 4.4\%  \\
+    Fluid                       & 1.6           & 3.0\%  \\
+    Kamino (Solana)             & 1.1           & 2.0\%  \\
+    Euler V2                    & 0.89          & 1.6\%  \\
+    \midrule
+    Top-8 subtotal              & 39.8          & 73.7\% \\
+    Tail ($\sim 350+$ protocols)& 14.2          & 26.3\% \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Our empirical study covers Aave V3 and Compound V3, which jointly hold
+\$22.1\,B (\$19.4\,B + \$2.7\,B), or $41\%$ of total lending TVL.  This
+is a representative, dominant subset of the market rather than a niche.
+The DA-BiGRU-CNN forecaster and the 4-factor MCDM allocator generalize
+to $N$-way protocol allocation without architectural change: each
+additional protocol requires only its protocol-specific kink function
+$f_{\text{kink}}^{(i)}(u)$ and a per-protocol Branch~B feature wiring.
+The methodology therefore applies unchanged to the remaining top-eight
+protocols in \Cref{tab:lending-tvl}; we leave the $N$-way evaluation as
+future work (\Cref{sec:limitations}).
+
 \subsection{Forecasting in DeFi rates}
 \label{sec:bg-forecasting}
 

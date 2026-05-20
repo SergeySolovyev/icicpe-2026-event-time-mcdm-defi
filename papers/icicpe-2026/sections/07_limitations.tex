@@ -65,3 +65,18 @@ inputs from the previous fold. The contamination is bounded at
 $24/2501 \approx 0.96\%$ of test samples; we report it as a
 threat-to-validity rather than re-engineer the feature pipeline
 per-fold for this cycle.
+
+\paragraph{$N$-way allocation across the lending market.}
+Our empirical study covers the two largest Ethereum L1 lending protocols
+(Aave V3 + Compound V3, jointly $41\%$ of the $\approx\$54$\,B total
+lending TVL --- DeFiLlama April 2026 \cite{defillama2026snapshot}; see
+\Cref{tab:lending-tvl}). The dual-branch architecture generalizes to
+$N$ protocols without redesign --- each additional protocol requires
+only its protocol-specific kink function $f_{\text{kink}}^{(i)}(u)$ and
+a per-protocol Branch~B feature wiring.  Four immediate Ethereum L1
+targets, ordered by TVL: Spark (SparkLend, \$6.8\,B; Maker-related),
+Morpho Blue (\$4.9\,B; permissionless markets), Fluid (\$1.6\,B), and
+Euler V2 (\$0.89\,B).  Cross-chain extensions (JustLend on Tron,
+\$2.4\,B; Kamino on Solana, \$1.1\,B) defer the rate-fetching
+infrastructure work but pose no methodological obstacle.  We leave the
+$N$-way extension as the obvious next step.
