@@ -1,0 +1,130 @@
+\section{Background and Related Work}
+\label{sec:background}
+
+We synthesize four strands of literature that bracket the contribution
+--- LOB deep learning, DeFi lending mechanics, ML-based DeFi rate
+forecasting, and MCDM in algorithmic allocation --- and then position
+the work against the recent impossibility result of
+\cite{halpern2024fair}, the most relevant theoretical counter-evidence.
+
+\subsection{LOB microstructure deep learning}
+\label{sec:bg-lob}
+
+Modern LOB mid-price prediction has converged on convolutional-recurrent
+backbones. DeepLOB \cite{zhang2019deeplob} established the
+CNN+LSTM template on the FI-2010 benchmark \cite{ntakaris2018benchmark};
+\cite{sirignano2019universal} demonstrated cross-stock universal features
+under deep learning; \cite{tsantekidis2017using, briola2021deep,
+tran2018temporal} extended the family with attention and bilinear
+mechanisms. The author's prior dual-branch architecture
+\cite{solovev2026lob} is the immediate predecessor to the present work
+and we recap its key results in \Cref{sec:lob-recap}. Recent crypto-LOB
+work \cite{briola2025microstructure, lit2025limit} reinforces a finding
+central to our motivation: \emph{domain-aware input engineering
+dominates raw depth scaling}, supporting the
+two-branch-over-deeper-stack design.
+
+\subsection{DeFi lending mechanics}
+\label{sec:bg-defi-mechanics}
+
+Aave V3 and Compound V3 USDC supply rates are deterministic
+piecewise-linear functions $f_{\text{kink}}(u)$ of pool utilization
+$u = \text{borrowed} / \text{supplied}$, with a shallow slope below a
+kink point (typically $u^{*} = 0.8$--$0.9$) and a steep slope above it
+that taxes high utilization. The strategy parameters are protocol
+governance variables: Aave's \texttt{ReserveInterestRateStrategy}
+contract and Compound V3's hard-coded slopes. Although the function
+$f_{\text{kink}}$ is deterministic given $u$, the realised rate stream
+is stochastic because $u$ moves with on-chain demand.
+
+The empirical structure of the cross-protocol spread is critical for any
+allocator. \cite{gudgeon2020loanable} establishes cointegration between
+Aave and Compound USDC rates with Compound leading and Aave adjusting at
+speed $0.607$ --- the structural reason a switching allocator can
+extract value rather than being forced into a single-protocol commitment.
+Recent crosschain comparative analyses \cite{aavecompoundcrosschain2025}
+confirm the cointegration persists into 2025.  Our 12,895-hour panel
+(\Cref{sec:defi-experiment}) finds the spread structure changes
+regime around 2025-Q3 $\to$ Q4, with the Aave-pays-more share rising from
+$39.9\%$ to $56.3\%$ across that quarter boundary.
+
+\subsection{Forecasting in DeFi rates}
+\label{sec:bg-forecasting}
+
+Published ML-based DeFi rate forecasting work falls into three rough
+classes. (i) \emph{Protocol-side rate control.}
+\cite{bertucci2025rl} train offline reinforcement-learning agents (CQL,
+BC, TD3-BC) on historical Aave data to set rates from the protocol
+governance side; the closely related Auto.gov framework
+\cite{xu2023autogov} reports $\sim14\%$ improvement over benchmarks for
+parameter governance under RL. (ii) \emph{Adaptive rate control.}
+\cite{agilerate2024} fits recursive least-squares (RLS) controllers on
+Compound demand/supply curves at 3-hour resolution. (iii) \emph{Optimal
+protocol design.} \cite{baude2025optimal} derives a closed-form
+Riccati-ODE solution for the protocol-optimal rate curve under linear
+agent response and a Monte-Carlo + deep-learning estimator for the
+nonlinear case; block-level empirical calibration shows industry-standard
+piecewise rate curves are sub-optimal, leaving structural residuals.
+This last point is foundational for us: \cite{baude2025optimal} solves
+the \emph{protocol designer's} problem (which rate function should the
+contract use?), whereas we solve the \emph{lender's} problem (given the
+realised rate stream, where should liquidity go?). Our DA-BiGRU-CNN
+forecaster targets exactly the structural residuals their optimality
+analysis predicts.  We are not aware of a published forecast-driven
+\emph{multi-protocol MCDM allocator} in the May 2026 literature; the
+nearest neighbour is the LSTM+Q-learning AMM quoter of
+\cite{predamm2024}, which transplants a TradFi forecaster to Uniswap V3
+but does not span multiple lending protocols nor use an MCDM head.
+
+\subsection{MCDM in algorithmic allocation}
+\label{sec:bg-mcdm}
+
+Multi-criteria decision making (MCDM) has a long-standing role in
+financial portfolio selection. TOPSIS \cite{hwang1981mcdm} and PROMETHEE
+\cite{brans1985promethee} are the two dominant families. Recent
+cryptocurrency-specific applications include
+\cite{aljinovic2021crypto}'s multicriteria crypto portfolio selection
+and \cite{hosseinzadeh2023promethee}'s asymmetric PROMETHEE-II that
+integrates return prediction with multi-criteria ranking. Our 4-factor
+TOPSIS-style allocator (APY, Risk, Cost, Stability) is in this tradition
+and inherits its criteria-and-weights structure from the author's
+ERC-4626 yield-vault project \cite{solovev2026vault}, modifying it by
+substituting forecast-driven APY for EMA-smoothed spot APY.
+
+\subsection{Counter-evidence: Halpern--Pass--Saraf impossibility}
+\label{sec:bg-impossibility}
+
+The most pointed theoretical counter-evidence to forecast-driven DeFi
+lending strategies is \cite{halpern2024fair}.  Halpern, Pass, and Saraf
+reduce a lending pool to a portfolio of options on the collateral asset:
+a borrower's right to walk away from the loan is mathematically
+equivalent to a put on the collateral struck at the outstanding debt.
+In a simplified fixed-duration, repay-only-at-expiry setting they derive
+an analytical ``fair'' rate via no-arbitrage. They then prove that in
+the realistic setting --- dynamic, perpetual loans with early repayment
+of the kind Aave V3 and Compound V3 implement --- \emph{no fair
+interest rate exists}: any rate either over-compensates lenders relative
+to the option-implied premium or under-compensates them, because the
+borrower's repayment optionality has no finite hedging cost.  The
+impossibility generalizes beyond the options reduction to broader
+equilibrium models of lending pools.
+
+A naive reading of \cite{halpern2024fair} suggests there is no
+exploitable structure in DeFi rates and any allocator should
+underperform a passive benchmark. We argue the implication does not
+follow.  Halpern et al.\ prove a \emph{static equilibrium fairness}
+impossibility under no-arbitrage --- a statement about whether a
+single rate function can correctly price the borrower-side optionality
+in equilibrium.  Our claim is the orthogonal \emph{empirical
+predictability} statement: the realised rate stream observed off-chain
+exhibits enough short-horizon structure (cointegration, regime
+persistence, kink-residual cycles) to drive a forecast-and-allocate
+strategy that improves a multi-criteria score against a reactive
+baseline.  Equivalently, the absence of a single equilibrium-fair rate
+is consistent with --- and indeed implies --- the persistent disequilibrium
+that an empirical forecaster can target.  The two claims constrain
+different layers of the protocol stack: \cite{halpern2024fair} constrains
+pricing theory at the contract design layer; we operate at the
+lender-side execution layer.  Reporting the honest H0-publishable result
+(\Cref{sec:limitations}) makes this distinction empirically verifiable
+rather than rhetorical.

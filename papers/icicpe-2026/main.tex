@@ -1,0 +1,75 @@
+% ICICPE 2026 — Cross-Domain DA-BiGRU-CNN paper (LOB + DeFi lending)
+% Author: Sergei S. Solovev (HSE FCS)
+% Template: IEEE Conference (IEEEtran)
+% Target: ~10 pages, 2-column, ICICPE Scopus proceedings.
+
+\documentclass[conference]{IEEEtran}
+
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{cite}
+\usepackage{url}
+\usepackage[colorlinks=true,allcolors=blue]{hyperref}
+\usepackage[capitalize,noabbrev]{cleveref}
+
+% Numerical macros (placeholders before retrain; substituted by
+% scripts/fill_whitepaper_results.py after the Colab retrain locks
+% final metrics).
+\input{sections/results_macros.tex}
+
+\title{Domain-Aware Dual-Branch Recurrent Networks Across TradFi and DeFi:
+       LOB Mid-Price and On-Chain Lending Rate Forecasting}
+
+\author{
+  \IEEEauthorblockN{Sergei~S.~Solovev}
+  \IEEEauthorblockA{Faculty of Computer Science\\
+  HSE University, Moscow, Russia\\
+  \texttt{sesesolovev@edu.hse.ru}}
+}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Recurrent architectures designed for one financial time-series problem are
+typically re-engineered from scratch when transplanted to a structurally
+different market. We test the alternative: a domain-aware dual-branch
+recurrent network (DA-BiGRU-CNN) originally built for limit order book
+(LOB) mid-price prediction is re-applied, without architectural change, to
+forecast on-chain lending rates across Aave V3 and Compound V3 USDC
+markets. The two BiGRU branches and the multi-scale Conv1d fusion head are
+re-specialised by identifying the domain-natural decomposition pair: in
+LOB the pair is (price, volume) augmented with microstructure features; in
+DeFi it is (rate residual $\varepsilon = r - f_{\text{kink}}(u)$,
+utilization $u$ with context). The same composite loss
+$\alpha\,\textsc{MSE} + \beta\,(1{-}\rho_w) + \gamma\,Q_{90}$ is the
+trained objective in both domains. In the prior LOB study the network
+attains weighted-Pearson $\LobGRUwPearson{}$ on test, beating a 205-feature
+LightGBM ($\LobLGBMwPearson{}$) by $\LobGRUOverLGBM{}$. In the present
+DeFi application, trained on $\DataHours{}$ hourly bars at $\DataCoverage$
+panel coverage from \DataStart{} to \DataEnd{}, the forecaster feeds a
+4-factor MCDM allocator; a paired monthly-Sharpe bootstrap returns a
+point-estimate Sharpe gain of $\SharpeDelta{}$ with a 95\% confidence
+interval that includes zero ($p = \BootstrapPvalue{}$). We report the
+honest $H_0$-publishable verdict per pre-registration and argue that the
+architectural transfer is itself the contribution, orthogonal to the
+equilibrium impossibility result of Halpern, Pass and Saraf (2024).
+\end{abstract}
+
+\input{sections/01_introduction.tex}
+\input{sections/02_background.tex}
+\input{sections/03_methodology.tex}
+\input{sections/04_lob_recap.tex}
+% Sections 5--8 (DeFi experiment, cross-domain discussion, limitations,
+% conclusion) are drafted in subsequent task batches after the post-fix
+% Colab retrain locks final numbers.
+% \input{sections/05_defi_experiment.tex}
+% \input{sections/06_cross_domain_discussion.tex}
+\input{sections/07_limitations.tex}
+% \input{sections/08_conclusion.tex}
+
+\bibliographystyle{IEEEtran}
+\bibliography{refs}
+
+\end{document}
