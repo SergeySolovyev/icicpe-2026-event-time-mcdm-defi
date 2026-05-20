@@ -38,6 +38,8 @@ forecaster/trained_models/*.cbm
 
 # Colab upload bundle (regenerable via scripts/prepare_colab_artifacts.py)
 predictive-mcdm-defi-artifacts.zip
+# Colab download bundle (transit; trained_models/ holds the unpacked artefacts)
+predictive-mcdm-defi-trained.zip
 
 # Whitepaper build artifacts
 whitepaper/*.aux
@@ -81,3 +83,19 @@ Thumbs.db
 *.log
 logs/
 !.gitkeep
+
+# Kaggle workspace — bundle is a transit copy (same file in repo root)
+kaggle_workspace/dataset/predictive-mcdm-defi-artifacts.zip
+
+# ICICPE paper build artifacts (mirror whitepaper/ convention; main.pdf tracked)
+papers/icicpe-2026/*.aux
+papers/icicpe-2026/*.log
+papers/icicpe-2026/*.out
+papers/icicpe-2026/*.bbl
+papers/icicpe-2026/*.blg
+papers/icicpe-2026/*.bcf
+papers/icicpe-2026/*.run.xml
+papers/icicpe-2026/*.fdb_latexmk
+papers/icicpe-2026/*.fls
+papers/icicpe-2026/*.synctex.gz
+papers/icicpe-2026/sections/*.aux
