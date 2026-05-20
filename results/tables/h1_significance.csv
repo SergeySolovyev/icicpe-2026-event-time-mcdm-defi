@@ -1,0 +1,2 @@
+metric,predictive,ema,delta,bootstrap_p_value,ci_low,ci_high,n_months,target
+monthly_sharpe,1959.4644274373388,1455.163438936739,504.3009885005995,0.298,-207.39883355921324,1720.3017990610117,4,0.2

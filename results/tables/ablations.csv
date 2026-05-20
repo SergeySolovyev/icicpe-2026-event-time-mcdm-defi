@@ -18,3 +18,8 @@ ablation_id,ablation_name,strategy_class,n_rebalances,net_apy,sharpe_annual,max_
 13,sliding_window,MCDMEMAStrategy,16,0.10826915997611936,1574.7661061874896,0.0,,OK,0.0834169977962943,0.14945857355726683,0.07854215542913745,
 14,ood_usdc_depeg,PredictiveMCDM,0,,,,,SKIPPED:Mar-2023 OOD dataset not provisioned in this repo,,,,
 15,horizon_sweep,PredictiveMCDM,0,,,,,SKIPPED:needs ONNX variants at horizons 3h/6h/24h (only 12h export exists),,,,
+16a,hysteresis_0.01,PredictiveMCDMStrategy,7,0.027583595725363397,424.57586071040737,0.0,147.0,OK,,1.9087346024636058,147.0,
+16b,hysteresis_0.02,PredictiveMCDMStrategy,7,0.027675366195073492,389.59707458729906,0.0,147.0,OK,,1.9087346024636058,147.0,
+16c,hysteresis_0.05,PredictiveMCDMStrategy,1,0.02883071045951291,429.40682387686496,0.0,21.0,OK,,0.2726763717805151,21.0,
+16d,hysteresis_0.10,PredictiveMCDMStrategy,0,0.0335854015128334,143.25060137613448,0.0,0.0,OK,,0.0,0.0,
+16e,hysteresis_0.20,PredictiveMCDMStrategy,0,0.0335854015128334,143.25060137613448,0.0,0.0,OK,,0.0,0.0,

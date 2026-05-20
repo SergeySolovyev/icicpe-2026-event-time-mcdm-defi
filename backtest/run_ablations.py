@@ -872,6 +872,64 @@ def ablation_15_horizon_sweep(
 
 
 # ---------------------------------------------------------------------------
+# Ablation 16: Hysteresis-threshold sweep (DEAD_BAND ∈ {0.01, 0.02, 0.05,
+# 0.10, 0.20}).
+#
+# Addresses the n_rebalances=1 observation on the headline PredictiveMCDM run:
+# the default HYSTERESIS_THRESHOLD (=0.05, score-delta required to switch)
+# leaves the strategy near-static across the 4-month window. By sweeping the
+# threshold we expose the rebalance-frequency / Sharpe / gas trade-off and
+# turn a potential reviewer objection ("only 1 rebalance — strategy is barely
+# active") into an empirical methodology choice. Plan §10 extra row; 5 rows
+# 16a..16e in the canonical a/b/.. convention.
+#
+# Implementation: HYSTERESIS_THRESHOLD is a field on BaseLendingAllocationParams
+# (inherited by PredictiveMCDMParams), so we simply pass it via kwargs rather
+# than monkey-patching a class attribute. Falls through to a SKIPPED row if
+# the ONNX export is missing — same convention as the regime-conditional rows.
+# ---------------------------------------------------------------------------
+
+_HYSTERESIS_GRID = [
+    ("16a", "hysteresis_0.01", 0.01),
+    ("16b", "hysteresis_0.02", 0.02),
+    ("16c", "hysteresis_0.05", 0.05),
+    ("16d", "hysteresis_0.10", 0.10),
+    ("16e", "hysteresis_0.20", 0.20),
+]
+
+
+def ablation_16_hysteresis_sweep(
+    observations: List[Observation],
+    cfg: MainRunConfig,
+    **_opts,
+) -> List[Dict[str, Any]]:
+    rows: List[Dict[str, Any]] = []
+
+    have_pred = _HAS_PREDICTIVE and ONNX_PATH.exists()
+    if not have_pred:
+        for ab_id, name, _theta in _HYSTERESIS_GRID:
+            rows.append(_nan_row(ab_id, name, "PredictiveMCDMStrategy",
+                                 "no ONNX export available"))
+        return rows
+
+    for ab_id, name, theta in _HYSTERESIS_GRID:
+        params = PredictiveMCDMParams(
+            INITIAL_BALANCE=cfg.initial_balance,
+            DEFAULT_INITIAL_ENTITY="AAVE",
+            HYSTERESIS_THRESHOLD=theta,
+        )
+        metrics, _eq, err = _safe_run(PredictiveMCDMStrategy, params,
+                                      observations, f"abl16/{name}", cfg)
+        if metrics is None:
+            rows.append(_nan_row(ab_id, name, "PredictiveMCDMStrategy",
+                                 err or "runtime error"))
+        else:
+            rows.append(_ok_row(ab_id, name, "PredictiveMCDMStrategy",
+                                metrics))
+    return rows
+
+
+# ---------------------------------------------------------------------------
 # Shared runner for forecast-injected ablations (#2, #3, #4, #5)
 # ---------------------------------------------------------------------------
 
@@ -1105,6 +1163,7 @@ ABLATIONS: Dict[int, Tuple[str, Callable]] = {
     13: ("sliding_window",         ablation_13_sliding_window),
     14: ("ood_usdc_depeg",         ablation_14_ood_depeg),
     15: ("horizon_sweep",          ablation_15_horizon_sweep),
+    16: ("hysteresis_sweep",       ablation_16_hysteresis_sweep),
 }
 
 

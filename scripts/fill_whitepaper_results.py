@@ -159,6 +159,20 @@ MAPPING["ForecastDirAcc"]    = ("ablations", {"ablation_id": "forecast_quality"}
 MAPPING["ForecastWPearson"]  = ("ablations", {"ablation_id": "forecast_quality"}, "w_pearson",    "raw")
 MAPPING["ForecastQNineLoss"] = ("ablations", {"ablation_id": "forecast_quality"}, "q90_loss",     "raw")
 
+# --- Ablation 16: hysteresis-threshold sweep (DEAD_BAND in 0.01..0.20) ---
+# Five sub-rows 16a..16e on PredictiveMCDMStrategy varying ONLY
+# HYSTERESIS_THRESHOLD (the score-delta required to switch protocol). Exposes
+# the rebalance-frequency / Sharpe / gas trade-off so reviewers can read off
+# why the headline run used a single rebalance (default theta=0.05). Three
+# macros per sub-row: net APY, Sharpe, and the integer rebalance count.
+_HYSTERESIS_SUFFIX = ["A", "B", "C", "D", "E"]
+for _suffix, _ab_id in zip(_HYSTERESIS_SUFFIX,
+                           ["16a", "16b", "16c", "16d", "16e"]):
+    _f = {"ablation_id": _ab_id}
+    MAPPING[f"AblationSixteen{_suffix}APY"]        = ("ablations", _f, "net_apy",       "pct_from_unit")
+    MAPPING[f"AblationSixteen{_suffix}Sharpe"]     = ("ablations", _f, "sharpe_annual", "raw")
+    MAPPING[f"AblationSixteen{_suffix}Rebalances"] = ("ablations", _f, "n_rebalances",  "raw_int")
+
 
 # ---------------------------------------------------------------------------
 # Loaders + formatting helpers
@@ -195,6 +209,9 @@ def _format(value: float, formatter: str) -> str:
         return f"{float(value):.2f}"
     if formatter == "raw_no_pct":
         return f"{float(value):.2f}"
+    if formatter == "raw_int":
+        # Integer counts (e.g., n_rebalances) — no decimals, no % suffix.
+        return f"{int(round(float(value)))}"
     if formatter == "money":
         return f"{float(value):.0f}"
     raise ValueError(f"unknown formatter {formatter!r}")
