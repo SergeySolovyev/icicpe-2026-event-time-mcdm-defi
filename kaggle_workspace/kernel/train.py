@@ -20,6 +20,13 @@ from pathlib import Path
 # 1. Locate input source (Kaggle auto-extracts ZIP datasets — files live
 #    directly under /kaggle/input/<dataset-slug>/ as a project tree)
 # -------------------------------------------------------------------------
+# --- Checkpoint files so we can see where the script died even when Kaggle
+# --- doesn't return the log via CLI. Each touched file is visible in outputs.
+_CKPT_DIR = Path("/kaggle/working/checkpoints")
+_CKPT_DIR.mkdir(parents=True, exist_ok=True)
+def _ck(name): (_CKPT_DIR / name).touch(); print(f"[CK] {name}", flush=True)
+_ck("00_started")
+
 # Kaggle mount path differs for private vs public datasets:
 #  public:  /kaggle/input/<slug>/<files>
 #  private: /kaggle/input/datasets/<user>/<slug>/<files>
@@ -52,20 +59,34 @@ print("[install] dependencies OK")
 
 
 # -------------------------------------------------------------------------
-# 4. GPU detection (fail fast)
+# 4. Device detection — CPU is the default after L4 GPU issues
 # -------------------------------------------------------------------------
+# History of failures on Kaggle GPU:
+#   * v6/v7: cuDNN RNN flatten_weight kernel missing for sm_89 (L4)
+#   * v8: disabling cuDNN didn't help — pre-installed torch wheel has NO
+#         sm_89 kernels at all (built for 7.0/7.5/8.0/8.6); even torch.zeros
+#         on cuda crashed with cudaErrorNoKernelImageForDevice
+# The dataset is small (~13k hourly bars, seq_len=168, 319K params), so
+# CPU training is the reliable path. enable_gpu=false in kernel-metadata.
 import torch  # MUST come before numpy/pandas (CLAUDE.md DLL-order note)
 
-if not torch.cuda.is_available():
-    raise RuntimeError(
-        "GPU not available. In Kaggle: Settings -> Accelerator -> GPU T4 ×2 (or P100). "
-        "Verify kernel-metadata.json has enable_gpu=true."
-    )
-props = torch.cuda.get_device_properties(0)
-print(f"[gpu] {props.name}, {props.total_memory/1e9:.1f} GB VRAM, "
-      f"CC {props.major}.{props.minor}; torch {torch.__version__}, CUDA {torch.version.cuda}")
-torch.set_float32_matmul_precision("high")
-torch.backends.cudnn.benchmark = True
+if torch.cuda.is_available():
+    props = torch.cuda.get_device_properties(0)
+    print(f"[gpu] {props.name}, {props.total_memory/1e9:.1f} GB VRAM, "
+          f"CC {props.major}.{props.minor}; torch {torch.__version__}, CUDA {torch.version.cuda}")
+    # L4 = compute capability 8.9 — Kaggle's pre-installed torch wheel
+    # lacks sm_89 kernels (see v8 failure). Fall back to CPU.
+    if (props.major, props.minor) >= (8, 9):
+        print(f"[gpu] CC {props.major}.{props.minor} not in torch wheel's kernel "
+              f"images (sm_70/75/80/86) — forcing CPU to avoid CUDA crash.")
+        DEVICE = "cpu"
+    else:
+        DEVICE = "cuda"
+        torch.set_float32_matmul_precision("high")
+else:
+    print(f"[device] CUDA not available — using CPU. torch {torch.__version__}")
+    DEVICE = "cpu"
+print(f"[device] selected: {DEVICE}", flush=True)
 
 
 # -------------------------------------------------------------------------
@@ -100,6 +121,7 @@ print(f"[kink] compound={KINK_COMP}")
 
 FEATS = extract_features(DATA, KINK_AAVE, KINK_COMP).dropna()
 print(f"[features] panel shape: {FEATS.shape}  (includes r_*_annual cols from R²-fix)")
+_ck("05_features_ok")
 
 
 # -------------------------------------------------------------------------
@@ -137,16 +159,18 @@ ds_te = (DABiGRUCNNDataset(FT_TE, KINK_AAVE, KINK_COMP,
                            stats=ds_tr.stats)
          if len(FT_TE) > SEQ_LEN + HORIZON else None)
 
+_PIN = (DEVICE == "cuda")
 train_loader = DataLoader(ds_tr, batch_size=BATCH, shuffle=True,  drop_last=True,
-                          num_workers=2, pin_memory=True)
+                          num_workers=2, pin_memory=_PIN)
 val_loader   = DataLoader(ds_va, batch_size=BATCH, shuffle=False,
-                          num_workers=2, pin_memory=True)
+                          num_workers=2, pin_memory=_PIN)
 test_loader  = (DataLoader(ds_te, batch_size=BATCH, shuffle=False,
-                           num_workers=2, pin_memory=True) if ds_te is not None else None)
+                           num_workers=2, pin_memory=_PIN) if ds_te is not None else None)
 
 print(f"[loaders] train batches={len(train_loader)} (n={len(ds_tr)})  "
       f"val batches={len(val_loader)} (n={len(ds_va)})  "
       f"test={'-' if ds_te is None else len(ds_te)}")
+_ck("07_loaders_ok")
 
 
 # -------------------------------------------------------------------------
@@ -159,13 +183,12 @@ CKPT_DIR = Path("/kaggle/working/trained_models")
 CKPT_DIR.mkdir(parents=True, exist_ok=True)
 
 # Persist z-score stats so the strategy can reload at backtest time.
-with open(CKPT_DIR / "feature_stats.json", "w") as f:
-    stats_serializable = {
-        k: {"mean": float(v["mean"]), "std": float(v["std"])}
-        for k, v in ds_tr.stats.items()
-    }
-    json.dump(stats_serializable, f, indent=2)
-print(f"[stats] saved feature_stats.json ({len(stats_serializable)} columns)")
+# DABiGRUCNNDataset already has a save_stats() method — use it (the stats
+# are a flat dict of x_a_mean/x_a_std/x_b_mean/x_b_std arrays, not the
+# nested col→{mean,std} shape).
+ds_tr.save_stats(CKPT_DIR / "feature_stats.json")
+print(f"[stats] saved feature_stats.json ({len(ds_tr.stats)} top-level keys)", flush=True)
+_ck("08_stats_saved")
 
 model_cfg = ForecasterConfig(
     branch_a_hidden=64, branch_b_hidden=64, head_hidden=64,
@@ -176,21 +199,42 @@ model_cfg = ForecasterConfig(
 train_cfg = TrainConfig(
     input_window=SEQ_LEN, forecast_horizon=HORIZON, batch_size=BATCH,
     lr=2e-3, weight_decay=0.01, grad_clip=1.0,
-    max_epochs=15, patience=5, num_workers=2, device="cuda",
+    max_epochs=15, patience=5, num_workers=2, device=DEVICE,
     alpha=0.4, beta=0.5, gamma=0.1, quantile_q=0.9,
     n_splits=1, seed=42,
     checkpoint_path=str(CKPT_DIR / "da_bigru_cnn.pt"),
 )
 
 model = DABiGRUCNNForecaster(model_cfg)
-print(f"[model] n_params = {model.n_params():,}")
+print(f"[model] n_params = {model.n_params():,}", flush=True)
+_ck("09_model_built")
 
-trainer = Trainer(model, train_cfg, KINK_AAVE, KINK_COMP, mlflow_experiment=None)
+try:
+    trainer = Trainer(model, train_cfg, KINK_AAVE, KINK_COMP, mlflow_experiment=None)
+except Exception as exc:  # noqa: BLE001
+    import traceback as _tb
+    _err = _tb.format_exc()
+    print(_err, flush=True)
+    (_CKPT_DIR / "99_trainer_init_FAILED.txt").write_text(
+        f"Exception type: {type(exc).__name__}\nMessage: {exc}\n\nFull traceback:\n{_err}\n\n"
+        f"GPU state: cuda_available={torch.cuda.is_available()}, "
+        f"device_count={torch.cuda.device_count() if torch.cuda.is_available() else 0}"
+    )
+    raise
+_ck("10_trainer_built")
 
 t0 = time.time()
+print("[train] starting trainer.fit()...", flush=True)
 try:
     fit_out = trainer.fit(train_loader, val_loader)
-except RuntimeError as exc:
+    _ck("11_fit_done")
+except Exception as exc:  # noqa: BLE001
+    import traceback
+    tb_text = traceback.format_exc()
+    print(tb_text, flush=True)
+    (_CKPT_DIR / "99_fit_FAILED.txt").write_text(
+        f"Exception type: {type(exc).__name__}\nMessage: {exc}\n\nFull traceback:\n{tb_text}"
+    )
     if "CUDA out of memory" in str(exc):
         raise RuntimeError("OOM — reduce BATCH from 64 to 32 in this script and re-push") from exc
     raise
@@ -209,7 +253,7 @@ def _collect(loader):
     preds_, trues_ = [], []
     with torch.no_grad():
         for x_a, x_b, y in loader:
-            x_a, x_b = x_a.to("cuda", non_blocking=True), x_b.to("cuda", non_blocking=True)
+            x_a, x_b = x_a.to(DEVICE, non_blocking=_PIN), x_b.to(DEVICE, non_blocking=_PIN)
             out = trainer.model(x_a, x_b)
             r_hat = reconstruct_rate(out, KINK_AAVE, KINK_COMP)
             preds_.append(r_hat.cpu().numpy())
