@@ -1,0 +1,118 @@
+\section{Cross-Domain Discussion: What Transfers and What Does Not}
+\label{sec:discussion}
+
+The empirical record now spans two structurally different markets:
+LOB mid-price prediction \cite{solovev2026lob} and DeFi USDC lending-rate
+forecasting (\Cref{sec:defi-experiment}).  We separate the discussion
+into three claims at distinct layers of the cross-domain transfer
+hypothesis --- architectural, predictive, and strategic --- and then
+position our negative H1 verdict against the impossibility result of
+\cite{halpern2024fair}.
+
+\subsection{Architectural transfer succeeds}
+\label{sec:disc-arch}
+
+The DA-BiGRU-CNN of \Cref{sec:methodology-abstract} trains stably and
+extracts non-trivial signal in both domains under \emph{identical}
+network wiring, composite loss, and optimization schedule.  In LOB it
+attains test weighted-Pearson $\LobGRUwPearson$, outperforming a
+205-feature LightGBM by $\LobGRUOverLGBM$
+\cite{solovev2026lob,ke2017lightgbm}; in DeFi it reaches validation
+weighted-Pearson $0.747$ on Aave with directional accuracy $0.739$ and
+a positive Compound $R^{2}=0.138$ (\Cref{sec:defi-forecaster}).  The
+recipe that ports without modification is concrete: (i) identify a
+domain-natural decomposition pair $(\mathcal{X}_A, \mathcal{X}_B)$
+such that one subspace carries the deterministic backbone and the
+other carries the residual stochastic component --- (price, volume) in
+LOB, $(\varepsilon = r - f_{\text{kink}}(u), u+\text{ctx})$ in DeFi;
+(ii) re-use the same dual-BiGRU stack with multi-scale Conv1d fusion;
+(iii) re-use the same composite loss with weighted-Pearson as the
+dominant term.  The \emph{architectural} transfer hypothesis ---
+``the same template generalises by re-identifying the decomposition
+pair'' --- is therefore supported by the validation diagnostics.  This
+is the central methodological contribution and is independent of the
+H1 outcome.
+
+\subsection{Predictive transfer is partial}
+\label{sec:disc-pred}
+
+The transfer breaks one layer up.  Validation weighted-Pearson $0.747$
+on Aave collapses to test $-0.07$, and directional accuracy falls from
+$0.739$ on validation to $0.351$ on test --- a sub-chance value whose
+sign is the empirical signature of a forecaster that has locked onto a
+correlation pattern from the wrong regime.  The proximate cause is
+documented: between 2025-Q3 and 2025-Q4 the Aave-pays-more share rises
+from $39.9\%$ to $56.3\%$ and the median cross-protocol spread inverts
+from $-0.22$\,pp to $+0.18$\,pp (\Cref{sec:bg-defi-mechanics}).  The
+validation fold lives in the pre-inversion regime; the test fold
+straddles the inversion and the 2026-Q1 reversion.  In-distribution
+predictability is therefore not equivalent to robust short-horizon
+predictability: the rate process exhibits regime structure on a
+quarterly time-scale that the four-month test window happens to slice
+adversarially.  The LOB benchmark \cite{solovev2026lob} did not exhibit
+a comparable test-fold collapse, plausibly because LOB
+microstructural dynamics are dominated by stationary
+adverse-selection mechanics on millisecond horizons, whereas DeFi
+lending rates inherit on-the-order-of-quarter regime persistence from
+slow demand-side composition shifts.  This is not a falsification of
+the architecture; it is a falsification of the implicit assumption
+that high in-sample weighted-Pearson predicts out-of-sample
+allocator edge.
+
+\subsection{Strategic transfer fails on this window}
+\label{sec:disc-strat}
+
+Predictive MCDM under-performs reactive MCDM-EMA by $8$\,bp in
+annualised net APY ($\PredictiveAPY$ vs $\EMAAPY$); the paired
+monthly-Sharpe bootstrap (\Cref{sec:defi-h1}) returns
+$\SharpeDelta$ with 95\% CI $[\BootstrapCILow,\,\BootstrapCIHigh]$
+and $p=\BootstrapPvalue$, firmly inside the H0 acceptance region of
+the pre-registered $\Delta\textsc{Sharpe}\ge 0.2$ test.  The
+hysteresis-sweep ablation of \Cref{sec:defi-ablation} rules out the
+most natural rebuttal --- ``the threshold is mis-tuned'' --- by
+showing that the design $\theta=0.05$ sits at the Sharpe knee, with
+fewer rebalances (and zero gas) actually \emph{raising} net APY in
+this window.  The mechanism is therefore: a forecaster that lost
+sign on test cannot drive a switching allocator into the right pool
+ahead of the EMA-smoothed reactive comparator; the predictive
+overhead consumes gas without obtaining timing alpha.  This is
+exactly the negative-ensemble pattern that
+\cite{solovev2026lob}~\S5.5 reported for LOB --- combining a strong
+GRU with a 205-feature LightGBM \emph{degraded} test
+weighted-Pearson by $0.05$--$1.6\%$ rather than improving it ---
+generalised one layer up the stack: combining a forecaster with a
+reactive allocator can underperform the allocator alone if the
+forecaster transports out-of-distribution badly.  Two negative
+results, in two structurally different domains, with the same
+mechanistic explanation: \emph{the apparent complementarity of two
+components is a property of the joint distribution they were
+calibrated on, not a robust architectural fact.}
+
+\subsection{Relation to the Halpern--Pass--Saraf impossibility}
+\label{sec:disc-impossibility}
+
+\cite{halpern2024fair} prove that no static interest-rate function can
+correctly price a perpetual lending pool with early-repayment
+optionality; any rate either over- or under-compensates lenders
+relative to the option-implied premium.  The result constrains
+\emph{contract design at the pricing layer}.  Our finding is at the
+\emph{execution layer}, and it is empirical rather than theoretical:
+short-horizon local predictability of the realised rate stream is
+present in-distribution (validation weighted-Pearson $0.747$ on Aave)
+but does not survive the 2025-Q3 $\to$ Q4 regime shift documented in
+the data panel.  These two negative findings do not refute each other
+--- one is a no-arbitrage statement about equilibrium fairness, the
+other is an out-of-sample statement about the stationarity of the
+short-horizon predictive structure --- and they do not jointly imply
+that DeFi-lending forecasting is hopeless.  They jointly imply that
+the empirical-predictability conjecture must be re-stated in a
+regime-conditional form, with explicit handling of distribution shift
+on the order of one fiscal quarter rather than a global predictability
+claim across an 18-month panel.  The right response is methodological,
+not pessimistic: longer test folds, online recalibration on regime
+boundaries, and reporting test-window-conditional metrics
+(\Cref{sec:limitations}, Finding~\#9).  Our H0-publishable verdict is
+in this sense complementary to \cite{halpern2024fair}: it provides the
+empirical data point that the impossibility-of-fair-pricing result
+predicts will manifest as regime-persistent disequilibrium in the
+realised rate stream.

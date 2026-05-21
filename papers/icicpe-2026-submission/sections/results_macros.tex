@@ -1,0 +1,100 @@
+% results_macros.tex --- numerical macros for the ICICPE 2026 paper
+% ---------------------------------------------------------------------------
+% Default placeholder values copied from whitepaper/sections/09_results.tex
+% (CURRENT pre-retrain numbers). These will be re-substituted by
+%   scripts/fill_whitepaper_results.py
+% after the post-fix Colab retrain completes. Every numeric claim in the
+% paper sections SHOULD use one of the macros below rather than hardcode
+% a number, so the "fill" pass is mechanical.
+% ---------------------------------------------------------------------------
+
+% --- Headline H1 test (predictive vs reactive MCDM-EMA) ---
+\newcommand{\PredictiveAPY}{3.36\%}
+\newcommand{\EMAAPY}{3.44\%}
+\newcommand{\PredictiveSharpe}{143.36}
+\newcommand{\EMASharpe}{154.02}
+\newcommand{\SharpeDelta}{-900.40}
+\newcommand{\BootstrapPvalue}{1.00}
+\newcommand{\BootstrapCILow}{-1799.57}
+\newcommand{\BootstrapCIHigh}{-1.23}
+
+% --- Per-strategy table: 5 strategies x 6 metrics ---
+\newcommand{\BuyholdAPY}{3.36\%}
+\newcommand{\BuyholdSharpe}{143.25}
+\newcommand{\BuyholdDD}{0.00\%}
+\newcommand{\BuyholdCalmar}{\textit{n/a}}}}
+\newcommand{\BuyholdTurnover}{0.00}
+\newcommand{\BuyholdGas}{0}
+\newcommand{\GreedyAPY}{3.59\%}
+\newcommand{\GreedySharpe}{157.33}
+\newcommand{\GreedyDD}{0.00\%}
+\newcommand{\GreedyCalmar}{\textit{n/a}}}}
+\newcommand{\GreedyTurnover}{26.72}
+\newcommand{\GreedyGas}{2058}
+\newcommand{\EMADD}{0.00\%}
+\newcommand{\EMACalmar}{\textit{n/a}}}}
+\newcommand{\EMATurnover}{0.55}
+\newcommand{\EMAGas}{42}
+\newcommand{\CIRAPY}{3.39\%}
+\newcommand{\CIRSharpe}{143.23}
+\newcommand{\CIRDD}{0.00\%}
+\newcommand{\CIRCalmar}{\textit{n/a}}}}
+\newcommand{\CIRTurnover}{0.55}
+\newcommand{\CIRGas}{42}
+\newcommand{\PredictiveDD}{0.00\%}
+\newcommand{\PredictiveCalmar}{\textit{n/a}}}}
+\newcommand{\PredictiveTurnover}{0.55}
+\newcommand{\PredictiveGas}{42}
+
+% --- Regime-conditional: per-quarter Sharpe and APY ---
+\newcommand{\QOneSharpePred}{320.58}
+\newcommand{\QOneAPYPred}{2.83\%}
+\newcommand{\QOneSharpeEMA}{467.76}
+\newcommand{\QOneAPYEMA}{2.95\%}
+\newcommand{\QTwoSharpePred}{122.55}
+\newcommand{\QTwoAPYPred}{4.82\%}
+\newcommand{\QTwoSharpeEMA}{122.55}
+\newcommand{\QTwoAPYEMA}{4.82\%}
+
+% --- Forecast quality (PredictiveMCDM only) ---
+\newcommand{\ForecastRsq}{-200.55}
+\newcommand{\ForecastDirAcc}{48.80\%}
+\newcommand{\ForecastWPearson}{0.42}
+\newcommand{\ForecastQNineLoss}{0.01}
+
+% --- Data panel ---
+\newcommand{\DataHours}{12{,}895}
+\newcommand{\DataCoverage}{98.5\%}
+\newcommand{\DataStart}{November 2024}
+\newcommand{\DataEnd}{April 2026}
+
+% --- Model size ---
+\newcommand{\ModelParams}{319\,K}
+\newcommand{\SeqLen}{168}
+\newcommand{\Horizon}{12}
+
+% --- LOB recap numbers (from Solovev 2026 figshare preprint) ---
+\newcommand{\LobGRUwPearson}{0.266}
+\newcommand{\LobLGBMwPearson}{0.168}
+\newcommand{\LobGRUOverLGBM}{58\%}
+\newcommand{\LobFeatureSuffGRU}{0.8\%}
+\newcommand{\LobFeatureSuffLGBM}{71.4\%}
+
+% --- Ablation 16: hysteresis-threshold sweep (DEAD_BAND in 0.01..0.20) ---
+% 5 sub-runs on PredictiveMCDM, varying only HYSTERESIS_THRESHOLD. Net APY,
+% Sharpe and integer rebalance count per sub-run.
+\newcommand{\AblationSixteenAAPY}{3.36\%}
+\newcommand{\AblationSixteenASharpe}{143.23}
+\newcommand{\AblationSixteenARebalances}{4}
+\newcommand{\AblationSixteenBAPY}{3.36\%}
+\newcommand{\AblationSixteenBSharpe}{143.23}
+\newcommand{\AblationSixteenBRebalances}{4}
+\newcommand{\AblationSixteenCAPY}{3.36\%}
+\newcommand{\AblationSixteenCSharpe}{143.36}
+\newcommand{\AblationSixteenCRebalances}{2}
+\newcommand{\AblationSixteenDAPY}{3.36\%}
+\newcommand{\AblationSixteenDSharpe}{143.25}
+\newcommand{\AblationSixteenDRebalances}{0}
+\newcommand{\AblationSixteenEAPY}{3.36\%}
+\newcommand{\AblationSixteenESharpe}{143.25}
+\newcommand{\AblationSixteenERebalances}{0}

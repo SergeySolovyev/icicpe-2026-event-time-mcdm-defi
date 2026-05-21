@@ -1,0 +1,184 @@
+\section{Methodology: One Architecture, Two Specialisations}
+\label{sec:methodology}
+
+We describe the architecture at three levels of abstraction:
+domain-agnostic (\Cref{sec:methodology-abstract}), specialised for LOB
+(\Cref{sec:methodology-lob}), and specialised for DeFi
+(\Cref{sec:methodology-defi}).  \Cref{sec:methodology-loss} states the
+composite loss used invariantly in both specialisations.
+
+\subsection{Domain-agnostic DA-BiGRU-CNN}
+\label{sec:methodology-abstract}
+
+The DA-BiGRU-CNN architecture
+(\emph{Domain-Aware Bidirectional GRU with Convolutional fusion}) takes
+a fixed-length window of $T$ time steps and produces an
+$H$-step-ahead point forecast for one or more targets.  Inputs are
+partitioned into two disjoint subspaces $\mathcal{X}_A$ and
+$\mathcal{X}_B$, chosen so that each subspace is a domain-natural
+sub-process and their joint observation is informative for the target.
+Each subspace is processed by a separate Bidirectional GRU
+\cite{cho2014gru} of hidden dimension $d=96$ stacked two layers deep.
+The two branch outputs are concatenated and passed through a multi-scale
+1-D convolutional fusion head with parallel kernel sizes
+$k \in \{3, 5, 7\}$, then projected through a two-layer MLP
+$192 \to 96 \to 48 \to H$ to produce the forecast vector.  The total
+parameter budget is $\ModelParams$, well below the depth-scaling regime
+explored in \cite{briola2021deep, briola2025microstructure}.  The
+dual-branch design is conceptually a financial analogue of the
+two-stream networks of \cite{simonyan2014two} for video action
+recognition: two complementary informational streams fused at a
+late stage, not concatenated at the input.
+
+\begin{figure}[t]
+  \centering
+  \begin{tikzpicture}[
+      x=1pt, y=1pt,
+      every node/.style={font=\scriptsize, inner sep=2pt},
+      box/.style={draw, rounded corners=2pt, minimum width=70pt,
+                  minimum height=14pt, align=center, thick},
+      branchA/.style={box, fill=blue!8},
+      branchB/.style={box, fill=orange!12},
+      fuse/.style={box, fill=gray!12, minimum width=160pt},
+      mlp/.style={box, fill=green!10, minimum width=160pt},
+      io/.style={font=\scriptsize\itshape},
+      arr/.style={-{Latex[length=4pt,width=3pt]}, thick},
+    ]
+    % --- Inputs (top) ---
+    \node[io] (xa) at (-55,140) {$\mathcal{X}_A$};
+    \node[io] (xb) at ( 55,140) {$\mathcal{X}_B$};
+    \node[io, font=\scriptsize] at (-55,150)
+       {\footnotesize price / $\varepsilon_t$};
+    \node[io, font=\scriptsize] at ( 55,150)
+       {\footnotesize volume / $u_t,\text{ctx}$};
+    % --- BiGRU branches ---
+    \node[branchA] (gruA1) at (-55,120) {BiGRU $d{=}96$};
+    \node[branchA] (gruA2) at (-55,102) {BiGRU $d{=}96$};
+    \node[branchB] (gruB1) at ( 55,120) {BiGRU $d{=}96$};
+    \node[branchB] (gruB2) at ( 55,102) {BiGRU $d{=}96$};
+    % --- Concat ---
+    \node[fuse] (cat) at (0,80) {concat $\to \mathbb{R}^{T\times 192}$};
+    % --- Multi-scale Conv1d (parallel kernels) ---
+    \node[box, fill=gray!8] (c3) at (-55,55) {Conv1d $k{=}3$};
+    \node[box, fill=gray!8] (c5) at (  0,55) {Conv1d $k{=}5$};
+    \node[box, fill=gray!8] (c7) at ( 55,55) {Conv1d $k{=}7$};
+    \node[fuse] (fuse2) at (0,33) {multi-scale concat};
+    % --- MLP head ---
+    \node[mlp] (mlp1) at (0,12) {MLP $192{\to}96{\to}48$};
+    \node[mlp] (out) at (0,-7) {forecast head $\to H$};
+    % --- Arrows ---
+    \draw[arr] (xa)    -- (gruA1);
+    \draw[arr] (gruA1) -- (gruA2);
+    \draw[arr] (xb)    -- (gruB1);
+    \draw[arr] (gruB1) -- (gruB2);
+    \draw[arr] (gruA2) -- (cat.north west);
+    \draw[arr] (gruB2) -- (cat.north east);
+    \draw[arr] (cat) -- (c3);
+    \draw[arr] (cat) -- (c5);
+    \draw[arr] (cat) -- (c7);
+    \draw[arr] (c3) -- (fuse2.north west);
+    \draw[arr] (c5) -- (fuse2);
+    \draw[arr] (c7) -- (fuse2.north east);
+    \draw[arr] (fuse2) -- (mlp1);
+    \draw[arr] (mlp1) -- (out);
+    % --- Per-domain caption strip (right side) ---
+    \node[anchor=west, font=\scriptsize\itshape, align=left]
+       at (90,90)
+       {\textbf{LOB:} \\ $\mathcal{X}_A{=}$price feats \\
+                       $\mathcal{X}_B{=}$vol feats \\
+                       $H{=}1$ mid-price};
+    \node[anchor=west, font=\scriptsize\itshape, align=left]
+       at (90,30)
+       {\textbf{DeFi:} \\ $\mathcal{X}_A{=}(\varepsilon_t,s_t,\tilde s_t)$\\
+                         $\mathcal{X}_B{=}(u_t,\text{ctx})$ \\
+                         $H{=}12$ hourly rates};
+  \end{tikzpicture}
+  \caption{Domain-agnostic schematic of DA-BiGRU-CNN. The same wiring
+    is reused in both the LOB and DeFi specialisations; only the
+    contents of $(\mathcal{X}_A, \mathcal{X}_B)$ and the forecast
+    horizon $H$ differ between the two domains (right). Total
+    parameter budget is $319\,K$.}
+  \label{fig:architecture-dual}
+\end{figure}
+
+\subsection{Specialisation for LOB (recap)}
+\label{sec:methodology-lob}
+
+In the LOB specialisation \cite{solovev2026lob} the subspace pair is
+$(\mathcal{X}_A, \mathcal{X}_B) = $ (price-series features,
+volume-series features), with an additional embedding $e_t$ of 21
+microstructure features (depth imbalance at the top-of-book, queue
+lengths, spread, immediacy proxies, tick-aligned signed volume) used to
+modulate the fusion stage. The motivation for the pair is that LOB
+mid-price is the price-side observable but its short-horizon dynamics
+are driven by volume-side imbalance signals --- the two-stream
+inductive bias from action-recognition translates directly. The
+target is the mid-price change at horizon $H$; the model trains on
+sequence length $T=\SeqLen$ ticks.
+
+\subsection{Specialisation for DeFi rates}
+\label{sec:methodology-defi}
+
+For DeFi lending the structurally analogous subspace pair is:
+\begin{equation}
+\mathcal{X}_A = \bigl(\varepsilon_t,\;
+                 s_t,\;
+                 \tilde{s}_t \bigr),\qquad
+\mathcal{X}_B = \bigl(u_t,\;
+                  \Delta\textsc{TVL}_t^{24h},\;
+                  g_t,\;
+                  \cos\phi_t,\;\sin\phi_t \bigr),
+\label{eq:defi-pair}
+\end{equation}
+where, for each protocol,
+$\varepsilon_t = r_t^{\text{ann}} - f_{\text{kink}}(u_t)$ is the
+\emph{rate residual} (with both terms in annualised scale),
+$s_t = r_t^{\text{Aave}} - r_t^{\text{Compound}}$ is the
+cross-protocol spread, $\tilde{s}_t$ is its de-trended residual,
+$u_t$ is utilization, $\Delta\textsc{TVL}_t^{24h}$ is the 24-hour
+percent change in total value locked, $g_t$ is Ethereum gas price
+(gwei), and $(\cos\phi_t, \sin\phi_t)$ is the cyclical hour-of-day
+encoding.  Sequence length is $T=\SeqLen$ hours; the forecast horizon
+is $H=\Horizon$ hours.
+
+The strongest claim of this specialisation is the choice to put the
+\emph{rate residual} $\varepsilon = r - f_{\text{kink}}(u)$ rather than
+the raw rate $r$ into branch~A.  The kink function $f_{\text{kink}}$ is
+known on-chain at decision time; subtracting it removes the
+deterministic dependency on $u$ that branch~B already observes, leaving
+$\varepsilon$ to carry only the unexplained variance --- the structural
+residuals that \cite{baude2025optimal} predict the protocol-optimal rate
+deviates from. Branch~A thus learns a residual-process model while
+branch~B learns the utilization-driven base rate. The decomposition is
+the DeFi analogue of separating price-series from volume-series in LOB
+\cite{solovev2026lob}, with $f_{\text{kink}}(u)$ playing the role of the
+``deterministic backbone'' that microstructure noise rides on top of.
+Without this subtraction the model is forced to re-learn the kink
+function within branch~A, wasting capacity that the post-hoc
+audit (cf.\ \Cref{sec:limitations}) showed was the proximate cause of
+the catastrophic R$^2$ artifact in an earlier pre-fix run.
+
+\subsection{Composite loss}
+\label{sec:methodology-loss}
+
+The training objective is the convex combination
+\begin{equation}
+\mathcal{L}\bigl(\hat y, y\bigr)
+  = \alpha\,\textsc{MSE}(\hat y, y)
+  + \beta\,\bigl(1 - \rho_w(\hat y, y)\bigr)
+  + \gamma\,Q_{90}(\hat y, y),
+\label{eq:composite-loss}
+\end{equation}
+with $(\alpha, \beta, \gamma) = (0.4, 0.5, 0.1)$ in both domains.  Here
+$\rho_w$ is the weighted Pearson correlation, with weights $w_t$
+proportional to $|y_t|$ to over-emphasise large moves (the metric used
+in LOB evaluation \cite{solovev2026lob} and equally diagnostic in
+lending-rate forecasting where small-move noise dominates row counts).
+$Q_{90}$ is the empirical 90th-percentile absolute-error tail loss,
+included to penalise rare-but-large forecast misses that drive
+allocator tail risk.  The weighted-Pearson term, not MSE, is what the
+network gets credit for; MSE acts as a regulariser to keep predictions
+on the correct scale and $Q_{90}$ adds a tail-aware safety net.  The
+key point for cross-domain transfer is that
+\Cref{eq:composite-loss} contains no domain-specific terms; the same
+formula trains both specialisations.

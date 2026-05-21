@@ -1,0 +1,374 @@
+% ============================================================
+%  refs.bib --- ICICPE 2026 cross-domain paper
+%  Curated 2026-05-20 from:
+%    - docs/research/icicpe-related-work-research.md (deep research)
+%    - DEEP_RESEARCH.md §IX Citation handoff
+%    - D:/DeFi/Wunder Fund/Claude/paper/main.tex bibliography
+% ============================================================
+
+% ---------- Author's prior work + framework ----------
+
+@misc{solovev2026lob,
+  author       = {{Anonymous}},
+  title        = {When less is more: Domain-aware dual-branch recurrent
+                  networks for limit order book mid-price prediction},
+  year         = {2026},
+  howpublished = {Anonymous preprint},
+  note         = {Anonymous prior work, citation withheld for blind review}
+}
+
+@misc{solovev2026vault,
+  author       = {{Anonymous}},
+  title        = {{AI-managed ERC-4626 yield vault with multi-criteria
+                  decision making}},
+  year         = {2026},
+  howpublished = {Anonymous preprint},
+  note         = {Anonymous prior work, citation withheld for blind review}
+}
+
+@software{krestenko2026fractaldefi,
+  author       = {Krestenko, A. and Berezovskiy, V. and others},
+  title        = {{fractal-defi}: A Python Research Library for {DeFi}
+                  Strategy Backtesting},
+  year         = {2026},
+  version      = {v1.3.2},
+  doi          = {10.5281/zenodo.20049904},
+  license      = {BSD-3-Clause}
+}
+
+% ---------- DeFi lending mechanics, forecasting, RL ----------
+
+@article{halpern2024fair,
+  author  = {Halpern, Joseph~Y. and Pass, Rafael and Saraf, Aditya},
+  title   = {Fair Interest Rates Are Impossible for Lending Pools:
+             Results from Options Pricing},
+  journal = {arXiv preprint arXiv:2410.11053},
+  year    = {2024},
+  note    = {v2, 29 Oct 2024}
+}
+
+@article{baude2025optimal,
+  author  = {Baude, Bastien and Challet, Damien and {Muni Toke}, Ioane},
+  title   = {Optimal Risk-Aware Interest Rates for Decentralized Lending
+             Protocols},
+  journal = {arXiv preprint arXiv:2502.19862},
+  year    = {2025}
+}
+
+@article{bertucci2025rl,
+  author  = {Bertucci, Louis and others},
+  title   = {From Rules to Rewards: Reinforcement Learning for Interest
+             Rate Adjustment in {DeFi} Lending Pools},
+  journal = {arXiv preprint arXiv:2506.00505},
+  year    = {2025}
+}
+
+@article{bastianello2025theory,
+  author  = {Bastianello, Niccol\`o and Cohen, Samuel~N.},
+  title   = {A Theory of Lending Protocols in {DeFi}},
+  journal = {arXiv preprint arXiv:2506.15295},
+  year    = {2025}
+}
+
+@article{agilerate2024,
+  author  = {Bastankhah, Mahsa and Nadkarni, Viraj and Wang, Xuechao and
+             Viswanath, Pramod},
+  title   = {{AgileRate}: Bringing Adaptivity and Robustness to {DeFi}
+             Lending Markets},
+  journal = {arXiv preprint arXiv:2410.13105},
+  year    = {2024}
+}
+
+@article{xu2023autogov,
+  author  = {Xu, Jiahua and Vadgama, Nikhil and others},
+  title   = {{Auto.gov}: Learning-Based Governance for Decentralized
+             Finance},
+  journal = {arXiv preprint arXiv:2302.09551},
+  year    = {2023}
+}
+
+@article{gudgeon2020loanable,
+  author  = {Gudgeon, Lewis and Perez, Daniel and Harz, Dominik and
+             Livshits, Benjamin and Gervais, Arthur},
+  title   = {{DeFi} Protocols for Loanable Funds: Interest Rates,
+             Liquidity and Market Efficiency},
+  journal = {arXiv preprint arXiv:2006.13922},
+  year    = {2020}
+}
+
+@article{aavecompoundcrosschain2025,
+  author  = {Iftikhar, Erum and Wei, Wei and Cartlidge, John},
+  title   = {Automated Risk Management Mechanisms in {DeFi} Lending
+             Protocols: A Cross-chain Comparative Analysis of {Aave} and
+             {Compound}},
+  journal = {arXiv preprint arXiv:2506.12855},
+  year    = {2025}
+}
+
+@article{orlando2020cir,
+  author  = {Orlando, Giuseppe and Mininni, Rosa~M. and Bufalo, Michele},
+  title   = {Forecasting Interest Rates Through {Vasicek} and {CIR}
+             Models: A Partitioning Approach},
+  journal = {Journal of Forecasting},
+  volume  = {39},
+  number  = {4},
+  pages   = {569--579},
+  year    = {2020},
+  note    = {arXiv:1901.02246}
+}
+
+% ---------- Classical short-rate baselines ----------
+
+@article{vasicek1977,
+  author  = {Vasicek, Oldrich},
+  title   = {An Equilibrium Characterization of the Term Structure},
+  journal = {Journal of Financial Economics},
+  volume  = {5},
+  number  = {2},
+  pages   = {177--188},
+  year    = {1977}
+}
+
+@article{cir1985,
+  author  = {Cox, John~C. and Ingersoll, Jonathan~E. and Ross, Stephen~A.},
+  title   = {A Theory of the Term Structure of Interest Rates},
+  journal = {Econometrica},
+  volume  = {53},
+  number  = {2},
+  pages   = {385--407},
+  year    = {1985}
+}
+
+% ---------- Cross-domain RNN / LOB DL backbone ----------
+
+@article{zhang2019deeplob,
+  author  = {Zhang, Zihao and Zohren, Stefan and Roberts, Stephen},
+  title   = {{DeepLOB}: Deep Convolutional Neural Networks for Limit
+             Order Books},
+  journal = {IEEE Transactions on Signal Processing},
+  volume  = {67},
+  number  = {11},
+  pages   = {3001--3012},
+  year    = {2019}
+}
+
+@article{sirignano2019universal,
+  author  = {Sirignano, Justin and Cont, Rama},
+  title   = {Universal Features of Price Formation in Financial Markets:
+             Perspectives from Deep Learning},
+  journal = {Quantitative Finance},
+  volume  = {19},
+  number  = {9},
+  pages   = {1449--1459},
+  year    = {2019}
+}
+
+@inproceedings{tsantekidis2017using,
+  author    = {Tsantekidis, Avraam and Passalis, Nikolaos and
+               Tefas, Anastasios and Kanniainen, Juho and
+               Gabbouj, Moncef and Iosifidis, Alexandros},
+  title     = {Using Deep Learning to Detect Price Change Indications in
+               Financial Markets},
+  booktitle = {Proc. 25th European Signal Processing Conf. (EUSIPCO)},
+  pages     = {2511--2515},
+  year      = {2017}
+}
+
+@article{ntakaris2018benchmark,
+  author  = {Ntakaris, Adamantios and Magris, Martin and
+             Kanniainen, Juho and Gabbouj, Moncef and
+             Iosifidis, Alexandros},
+  title   = {Benchmark Dataset for Mid-Price Forecasting of Limit Order
+             Book Data with Machine Learning Methods},
+  journal = {Journal of Forecasting},
+  volume  = {37},
+  number  = {8},
+  pages   = {852--866},
+  year    = {2018}
+}
+
+@article{briola2021deep,
+  author  = {Briola, Antonio and Turiel, Jeremy and
+             Marcaccioli, Riccardo and Aste, Tomaso},
+  title   = {Deep Learning Modeling of the Limit Order Book:
+             A Comparative Perspective},
+  journal = {arXiv preprint arXiv:2112.09534},
+  year    = {2021}
+}
+
+@article{briola2025microstructure,
+  author  = {Briola, Antonio and others},
+  title   = {Exploring Microstructural Dynamics in Cryptocurrency Limit
+             Order Books: Better Inputs Matter More Than Stacking Another
+             Hidden Layer},
+  journal = {arXiv preprint arXiv:2506.05764},
+  year    = {2025}
+}
+
+@article{lit2025limit,
+  author  = {Xiao, Yue and Ventre, Carmine and Wang, Yuhan and
+             Li, Haochen and Huan, Yuxi and Liu, Buhong},
+  title   = {{LiT}: Limit Order Book Transformer},
+  journal = {Frontiers in Artificial Intelligence},
+  year    = {2025},
+  doi     = {10.3389/frai.2025.1616485}
+}
+
+@article{tran2018temporal,
+  author  = {Tran, Dat~Thanh and Iosifidis, Alexandros and
+             Kanniainen, Juho and Gabbouj, Moncef},
+  title   = {Temporal Attention-Augmented Bilinear Network for Financial
+             Time-Series Data Analysis},
+  journal = {IEEE Transactions on Neural Networks and Learning Systems},
+  volume  = {30},
+  number  = {5},
+  pages   = {1407--1418},
+  year    = {2018}
+}
+
+% ---------- Transfer learning + ensembles ----------
+
+@article{gaf2025transfer,
+  author  = {Long, Hou-Wan and Ho, On-In and He, Qi-Qiao and Si, Yain-Whar},
+  title   = {Transfer Learning in Financial Time Series with Gramian
+             Angular Field},
+  journal = {arXiv preprint arXiv:2504.00378},
+  year    = {2025}
+}
+
+@article{sun2021multisource,
+  author  = {Sun, Qi-Lin and others},
+  title   = {Multi-Source Transfer Learning with Ensemble for Financial
+             Time Series Forecasting},
+  journal = {arXiv preprint arXiv:2103.15593},
+  year    = {2021}
+}
+
+@incollection{batsi2026cryptogpt,
+  author    = {Batsi, A. and others},
+  title     = {{CryptoGPT}: An LLM-Driven Transfer Learning Approach to
+               Cryptocurrencies Time Series Forecasting},
+  booktitle = {Lecture Notes in Computer Science},
+  publisher = {Springer},
+  year      = {2026},
+  doi       = {10.1007/978-3-032-16281-6\_5}
+}
+
+@inproceedings{simonyan2014two,
+  author    = {Simonyan, Karen and Zisserman, Andrew},
+  title     = {Two-Stream Convolutional Networks for Action Recognition
+               in Videos},
+  booktitle = {Advances in Neural Information Processing Systems
+               (NeurIPS)},
+  year      = {2014}
+}
+
+@inproceedings{cho2014gru,
+  author    = {Cho, Kyunghyun and van Merri\"enboer, Bart and
+               Gulcehre, Caglar and Bahdanau, Dzmitry and
+               Bougares, Fethi and Schwenk, Holger and Bengio, Yoshua},
+  title     = {Learning Phrase Representations Using {RNN}
+               Encoder-Decoder for Statistical Machine Translation},
+  booktitle = {Proceedings of EMNLP},
+  year      = {2014}
+}
+
+@inproceedings{ke2017lightgbm,
+  author    = {Ke, Guolin and Meng, Qi and Finley, Thomas and
+               Wang, Taifeng and Chen, Wei and Ma, Weidong and
+               Ye, Qiwei and Liu, Tie-Yan},
+  title     = {{LightGBM}: A Highly Efficient Gradient Boosting
+               Decision Tree},
+  booktitle = {Advances in Neural Information Processing Systems
+               (NeurIPS)},
+  year      = {2017}
+}
+
+@article{predamm2024,
+  author  = {Lim, Tristan},
+  title   = {Predictive Crypto-Asset Automated Market Maker Architecture
+             for Decentralized Finance Using Deep Reinforcement Learning},
+  journal = {Financial Innovation},
+  volume  = {10},
+  number  = {1},
+  year    = {2024},
+  doi     = {10.1186/s40854-024-00660-0}
+}
+
+% ---------- MCDM foundations + financial applications ----------
+
+@book{hwang1981mcdm,
+  author    = {Hwang, Ching-Lai and Yoon, Kwangsun},
+  title     = {Multiple Attribute Decision Making: Methods and
+               Applications},
+  publisher = {Springer-Verlag},
+  year      = {1981}
+}
+
+@article{brans1985promethee,
+  author  = {Brans, Jean-Pierre and Vincke, Philippe},
+  title   = {A Preference Ranking Organisation Method: The {PROMETHEE}
+             Method for Multiple Criteria Decision-Making},
+  journal = {Management Science},
+  volume  = {31},
+  number  = {6},
+  pages   = {647--656},
+  year    = {1985}
+}
+
+@article{aljinovic2021crypto,
+  author  = {Aljinovi\'c, Zdravka and Marasovi\'c, Branka and
+             \v{S}estanovi\'c, Tea},
+  title   = {Cryptocurrency Portfolio Selection --- A Multicriteria
+             Approach},
+  journal = {Mathematics},
+  volume  = {9},
+  number  = {14},
+  pages   = {1677},
+  year    = {2021}
+}
+
+@article{hosseinzadeh2023promethee,
+  author  = {Hosseinzadeh, Mahdi and others},
+  title   = {An Asymmetric {PROMETHEE II} for Cryptocurrency Portfolio
+             Allocation Based on Return Prediction},
+  journal = {Computers \& Operations Research},
+  year    = {2023}
+}
+
+% ---------- Instructor / Vega-Institute baseline trio ----------
+
+@article{urusov2024clmm,
+  author  = {Urusov, A. and Berezovskiy, R. and Yanovich, Y.},
+  title   = {Backtesting Framework for Concentrated Liquidity Market
+             Makers on {Uniswap V3} Decentralized Exchange},
+  journal = {arXiv preprint arXiv:2410.09983},
+  year    = {2024}
+}
+
+@article{urusov2025dynamic,
+  author  = {Urusov, A. and Berezovskiy, R. and Krestenko, A. and
+             Kornilov, A. and Yanovich, Y.},
+  title   = {Dynamic Liquidity Provision in Decentralized Markets},
+  journal = {arXiv preprint arXiv:2505.15338},
+  year    = {2025}
+}
+
+@article{krestenko2026perp,
+  author  = {Krestenko, A. and Butov, M. and Berezovskiy, R. and
+             Bolotin, D.},
+  title   = {Dynamic Collateral Control for Permissionless Spot
+             Perpetual Basis Trading},
+  journal = {arXiv preprint arXiv:2605.05089},
+  year    = {2026}
+}
+
+% ---------- Market structure snapshot ----------
+
+@misc{defillama2026snapshot,
+  title        = {{DeFi} lending market by {TVL} (April 2026 snapshot)},
+  author       = {{DeFiLlama}},
+  howpublished = {\url{https://defillama.com/protocols/lending}},
+  note         = {Accessed 2026-04-XX},
+  year         = {2026}
+}

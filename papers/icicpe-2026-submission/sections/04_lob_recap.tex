@@ -1,0 +1,51 @@
+\section{LOB Recap (Prior Work)}
+\label{sec:lob-recap}
+
+In our prior work \cite{solovev2026lob}
+(figshare DOI \href{https://doi.org/10.6084/m9.figshare.31859557}%
+{10.6084/m9.figshare.31859557}) we proposed DA-BiGRU-CNN for LOB
+mid-price prediction.  Two BiGRU branches operate on price-series and
+volume-series features respectively, with a multi-scale Conv1d fusion
+head; a 21-dimensional microstructure-feature embedding modulates the
+fusion stage.  The composite loss of \Cref{eq:composite-loss} directly
+optimises weighted-Pearson correlation, which is also the evaluation
+metric reported on the held-out test fold.
+
+Three findings from the LOB study motivate the cross-domain transfer we
+study here.  First, the dual-branch GRU on a compact set of 53
+hand-selected microstructure features achieves
+weighted-Pearson $\LobGRUwPearson{}$ on test, outperforming a
+LightGBM \cite{ke2017lightgbm} baseline trained on 205 features
+($\LobLGBMwPearson{}$) by $\LobGRUOverLGBM{}$.  Second, feature
+sufficiency is asymmetric across model families: expanding 53 features
+to 219 improves the GRU by only $\LobFeatureSuffGRU$ while the LightGBM
+gains $\LobFeatureSuffLGBM$ over the same extension --- the
+domain-aware branches absorb the structural information at low feature
+dimensionality.  Third, a naive GRU-plus-gradient-boosting ensemble
+\emph{degrades} performance by $0.05$--$1.6\%$ against the GRU alone:
+the two model families fail to be complementary on this task, again
+suggesting the GRU has already captured the available signal.
+\Cref{tab:lob-recap} reproduces the headline numbers.
+
+\begin{table}[t]
+\centering
+\caption{LOB results from the prior work \cite{solovev2026lob}.
+Test weighted-Pearson on the held-out fold; $\Delta$ is the relative
+improvement over the GRU.}
+\label{tab:lob-recap}
+\begin{tabular}{lccc}
+\toprule
+Model & \#Features & wPearson & $\Delta$ vs GRU \\
+\midrule
+DA-BiGRU-CNN (ours) & 53  & $\LobGRUwPearson$  & --- \\
+LightGBM            & 205 & $\LobLGBMwPearson$ & $-\LobGRUOverLGBM$ \\
+GRU + LightGBM ensemble & 53 + 205 & 0.262 & $-1.6\%$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+These findings constitute the baseline methodology we now test in a
+structurally different domain (\Cref{sec:methodology-defi,%
+sec:defi-experiment}): the same architecture, the same composite loss,
+and a re-identified domain-natural decomposition pair --- substituting
+$(\varepsilon, u+\text{ctx})$ for $(\text{price}, \text{volume})$.

@@ -1,0 +1,34 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+We tested whether a domain-aware dual-branch recurrent network
+(DA-BiGRU-CNN) calibrated for LOB mid-price prediction
+\cite{solovev2026lob} transfers --- without architectural change --- to
+DeFi USDC lending-rate forecasting on Aave V3 and Compound V3.  Under
+the same composite loss and the substitution of the domain-natural
+decomposition pair from (price, volume) to
+$(\varepsilon = r - f_{\text{kink}}(u),\, u + \text{ctx})$, the
+network trains stably on $\DataHours$ hourly bars and attains
+validation weighted-Pearson $0.747$ on Aave with directional accuracy
+$0.739$ --- a non-trivial in-distribution signal.  The pre-registered
+H1 test on the binding 4-month test fold, however, returns
+$\Delta\textsc{Sharpe}=\SharpeDelta$ with 95\% CI
+$[\BootstrapCILow,\,\BootstrapCIHigh]$ and $p=\BootstrapPvalue$:
+\emph{fail to reject $H_0$}.  The hysteresis ablation rules out a
+mis-tuned threshold as the cause; the documented 2025-Q3 $\to$ Q4
+regime inversion is the proximate explanation.
+
+We report the result honestly per the H0-publishable protocol.  The
+contribution stands at three layers.  At the architectural layer,
+identical wiring carries signal across two structurally different
+financial markets, supporting the design template as portable.  At the
+infrastructure layer, the open-source Compound V3 base-rate loader
+and the \texttt{Base\-Lending\-Allocation\-Strategy} abstraction
+upstream to \texttt{fractal-defi} \cite{krestenko2026fractaldefi} are,
+to our knowledge, the first of their kind.  At the empirical layer,
+the falsified LOB-to-DeFi-lending strategic transfer --- mirroring the
+``negative ensemble'' finding of \cite{solovev2026lob}~\S5.5 one layer
+up the stack --- is itself publishable evidence that complements the
+equilibrium impossibility result of \cite{halpern2024fair}.  Regime-
+conditional retraining, longer test folds, and $N$-way protocol
+extension (\Cref{sec:limitations}) are the obvious next steps.

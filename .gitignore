@@ -99,3 +99,16 @@ papers/icicpe-2026/*.fdb_latexmk
 papers/icicpe-2026/*.fls
 papers/icicpe-2026/*.synctex.gz
 papers/icicpe-2026/sections/*.aux
+
+# ICICPE submission build artifacts (mirror; main.pdf tracked)
+papers/icicpe-2026-submission/*.aux
+papers/icicpe-2026-submission/*.log
+papers/icicpe-2026-submission/*.out
+papers/icicpe-2026-submission/*.bbl
+papers/icicpe-2026-submission/*.blg
+papers/icicpe-2026-submission/*.bcf
+papers/icicpe-2026-submission/*.run.xml
+papers/icicpe-2026-submission/*.fdb_latexmk
+papers/icicpe-2026-submission/*.fls
+papers/icicpe-2026-submission/*.synctex.gz
+papers/icicpe-2026-submission/sections/*.aux
