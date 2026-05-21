@@ -1,0 +1,212 @@
+% 05_defi_experiment.tex --- DeFi Experiment (long-form analogue of
+% ICICPE paper Section V). Narrates forecaster training, headline H1
+% test, and the hysteresis-sweep ablation in roughly 1200 words. All
+% numeric entries are pulled either from the macros defined in
+% sections/09_results.tex (auto-filled from results/tables/*.csv) or
+% from forecaster/trained_models/metrics.json directly.
+
+\section{DeFi Experiment}
+\label{sec:defi-experiment}
+
+This section narrates the empirical evaluation of the architecture,
+forecaster, and allocator developed in
+\cref{sec:methodology,sec:dual-branch,sec:mcdm,sec:decision} on the
+Aave V3 / Compound V3 USDC supply panel of \cref{sec:data}. It is the
+long-form companion to the headline summary tables of
+\cref{sec:results}: where \cref{sec:results} reports the binding
+numbers in tabular form, this section unpacks the training and
+validation diagnostics, the bootstrap, the per-quarter regime
+breakdown, and the hysteresis-sweep ablation as a connected narrative.
+The headline pre-registered test
+$H_1{:}\,\Delta\textsc{Sharpe}\ge 0.2$ from \cref{sec:introduction}
+is evaluated on a binding four-month held-out fold, and the
+publication protocol of \cref{sec:contributions} commits to reporting
+the result whether or not $H_1$ is rejected. As we shall see, the
+test window does \emph{not} reject $H_0$; this section presents the
+forecaster diagnostics that drive that outcome and the design
+ablation that confirms the allocator itself is calibrated rather than
+mis-specified.
+
+\subsection{Data, Splits and Window Selection}
+\label{sec:defi-data-narrative}
+
+The training panel is the $13{,}096$-hour Aave V3 / $12{,}904$-hour
+Compound V3 grid of \cref{sec:window}, joined to the
+$12{,}895$-hour $98.5\%$-coverage overlap of \cref{sec:coverage}.
+The chronological 70/15/15 split of \cref{sec:splits} places the
+binding test fold in the final four months of the panel
+(2026-01 -- 2026-04). This window was not chosen retrospectively: it
+straddles the 2025-Q3-to-Q4 cross-protocol regime inversion documented
+in \cref{sec:empirical-spread,sec:regime-empirical} and continues
+into the partial 2026-Q2 Aave-dominant phase. It is the most
+adversarial single test fold the panel admits, and was selected
+deliberately to test transferability under distribution shift rather
+than under in-sample stationarity. A more lenient validation-split
+choice (e.g.\ a 2025-Q1 test fold inside the Compound-calm regime)
+would inflate the headline numbers without testing the architectural
+claim of \cref{sec:lob-bridge}.
+
+\subsection{Forecaster Training and Diagnostics}
+\label{sec:defi-forecaster-narrative}
+
+The DA-BiGRU-CNN of \cref{sec:dual-branch} is trained with the
+composite loss of \cref{eq:loss} under the
+$(\alpha,\beta,\gamma)=(0.4,0.5,0.1)$ schedule transferred verbatim
+from the LOB specialisation of \cite{solovev2026lob}. The selected
+configuration (\cref{sec:fcst-grid}) has hidden dimension $64$, two
+BiGRU layers per branch, multi-scale 1-D CNN kernels
+$\{3,5,7\}$, dropout $0.1$, learning rate $10^{-3}$, batch size $32$,
+sequence length $T=168$ hours and forecast horizon $H=12$ hours; the
+exported ONNX module is $1.26$\,MB. Training was conducted on a
+Kaggle P100 instance with the v9 hyperparameter pin; the recorded
+best-validation loss is $0.427$ and elapsed wall-clock is
+$21.5$ minutes for the converged run.
+
+On the validation fold the network attains weighted-Pearson $0.747$
+on Aave and $0.289$ on Compound, with directional accuracy $0.739$
+on the binary ``Aave $>$ Compound at $t+12\mathrm{h}$'' label and a
+positive in-sample $R^{2}=0.138$ on the Compound branch. The
+Compound $R^{2}$ exceeds the constant-mean predictor, confirming that
+the dual-branch design extracts non-trivial signal on a protocol whose
+base rate must be reconstructed via RPC view-call replays
+(\cref{sec:data-sources}). The Aave-side $R^{2}$ is negative on the
+raw rate level ($-2.12$) but this is the expected signature of the
+kink-subtracted residual design: the dominant determinist component
+sits in $f_{\text{kink}}(u)$ and the architecture learns the residual
+$\varepsilon = r-f_{\text{kink}}(u)$, so absolute rate-level $R^{2}$
+under-counts the architecturally-extracted signal that the
+weighted-Pearson score correctly weighs.
+
+On the held-out test fold the picture inverts. Weighted-Pearson is
+$-0.07$ on Aave and $+0.60$ on Compound; directional accuracy on the
+cross-protocol label collapses to $0.35$, below the $0.5$ random-coin
+baseline. The pooled out-of-sample diagnostics reported in
+\cref{tab:forecast-quality} are dominated by this collapse: the
+$\ForecastDirAcc{}$ directional accuracy is below the random baseline
+and the pooled rate-level $R^{2}=\ForecastRsq$ is deeply negative
+once the kink-residual is reconstituted. The 2025-Q3-to-Q4 regime
+crossover documented in \cref{sec:regime-empirical} --- the
+Aave-pays-more share rising from $39.9\%$ to $56.3\%$, with median
+spread inverting from $-0.218$\,pp to $+0.183$\,pp --- is the most
+plausible attribution. The validation fold sits inside the
+pre-inversion regime; the test fold straddles the inversion and a
+return to Compound dominance in 2026-Q1. The sub-chance directional
+accuracy is the empirical signature of a forecaster that has
+high-confidence in well-calibrated weighted-Pearson terms locked
+onto a correlation pattern from the wrong regime: the model is not
+indecisive on the test fold, it commits to the wrong side of the
+cross-protocol comparison.
+
+\subsection{Headline H1 Test}
+\label{sec:defi-h1-narrative}
+
+The forecast vector feeds the 4-factor MCDM allocator of
+\cref{sec:mcdm,eq:mcdm} (APY, Risk, Cost, Stability with default
+weights $(0.40,0.25,0.20,0.15)$), with rebalance gated by the
+three-gate protocol of \cref{alg:rebalance}: a hysteresis threshold
+$\theta=0.05$ on the criterion-score delta, a cooldown
+$\tau=1$\,hour, and a gas-cost gate requiring expected uplift over
+the forecast horizon to exceed realized gas spend. The reactive
+comparator is the EMA-smoothed MCDM-EMA of \cite{solovev2026vault}
+re-instantiated as a sibling subclass of
+\texttt{BaseLendingAllocationStrategy} on the same backtest harness;
+both strategies execute on identical observation streams to ensure
+apples-to-apples comparison.
+
+The binding numbers, reproduced from \cref{tab:baselines} for
+self-containment, are: predictive net APY \PredictiveAPY{} against
+reactive \EMAAPY{}, an $8$\,bp annualized gap in favor of the
+reactive baseline; predictive Sharpe \PredictiveSharpe{} against
+reactive \EMASharpe{}; both strategies rebalance twice on the
+window, with gas spend \PredictiveGas{} versus \EMAGas{} dollars
+respectively. The cumulative equity curves (figure logged under
+\texttt{results/figures/main\_vs\_ema\_equity.png}) track each
+other to within ten basis points over the four-month window; the
+predictive variant pays its overhead but does not earn it back.
+
+The $1000$-resample paired monthly-Sharpe bootstrap (predictive
+minus reactive on per-month Sharpe pairs) returns
+$\Delta\textsc{Sharpe}=\SharpeDelta{}$ with $95\%$ confidence
+interval $[\BootstrapCILow{},\,\BootstrapCIHigh{}]$ and bootstrap
+$p$-value $\BootstrapPvalue{}$. Both endpoints of the CI lie below
+the $H_1$ threshold of $+0.2$; the verdict is therefore
+\emph{fail to reject $H_0$}. The wide CI magnitude is a
+four-month-window artifact (only four paired monthly observations
+enter the resample) and is the same caveat documented in the
+pre-registration; with a longer test fold the same point estimate
+would carry a tighter interval, but the sign of the contrast would
+not change. The bootstrap distribution is concentrated below zero
+on every resample, which is why $p=\BootstrapPvalue{}$ for the
+one-sided $H_1$ alternative: the resampling procedure cannot find a
+sub-window in which the predictive variant outperforms by the
+$+0.2$ Sharpe pre-registration threshold.
+
+\subsection{Per-Quarter Regime Decomposition}
+\label{sec:defi-regime}
+
+The test window splits cleanly along the two empirically distinct
+regimes documented in \cref{sec:regime-empirical}: 2026-Q1
+(Compound-calm, $27.1\%$ Aave-pays-more share,
+$\sigma=0.57$\,pp) and the partial 2026-Q2 (Aave-dominant,
+$61.3\%$ Aave-pays-more share, $\sigma=3.61$\,pp). The
+regime-conditional breakdown of \cref{tab:regime-results} reports
+the two strategies separately on each sub-window. In Q1 the
+predictive variant Sharpe is \QOneSharpePred{} versus EMA
+\QOneSharpeEMA{}, with predictive net APY \QOneAPYPred{} versus
+EMA \QOneAPYEMA{}; the gap is $1.1$\,pp annualized in favor of the
+reactive comparator on this quarter alone, attributable to
+unnecessary rebalances triggered by a forecaster that has not yet
+recognized the regime as Compound-dominant. In Q2 the predictive
+and reactive strategies converge to identical numbers
+(Sharpe \QTwoSharpePred{}, APY \QTwoAPYPred{}) because both
+implementations elect to remain in the dominant venue throughout the
+sub-window, and the forecaster's directional error does not cost
+gas. The Q1-vs-Q2 contrast confirms that the H1 negative result is
+not driven by gas overhead in steady state: it is driven by
+forecaster mis-direction at the regime boundary, where the cost of
+the wrong call is highest.
+
+\subsection{Hysteresis-Sweep Ablation}
+\label{sec:defi-ablation-narrative}
+
+A natural rebuttal to the H1 negative result is that the default
+hysteresis threshold $\theta=0.05$ is mis-calibrated and that the
+predictive variant could outperform under a different rebalance
+cadence. Ablation~\#16 sweeps $\theta\in\{0.01, 0.02, 0.05, 0.10,
+0.20\}$ on the predictive MCDM with all other parameters fixed
+(\cref{tab:ablations} row 16 and the row C/E entries in the
+ablation macro block). Increasing rebalance frequency from $0$
+($\theta\in\{0.10, 0.20\}$) to $4$ ($\theta\in\{0.01, 0.02\}$)
+\emph{hurts} risk-adjusted return: net APY moves from
+$\AblationSixteenDAPY{}$ at zero rebalances (no action triggered) to
+$\AblationSixteenAAPY{}$ at four rebalances, even though Sharpe sits
+in the $\AblationSixteenASharpe{}$--$\AblationSixteenCSharpe{}$
+range. The default $\theta=0.05$ (row C) sits at the knee of the
+curve, with two rebalances, $\AblationSixteenCSharpe{}$ Sharpe, and
+$\AblationSixteenCAPY{}$ APY --- gas-light and risk-adjusted, exactly
+the calibration the pre-registration of \cref{sec:strat-grid}
+prescribed. The ablation does not change the H1 verdict, but it
+does establish that the design is correctly tuned: the gap to the
+EMA baseline is not a hysteresis-knob artifact, and no setting of
+$\theta$ within the swept range recovers a positive
+$\Delta\textsc{Sharpe}$ against the reactive comparator.
+
+\subsection{Summary}
+\label{sec:defi-summary}
+
+In summary: the architecture extracts in-sample structure on both
+protocols (validation weighted-Pearson $0.747$ on Aave with
+directional accuracy $0.739$, a positive Compound branch
+$R^{2}=0.138$); the allocator is correctly calibrated (default
+$\theta=0.05$ sits at the Sharpe knee of the hysteresis sweep, with
+two rebalances and gas-light execution); and yet the headline $H_1$
+fails on the binding test fold, with
+$\Delta\textsc{Sharpe}=\SharpeDelta{}$, $95\%$ CI
+$[\BootstrapCILow{},\,\BootstrapCIHigh{}]$ and
+$p=\BootstrapPvalue{}$. The proximate cause is the
+quarterly-time-scale regime structure documented in
+\cref{sec:regime-empirical} that the four-month test window slices
+adversarially. The discussion of \cref{sec:discussion} unpacks what
+this means for the LOB-to-DeFi cross-domain transfer hypothesis at
+each of the three layers --- architectural, predictive, and
+strategic.

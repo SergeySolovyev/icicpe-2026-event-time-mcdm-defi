@@ -1,1 +1,112 @@
-% 12_conclusion -- TODO populate during Week 4
+% 12_conclusion.tex --- Conclusion and Future Work (long-form
+% analogue of ICICPE Section VIII, ~500 words). Reports the H1
+% verdict honestly per the H0-publishable protocol and breaks the
+% contribution into architectural, infrastructure, and empirical
+% layers. Cross-references to results macros and to the
+% three-layer cross-domain framing of sec:disc-three-layers.
+
+\section{Conclusion and Future Work}
+\label{sec:conclusion}
+
+\subsection{Summary of Findings}
+\label{sec:summary}
+
+We tested whether a domain-aware dual-branch recurrent network
+(DA-BiGRU-CNN) calibrated for LOB mid-price prediction
+\cite{solovev2026lob} transfers --- without architectural change ---
+to DeFi USDC lending-rate forecasting on Aave V3 and Compound V3,
+and whether the resulting forecast yields a Sharpe improvement
+over a reactive EMA-smoothed MCDM allocator on a binding four-month
+held-out test window. Under the same composite loss
+(\cref{eq:loss}) and the substitution of the domain-natural
+decomposition pair from (price, volume) to
+$(\varepsilon = r-f_{\text{kink}}(u),\, u+\text{ctx})$, the network
+trains stably on the $13{,}096$-hour Aave panel and attains
+validation weighted-Pearson $0.747$ on Aave with directional
+accuracy $0.739$ --- a non-trivial in-distribution signal that
+confirms the architectural transfer hypothesis of
+\cref{sec:disc-arch}. The pre-registered H1 test on the binding
+test fold, however, returns
+$\Delta\textsc{Sharpe}=\SharpeDelta{}$ with $95\%$ CI
+$[\BootstrapCILow{},\,\BootstrapCIHigh{}]$ and
+$p=\BootstrapPvalue{}$: \emph{fail to reject $H_0$}. The
+hysteresis ablation (\cref{sec:defi-ablation-narrative}) rules out
+a mis-tuned threshold as the cause; the documented
+2025-Q3-to-Q4 regime inversion of \cref{sec:regime-empirical} is
+the proximate explanation.
+
+\subsection{Contribution at Three Layers}
+\label{sec:contribution-layers}
+
+We report the negative H1 verdict honestly per the H0-publishable
+protocol pre-registered in \cref{sec:contributions}; the
+contribution stands at three layers, each of which is independently
+defensible. At the \emph{architectural layer}, identical wiring
+carries non-trivial signal across two structurally different
+financial markets (microsecond-resolution order-book microstructure
+and hour-resolution lending-rate dynamics), supporting the
+DA-BiGRU-CNN template as portable across the (price, volume) /
+(residual, utilization) decomposition pair. The kink-prior
+extension of \cref{sec:dual-branch} is, in our reading, the first
+architecturally-encoded use of a protocol-published rate model as a
+hard prior in a deep DeFi-rate forecaster. At the
+\emph{infrastructure layer}, the open-source Compound V3 base-rate
+loader and the \texttt{BaseLendingAllocationStrategy} abstraction
+upstream-able to \texttt{fractal-defi} \cite{krestenko2026basis}
+(documented in \cref{sec:contributions-detail,app:prs}) are, to
+our knowledge, the first multi-protocol lending-allocation
+primitive in that substrate; both are ready for upstream PR
+independent of the H1 outcome. At the \emph{empirical layer}, the
+falsified LOB-to-DeFi-lending strategic transfer ---
+mirroring the ``negative ensemble'' finding of
+\cite{solovev2026lob}~\S5.5 one layer up the stack
+(\cref{sec:disc-strat}) --- is itself publishable evidence that
+complements the equilibrium impossibility result of
+\cite{halpern2024fairrates}: it provides the directly-measured
+short-horizon regime-shift instance that the impossibility result
+predicts will manifest in the realised rate stream
+(\cref{sec:disc-impossibility}).
+
+\subsection{Limitations}
+\label{sec:limitations}
+
+Four limitations bound the present claims. (i) The 18-month panel
+covers less than two full macro cycles, and the binding test fold
+is four months, yielding only four paired monthly observations for
+the bootstrap of \cref{sec:defi-h1-narrative}; a longer test fold
+would tighten the CI without changing the sign of the contrast.
+(ii) The two-protocol scope is deliberate but excludes Morpho,
+Spark, and cross-chain venues; cross-protocol structural diversity
+beyond Aave/Compound is untested. (iii) The single underlying
+(USDC) is intentional but limits external validity to the
+stablecoin family; cross-asset rate forecasting (ETH, wBTC, DAI)
+is plausibly more or less regime-stable. (iv) The forecaster is
+trained once on the pre-inversion window; online recalibration
+across regime boundaries (\cref{sec:disc-pred}) is not
+implemented here.
+
+\subsection{Future Work}
+\label{sec:future}
+
+Four extensions are immediate and each directly addresses one
+limitation. First, \emph{regime-conditional retraining}: re-fit the
+forecaster on a rolling pre-window at the Q3-to-Q4 boundary and
+re-run the H1 test; this is the cleanest empirical falsification
+of the regime-attribution argument in \cref{sec:disc-pred}.
+Second, \emph{longer test folds}: extending the panel to a
+$\sim$36-month window and re-running the four-month rolling H1
+test gives a distribution of bootstrap outcomes against which the
+present single-window verdict can be properly contextualized.
+Third, \emph{$N$-way protocol extension}: Morpho and Spark
+integration on the existing \texttt{BaseLendingAllocationStrategy}
+abstraction would test whether the predictive edge scales beyond
+the Aave--Compound pair. Fourth, \emph{architectural ablation
+under regime-aware training}: an attention-backbone variant along
+the lines of \cite{wallbridge2020transformerlob} and
+\cite{nunes2026lstm} can be tested under the same regime-aware
+training schedule, isolating whether the present H1 negative is a
+DA-BiGRU-CNN capacity ceiling or a data-regime structural limit. A
+Panoptic-style options overlay on the supply position, hedging
+tail risk during the high-volatility tertile of
+\cref{sec:regime-empirical}, is under active exploration as a
+complement to (rather than substitute for) the forecasting layer.

@@ -581,9 +581,15 @@ March 2023 USDC depeg, drawn from the
 (\cref{tab:ablations}, row~14).
 
 % ---------------------------------------------------------------------------
-% 8. RESULTS
+% 8. RESULTS (macro block + headline / ablation / regime / forecast tables)
 % ---------------------------------------------------------------------------
 \input{sections/09_results.tex}
+
+% ---------------------------------------------------------------------------
+% 9. DEFI EXPERIMENT (narrative companion to the results tables; uses macros
+%    defined at the top of sections/09_results.tex)
+% ---------------------------------------------------------------------------
+\input{sections/05_defi_experiment.tex}
 
 % ---------------------------------------------------------------------------
 % 9. DISCUSSION
@@ -591,50 +597,9 @@ March 2023 USDC depeg, drawn from the
 \input{sections/10_discussion.tex}
 
 % ---------------------------------------------------------------------------
-% 10. CONCLUSION AND FUTURE WORK
+% 11. CONCLUSION AND FUTURE WORK
 % ---------------------------------------------------------------------------
-\section{Conclusion and Future Work}
-\label{sec:conclusion}
-
-\subsection{Summary of Findings}
-\label{sec:summary}
-
-We have specified, implemented, and pre-registered a forecast-driven
-MCDM allocator for USDC supply between Aave V3 and Compound V3, with
-a dual-branch DA-BiGRU-CNN forecaster exploiting the protocol-known
-kink function as a hard prior, on the \texttt{fractal-defi}
-substrate. The headline pre-registered targets are Sharpe improvement
-$0.2$--$0.5$, $R^2 \in [0.15,0.40]$, and directional accuracy
-$\in [55,65]\%$ over a held-out 4-month test window. The null
-hypothesis is entertained explicitly and is structurally falsifiable
-by ablation~1.
-
-\subsection{Limitations}
-\label{sec:limitations}
-
-The 18-month window covers less than two full macro cycles; the
-two-protocol scope is deliberate but excludes Morpho, Spark, and
-cross-chain venues; the single underlying (USDC) is intentional but
-limits external validity. Gas-cost spikes can dominate forecast edge
-in adversarial regimes (ablation~12 quantifies the break-even gas).
-The forecast is conditional on neither protocol experiencing a
-solvency event during the test window --- a historically valid but
-nontrivial assumption.
-
-\subsection{Future Work}
-\label{sec:future}
-
-Three extensions are immediate. First, Morpho and Spark integration
-would broaden the venue universe and test whether the predictive
-edge scales beyond the Aave--Compound pair. Second, a cross-chain
-extension (Aave on Arbitrum/Base) would expose the strategy to
-bridge friction and a richer execution-risk profile. Third, the
-dual-branch BiGRU--CNN architecture can be upgraded to attention-based
-backbones along the lines of
-\cite{wallbridge2020transformerlob} and
-\cite{nunes2026lstm}. A Panoptic-style options overlay on the supply
-position, hedging tail risk during the high-volatility tertile, is
-under active exploration.
+\input{sections/12_conclusion.tex}
 
 % ---------------------------------------------------------------------------
 % APPENDIX

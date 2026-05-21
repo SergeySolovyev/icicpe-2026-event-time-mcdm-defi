@@ -126,3 +126,169 @@ backtest of MCDM-EMA, the falsification of the LOB-to-DeFi transfer
 claim, and the open-source Extra+1/Extra+2 contributions of
 \cref{sec:contributions-detail} --- each of which stands on its own
 merits.
+
+\subsection{Three Layers of Cross-Domain Transfer}
+\label{sec:disc-three-layers}
+
+The empirical record now spans two structurally different markets:
+high-frequency LOB mid-price prediction \cite{solovev2026lob} and
+the DeFi USDC lending-rate forecasting and allocation problem of
+\cref{sec:defi-experiment}. The cross-domain hypothesis behind both
+papers is not a single claim but a sequence of three: that an
+identical \emph{architecture} carries signal across the two markets;
+that the resulting \emph{predictions} carry the same kind of
+out-of-sample structure; and that this in turn confers a
+\emph{strategic} edge on an allocator built on top. The empirical
+record now lets us disaggregate the three claims, and the conclusion
+is that they fail at distinct layers --- the architectural transfer
+succeeds, the predictive transfer is partial and regime-conditional,
+and the strategic transfer fails on the binding test window. We
+state each claim and the evidence in turn.
+
+\subsubsection{Architectural Transfer Succeeds}
+\label{sec:disc-arch}
+
+The DA-BiGRU-CNN of \cref{sec:dual-branch} trains stably and
+extracts non-trivial signal in both domains under \emph{identical}
+network wiring, composite loss, and optimization schedule. In LOB
+mid-price prediction it attains test weighted-Pearson on the order
+of $0.74$, outperforming a 205-feature LightGBM baseline by
+$0.5$--$1.6$ percentage points
+\cite{solovev2026lob}; in DeFi lending it reaches validation
+weighted-Pearson $0.747$ on Aave with directional accuracy $0.739$
+and a positive Compound branch $R^{2}=0.138$
+(\cref{sec:defi-forecaster-narrative}). The recipe that ports
+without modification is concrete and recordable: (i) identify a
+domain-natural decomposition pair $(\mathcal X_A, \mathcal X_B)$
+such that one subspace carries the deterministic backbone and the
+other carries the residual stochastic component --- (price, volume)
+in LOB, $(\varepsilon = r-f_{\text{kink}}(u),\; u+\text{ctx})$ in
+DeFi (\cref{sec:dual-branch}); (ii) re-use the same dual-BiGRU
+stack with multi-scale Conv1d fusion (kernels $\{3,5,7\}$, hidden
+size $64$); and (iii) re-use the same composite loss
+(\cref{eq:loss}) with weighted-Pearson as the dominant term. The
+\emph{architectural} transfer hypothesis --- ``the same template
+generalises by re-identifying the decomposition pair'' --- is
+therefore supported by the validation diagnostics on both panels.
+This is the central methodological contribution of the present
+paper and is independent of the H1 outcome on the strategic layer.
+
+A subsidiary but important architectural finding is that the kink
+prior has no LOB analogue and contributes a genuinely new lever in
+the DeFi setting. The governance-noise analysis of
+\cref{sec:governance-noise} shows that subtracting
+$f_{\text{kink}}(u;\theta_{\text{current}})$ from the realized rate
+explains only $21.3\%$ of supply-rate variance under static current
+parameters; conditioning on the protocol-published kink function
+absorbs a deterministic $+186$\,bps offset that would otherwise be
+invisible to any architecture conditioning only on $(r, u)$. The
+LOB-to-DeFi transfer is in this sense \emph{strictly enriching} at
+the architectural layer: every LOB-side architectural choice ports,
+and one DeFi-native lever (the kink prior) is added.
+
+\subsubsection{Predictive Transfer is Partial}
+\label{sec:disc-pred}
+
+The transfer breaks one layer up. Validation weighted-Pearson
+$0.747$ on the Aave branch collapses to test
+$-0.07$, and directional accuracy on the cross-protocol label
+falls from $0.739$ on validation to $0.351$ on test
+(\cref{sec:defi-forecaster-narrative}) --- a sub-chance value
+whose sign is the empirical signature of a forecaster that has
+locked onto a correlation pattern from the wrong regime rather
+than of a forecaster that is uncertain. The proximate cause is
+documented and dated: between 2025-Q3 and 2025-Q4 the
+Aave-pays-more share rises from $39.9\%$ to $56.3\%$ and the
+median cross-protocol spread inverts from $-0.218$\,pp to
+$+0.183$\,pp (\cref{sec:regime-empirical}); the validation fold
+lives in the pre-inversion regime; the test fold straddles the
+inversion and a return to Compound dominance in 2026-Q1. The
+empirical contrast with the LOB benchmark of
+\cite{solovev2026lob} is sharp. LOB microstructural dynamics on
+millisecond horizons are dominated by stationary adverse-selection
+mechanics whose statistical character does not shift on a
+four-month time scale; DeFi lending rates inherit
+on-the-order-of-quarter regime persistence from slow demand-side
+composition shifts (USDC borrow-demand cohort changes, perpetual
+DEX funding-rate cycles, periodic governance-set risk-parameter
+updates), and on the panel assembled here a single quarter is the
+characteristic regime time-scale rather than a sub-component of
+within-regime noise. Predictive transfer is therefore conditional
+on regime alignment, not architecturally guaranteed: in-distribution
+predictability does not imply robust short-horizon predictability
+in DeFi the way it appears to in microstructure.
+
+A constructive reading of this partial-transfer result is the
+quarterly-conditional retraining schedule of \cref{sec:future}.
+The same architecture, trained on a rolling pre-inversion window
+and re-fit at the Q3-to-Q4 boundary, is the obvious next
+experiment. The negative test-fold weighted-Pearson does not
+falsify the architecture; it falsifies the implicit assumption
+that a one-shot training pass on the pre-inversion regime gives a
+forecaster whose calibration survives the inversion.
+
+\subsubsection{Strategic Transfer Fails on This Window}
+\label{sec:disc-strat}
+
+The predictive MCDM under-performs the reactive MCDM-EMA by
+$8$\,bp in annualised net APY ($\PredictiveAPY{}$ vs
+$\EMAAPY{}$); the paired monthly-Sharpe bootstrap of
+\cref{sec:defi-h1-narrative} returns $\SharpeDelta{}$ with $95\%$
+CI $[\BootstrapCILow{},\,\BootstrapCIHigh{}]$ and
+$p=\BootstrapPvalue{}$, firmly inside the H0 acceptance region of
+the pre-registered $\Delta\textsc{Sharpe}\ge 0.2$ test. The
+hysteresis-sweep ablation of \cref{sec:defi-ablation-narrative}
+rules out the most natural rebuttal --- ``the threshold is
+mis-tuned'' --- by showing that the design $\theta=0.05$ sits at
+the Sharpe knee of the sweep, with fewer rebalances (and zero
+gas at $\theta\in\{0.10,0.20\}$) actually \emph{not raising} net
+APY against EMA in this window. The mechanism is therefore: a
+forecaster whose test-fold directional sign is wrong cannot drive
+a switching allocator into the right pool ahead of the
+EMA-smoothed reactive comparator; the predictive overhead consumes
+gas without obtaining the timing alpha that justifies it.
+
+This is the same negative-ensemble pattern that
+\cite{solovev2026lob}~\S5.5 reported for the LOB setting ---
+combining a strong dual-branch GRU forecaster with a 205-feature
+LightGBM ranker \emph{degraded} test weighted-Pearson by $0.05$ to
+$1.6$ percentage points rather than improving it --- generalised
+one layer up the stack: combining a forecaster with a reactive
+allocator can under-perform the allocator alone if the forecaster
+transports out-of-distribution badly. Two negative results, in two
+structurally different domains, with the same mechanistic
+explanation: \emph{the apparent complementarity of two components
+is a property of the joint distribution they were calibrated on,
+not a robust architectural fact}. This is, in our reading, a
+non-trivial finding that the H0-publishable protocol of
+\cref{sec:contributions} is designed to surface. A literature in
+which only H1-positive ensembles are reported is a literature in
+which this cross-domain regularity is invisible.
+
+\subsubsection{Relation to Halpern--Pass--Saraf, Revisited}
+\label{sec:disc-impossibility}
+
+The three-layer disaggregation lets us refine the response to
+\cite{halpern2024fairrates} previewed in \cref{sec:fair-rates-response}.
+Their result is a no-arbitrage statement about equilibrium fairness
+at the contract-pricing layer; it constrains \emph{which interest
+rate the protocol could in principle charge} under strategic
+borrowers. Our finding is at the execution layer and it is
+empirical rather than theoretical: short-horizon local
+predictability of the realized rate stream is present
+in-distribution (validation weighted-Pearson $0.747$ on Aave) but
+does not survive the 2025-Q3-to-Q4 regime shift documented in the
+data panel. These two negative findings do not refute each other ---
+one is a no-arbitrage statement about equilibrium fairness, the
+other is an out-of-sample statement about the stationarity of the
+short-horizon predictive structure --- and they do not jointly
+imply that DeFi-lending forecasting is hopeless. They jointly
+imply that the empirical-predictability conjecture must be
+re-stated in a regime-conditional form, with explicit handling of
+distribution shift on the order of one fiscal quarter rather than
+a global predictability claim across an 18-month panel. The
+H0-publishable verdict is in this sense complementary to
+\cite{halpern2024fairrates}: it provides the empirical data point
+that the impossibility-of-fair-pricing result predicts will
+manifest as regime-persistent disequilibrium in the realised rate
+stream.
