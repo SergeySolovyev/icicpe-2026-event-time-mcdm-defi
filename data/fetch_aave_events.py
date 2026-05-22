@@ -130,11 +130,16 @@ def fetch_aave_events(
 
     raw = pd.DataFrame(rows)
 
-    # Sort by ts, then assign event_idx within each timestamp (proxy for
-    # within-block ordering; subgraph doesn't expose true logIndex on this
-    # entity).
+    # Sort by ts, then assign event_idx as a UNIQUE within-fetch counter.
+    # Cannot use groupby(ts).cumcount() here because at fetch time
+    # block_number is sentinel -1 for every row, and the dedup key is
+    # (block_number, event_idx, protocol) -- per-timestamp cumcount would
+    # produce event_idx=0 for every single-event timestamp, colliding on
+    # the dedup key. The stitcher (build_per_block_panel.py) re-cumcounts
+    # within (block_number, protocol) AFTER it resolves ts -> block_number,
+    # which is the right time to assign semantic "within-block ordering".
     raw = raw.sort_values("block_timestamp_ts", kind="stable").reset_index(drop=True)
-    raw["event_idx"] = raw.groupby("block_timestamp_ts").cumcount().astype("int32")
+    raw["event_idx"] = pd.RangeIndex(len(raw)).astype("int32")
 
     # Compute fields per the canonical schema.
     apr_lend = raw["liquidity_rate_ray"] / RAY

@@ -114,7 +114,12 @@ def fetch_spark_events(
         return empty_event_frame()
 
     raw = pd.DataFrame(rows).sort_values("ts", kind="stable").reset_index(drop=True)
-    raw["event_idx"] = raw.groupby("ts").cumcount().astype("int32")
+    # event_idx = unique within-fetch counter (NOT per-timestamp cumcount).
+    # See identical comment in data/fetch_aave_events.py: at fetch time
+    # block_number is sentinel -1 and groupby(ts).cumcount() would collide
+    # on the dedup key (block_number, event_idx, protocol). Stitcher
+    # re-cumcounts within (block_number, protocol) after ts -> block lookup.
+    raw["event_idx"] = pd.RangeIndex(len(raw)).astype("int32")
 
     supplied = raw["supplied"] / 1e6
     borrowed = raw["borrowed"] / 1e6

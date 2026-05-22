@@ -19,6 +19,21 @@ from __future__ import annotations
 
 import pandas as pd
 
+# event_idx semantic (IMPORTANT, see Task A2 retrospective in KANBAN.md):
+#   * At FETCH time, fetchers populate event_idx as a unique within-frame
+#     counter (e.g. `pd.RangeIndex(len(df))`). block_number is sentinel -1
+#     at this stage because the subgraph doesn't expose true block numbers
+#     on the rate-history entity. The dedup key (block, idx, protocol) is
+#     unique because event_idx is globally unique within the fetch frame.
+#   * At STITCHER time (build_per_block_panel.py), after ts->block_number
+#     is resolved, the stitcher re-cumcounts event_idx within
+#     (block_number, protocol) to recover the semantic "within-block
+#     ordering". From that point on event_idx means "kth event in this
+#     block for this protocol".
+# The validator enforces uniqueness on (block_number, event_idx, protocol)
+# but does NOT require event_idx to start at 0 per timestamp -- that
+# semantic is the stitcher's responsibility.
+
 EVENT_ROW_DTYPES: dict[str, str] = {
     "block_number":        "int64",
     "block_timestamp":     "datetime64[ns, UTC]",
