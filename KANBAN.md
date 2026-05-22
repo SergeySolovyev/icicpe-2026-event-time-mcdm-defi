@@ -16,36 +16,39 @@
 
 | # | Task | Status | Owner | Files | Notes |
 |---|---|---|---|---|---|
-| A1 | EventRow schema + validator | 🟨 In Progress | inline | `data/event_schema.py`, `tests/test_event_schema.py` | Locks shared contract before fork. Test written; impl next. |
-| A2 | Aave V3 per-event 1-day smoke | 🟦 Backlog | subagent-A2 | `data/fetch_aave_events.py`, `tests/test_fetch_aave_events.py` | Template for A4 (Spark) clone. RAY 1e27. |
-| A3 | Aave V3 18-month cached | 🟦 Backlog | subagent-A2 | (same) | Cached parquet round-trip. |
-| A4 | Spark per-event (Aave fork) | 🟦 Backlog | subagent-A4 | `data/fetch_spark_events.py`, `tests/test_fetch_spark_events.py` | Same schema as Aave, new subgraph id. |
-| A5 | Compound V3 RPC sample | 🟦 Backlog | subagent-A5 | `data/fetch_compound_events.py`, `tests/test_fetch_compound_events.py` | Messari subgraph has no base-Comet rates. WAD 1e18. |
-| A6 | Morpho Blue per-event | 🟦 Backlog | subagent-A6 | `data/fetch_morpho_events.py`, `tests/test_fetch_morpho_events.py` | api.morpho.org/graphql. AdaptiveCurve IRM — no static f_kink. |
-| A7 | Euler V2 per-event | 🟦 Backlog | subagent-A7 | `data/fetch_euler_events.py`, `tests/test_fetch_euler_events.py` | Goldsky subgraph (no auth). |
-| A8 | Fluid RPC sample | 🟦 Backlog | subagent-A8 | `data/fetch_fluid_events.py`, `tests/test_fetch_fluid_events.py` | No production subgraph. RATE_PRECISION 1e12. |
-| A9 | Maker DSR (Signal F1) | 🟦 Backlog | subagent-A9 | `data/fetch_dsr_events.py`, `tests/test_fetch_dsr_events.py` | Pot.File events. Signal F1 futures-lead analog. |
-| A10 | build_per_block_panel.py stitcher | 🟦 Backlog | inline | `data/build_per_block_panel.py`, `tests/test_build_per_block_panel.py` | Depends on A1. Forward-fill onto uniform block grid. |
-| A11 | 2026c parity verification | 🟦 Backlog | inline | `tests/test_event_parity.py` | Depends on A10. Hourly resample of new panel matches `joined_clean.parquet` within 5 bp. |
+| A1 | EventRow schema + validator | 🟩 Done | inline | `data/event_schema.py` | `6d0119c` + dedup-bug fix `edc67e0`. 9 tests pass. |
+| A2 | Aave V3 per-event 1-day smoke | 🟩 Done | subagent | `data/fetch_aave_events.py` | `2fcfad1` + `edc67e0`. Pool addr fixed in-place (PoolAddressesProvider). |
+| A3 | Aave V3 18-month cached | 🟩 Done | subagent | (same file) | Same commit as A2. Cached wrapper round-trip tested. |
+| A4 | Spark per-event (Aave fork) | 🟩 Done | subagent | `data/fetch_spark_events.py` | `b55f9dd` + `edc67e0`. |
+| A5 | Compound V3 RPC sample | 🟩 Done | subagent | `data/fetch_compound_events.py` | `6d07c91`. 3 offline tests pass. |
+| A6 | Morpho Blue per-event | 🟩 Done | subagent | `data/fetch_morpho_events.py` | `90d596d`. Schema-fix `fb051e5` after live API introspection. |
+| A7 | Euler V2 per-event | 🟩 Done | subagent | `data/fetch_euler_events.py` | `dda3a62`. Endpoint-fix `fb051e5`. |
+| A8 | Fluid RPC sample | 🟩 Done | subagent | `data/fetch_fluid_events.py` | `f494289`. Selector `0x29e04fbf`. |
+| A9 | Maker DSR (Signal F1) | 🟩 Done | subagent | `data/fetch_dsr_events.py` | `8bb55d1`. |
+| A10 | build_per_block_panel.py stitcher | 🟩 Done | inline | `data/build_per_block_panel.py` | `4573a31`. Forward-fill + re-cumcount-after-block-resolution. 5 tests. |
+| A11 | 2026c parity verification | 🟩 Done | inline | `tests/test_event_parity.py` | `6e58867`. Skips when caches missing; activates after operator build. |
+| A12 | Kaggle build kernel | 🟨 v2 partial | inline | `kaggle_workspace/build_panel/` | `c145820` + `fb051e5`. **v2 result: Morpho ✅ + Euler ✅ + 5 await user secret-binding.** Partial panel 3.93M × 10 cols staged at `data/cached/per_block_panel.parquet` (48 MB) for sandbox validation. |
 
-**Critical path:** A1 → {A2…A9 parallel} → A10 → A11.
-**Output:** `data/cached/per_block_panel.parquet` (~3.9M rows, ~28 cols, gitignored).
+**Critical path:** A1 → {A2…A9 parallel} → A10 → A11 → A12. **A1-A11 ✅; A12 partial pending user secrets-binding.**
+**Output:** `data/cached/per_block_panel.parquet` (target ~3.9M rows × ~28 cols; currently 3.93M × 10 cols with Morpho + Euler only, gitignored).
 
 ---
 
 ## Plan B — T1+T2 decision policies + replay engine (Week 2)
 
+Detailed TDD plan: `docs/superpowers/plans/2026-05-22-decision-policies-t1-t2-replay.md`
+
 | # | Task | Status | Owner | Files | Notes |
 |---|---|---|---|---|---|
-| B1 | DecisionPolicy ABC | ⬜ Deferred (post Plan A) | TBD | `decision/base.py`, `tests/test_decision_base.py` | `decide(state) → {hold, switch_to_i}`. |
-| B2 | T1 gas-aware threshold rule | ⬜ Deferred | TBD | `decision/t1_threshold.py`, tests | Rule: `E[dwell]·spread > gas/position`. EWMA dwell. |
-| B3 | OU spread model | ⬜ Deferred | TBD | `decision/ou_calibrator.py`, tests | `dS = κ(θ−S)dt + σdW`. Rolling-window MLE. |
-| B4 | T2 optimal stopping Bellman threshold | ⬜ Deferred | TBD | `decision/t2_optimal_stopping.py`, tests | Closed-form S* from (κ,θ,σ,K,gas). Kissell eq 8.23 benchmark. |
-| B5 | Per-block replay engine | ⬜ Deferred | TBD | `backtest/replay_per_block.py`, tests | Streaming replay; O(1) state. Embargo 0.01·T per AFML. |
-| B6 | B1-B4 baseline runners | ⬜ Deferred | TBD | `backtest/run_baselines.py` | Always-Aave, Always-Compound, Greedy spot, MCDM-EMA event-time. |
-| B7 | Validation slice (Sep-Dec 2025) | ⬜ Deferred | TBD | `results/tables/val_matrix.csv` | Iterate hyperparams until T1 beats B4 by ≥10 bp. |
+| B1 | DecisionPolicy ABC | 🟩 Done | inline | `decision/base.py` | `711d34b`. BLOCKS_PER_YEAR=2_628_000 int constant. 9 tests. |
+| B2 | T1 gas-aware threshold rule | 🟩 Done | subagent | `decision/t1_threshold.py` | `7c3827e`. 7 tests pass. EWMA-dwell estimator. |
+| B3 | OU spread calibrator | 🟩 Done | subagent | `decision/ou_calibrator.py` | `b45df13`. 4 tests pass. Closed-form MLE. |
+| B4 | T2 optimal stopping Bellman threshold | 🟩 Done | inline | `decision/t2_optimal_stopping.py` | `06f9033`. 5 tests pass. S*=θ+σ·√(K/(κ·dt)). Defers to T1 when κ ≤ 1e-6 or cold-start. |
+| B5 | Per-block replay engine | 🟩 Done | subagent | `backtest/replay_per_block.py` | `e50d2f4`. 5 tests pass (slow 1-yr compound: 911s). Protocols extracted dynamically from `<proto>_lending_apr` cols. |
+| B6 | B1-B4 baselines as policies | 🟩 Done | subagent | `backtest/run_baselines_event_time.py` | `f724b4e`. 4 tests pass. **Empirical finding**: B4 MCDM-EMA at realistic 2× Aave-TVL gap structurally suppresses moderate APY edges (paper §V hook). |
+| B7 | Validation matrix (Sep-Dec 2025) | 🟨 In Progress | inline | `backtest/run_validation_matrix.py` | Drafted; running on partial panel (Morpho+Euler 878K blocks). ~30 min wall-clock. Output: `results/tables/plan_b_validation_matrix.csv`. |
 
-**Gate:** T1 net-APY > B4 net-APY by ≥10 bp on Sep-Dec 2025.
+**Gate:** T1 net-APY > B4 net-APY by ≥10 bp on Sep-Dec 2025 (will validate once full panel arrives).
 
 ---
 
