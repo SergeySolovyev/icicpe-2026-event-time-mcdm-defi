@@ -1,0 +1,22 @@
+protocol=spark
+elapsed=0.0
+
+Traceback (most recent call last):
+  File "/kaggle/src/script.py", line 241, in <module>
+    df = fn()
+         ^^^^
+  File "/kaggle/src/script.py", line 179, in <lambda>
+    lambda: fetch_spark_events_cached(
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/kaggle/input/datasets/sergeisolovyev/predictive-mcdm-defi-artifacts/predictive-mcdm-defi-artifacts/data/fetch_spark_events.py", line 156, in fetch_spark_events_cached
+    df = fetch_spark_events(start=start, end=end)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/kaggle/input/datasets/sergeisolovyev/predictive-mcdm-defi-artifacts/predictive-mcdm-defi-artifacts/data/fetch_spark_events.py", line 87, in fetch_spark_events
+    data = _post({
+           ^^^^^^^
+  File "/kaggle/input/datasets/sergeisolovyev/predictive-mcdm-defi-artifacts/predictive-mcdm-defi-artifacts/data/fetch_spark_events.py", line 63, in _post
+    r = requests.post(_endpoint(), json=payload, timeout=30)
+                      ^^^^^^^^^^^
+  File "/kaggle/input/datasets/sergeisolovyev/predictive-mcdm-defi-artifacts/predictive-mcdm-defi-artifacts/data/fetch_spark_events.py", line 58, in _endpoint
+    raise RuntimeError("THE_GRAPH_API_KEY not set")
+RuntimeError: THE_GRAPH_API_KEY not set

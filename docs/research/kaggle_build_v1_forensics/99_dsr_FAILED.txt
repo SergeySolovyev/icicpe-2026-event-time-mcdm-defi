@@ -1,0 +1,19 @@
+protocol=dsr
+elapsed=0.0
+
+Traceback (most recent call last):
+  File "/kaggle/src/script.py", line 241, in <module>
+    df = fn()
+         ^^^^
+  File "/kaggle/src/script.py", line 225, in <lambda>
+    lambda: fetch_dsr_events_cached(
+            ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/kaggle/input/datasets/sergeisolovyev/predictive-mcdm-defi-artifacts/predictive-mcdm-defi-artifacts/data/fetch_dsr_events.py", line 158, in fetch_dsr_events_cached
+    df = fetch_dsr_events(start=start, end=end)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/kaggle/input/datasets/sergeisolovyev/predictive-mcdm-defi-artifacts/predictive-mcdm-defi-artifacts/data/fetch_dsr_events.py", line 89, in fetch_dsr_events
+    r = requests.post(_rpc_endpoint(), json=payload, timeout=60)
+                      ^^^^^^^^^^^^^^^
+  File "/kaggle/input/datasets/sergeisolovyev/predictive-mcdm-defi-artifacts/predictive-mcdm-defi-artifacts/data/fetch_dsr_events.py", line 47, in _rpc_endpoint
+    raise RuntimeError("ETHEREUM_RPC_URL not set")
+RuntimeError: ETHEREUM_RPC_URL not set

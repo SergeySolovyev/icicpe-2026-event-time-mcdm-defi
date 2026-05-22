@@ -1,0 +1,22 @@
+protocol=compound_v3
+elapsed=0.1
+
+Traceback (most recent call last):
+  File "/kaggle/src/script.py", line 241, in <module>
+    df = fn()
+         ^^^^
+  File "/kaggle/src/script.py", line 185, in <lambda>
+    lambda: fetch_compound_events_cached(
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/kaggle/input/datasets/sergeisolovyev/predictive-mcdm-defi-artifacts/predictive-mcdm-defi-artifacts/data/fetch_compound_events.py", line 186, in fetch_compound_events_cached
+    df = fetch_compound_events(
+         ^^^^^^^^^^^^^^^^^^^^^^
+  File "/kaggle/input/datasets/sergeisolovyev/predictive-mcdm-defi-artifacts/predictive-mcdm-defi-artifacts/data/fetch_compound_events.py", line 122, in fetch_compound_events
+    util_resps = _batch_call(util_reqs)
+                 ^^^^^^^^^^^^^^^^^^^^^^
+  File "/kaggle/input/datasets/sergeisolovyev/predictive-mcdm-defi-artifacts/predictive-mcdm-defi-artifacts/data/fetch_compound_events.py", line 62, in _batch_call
+    r = requests.post(_rpc_endpoint(), json=chunk, timeout=60)
+                      ^^^^^^^^^^^^^^^
+  File "/kaggle/input/datasets/sergeisolovyev/predictive-mcdm-defi-artifacts/predictive-mcdm-defi-artifacts/data/fetch_compound_events.py", line 53, in _rpc_endpoint
+    raise RuntimeError("ETHEREUM_RPC_URL not set")
+RuntimeError: ETHEREUM_RPC_URL not set

@@ -1,0 +1,21 @@
+protocol=euler_v2
+elapsed=0.2
+
+Traceback (most recent call last):
+  File "/kaggle/src/script.py", line 241, in <module>
+    df = fn()
+         ^^^^
+  File "/kaggle/src/script.py", line 215, in <lambda>
+    lambda: fetch_euler_events_cached(
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/kaggle/input/datasets/sergeisolovyev/predictive-mcdm-defi-artifacts/predictive-mcdm-defi-artifacts/data/fetch_euler_events.py", line 191, in fetch_euler_events_cached
+    df = fetch_euler_events(vault=vault, start=start, end=end)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/kaggle/input/datasets/sergeisolovyev/predictive-mcdm-defi-artifacts/predictive-mcdm-defi-artifacts/data/fetch_euler_events.py", line 108, in fetch_euler_events
+    data = _post({
+           ^^^^^^^
+  File "/kaggle/input/datasets/sergeisolovyev/predictive-mcdm-defi-artifacts/predictive-mcdm-defi-artifacts/data/fetch_euler_events.py", line 77, in _post
+    r.raise_for_status()
+  File "/usr/local/lib/python3.12/dist-packages/requests/models.py", line 1026, in raise_for_status
+    raise HTTPError(http_error_msg, response=self)
+requests.exceptions.HTTPError: 404 Client Error: Not Found for url: https://api.goldsky.com/api/public/project_clyzphvgm0o3p01vcfm1f8qju/subgraphs/euler-v2-mainnet/latest/gn

@@ -1,0 +1,22 @@
+protocol=fluid
+elapsed=0.1
+
+Traceback (most recent call last):
+  File "/kaggle/src/script.py", line 241, in <module>
+    df = fn()
+         ^^^^
+  File "/kaggle/src/script.py", line 205, in <lambda>
+    lambda: fetch_fluid_events_cached(
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/kaggle/input/datasets/sergeisolovyev/predictive-mcdm-defi-artifacts/predictive-mcdm-defi-artifacts/data/fetch_fluid_events.py", line 199, in fetch_fluid_events_cached
+    df = fetch_fluid_events(
+         ^^^^^^^^^^^^^^^^^^^
+  File "/kaggle/input/datasets/sergeisolovyev/predictive-mcdm-defi-artifacts/predictive-mcdm-defi-artifacts/data/fetch_fluid_events.py", line 134, in fetch_fluid_events
+    resps = _batch_call(reqs)
+            ^^^^^^^^^^^^^^^^^
+  File "/kaggle/input/datasets/sergeisolovyev/predictive-mcdm-defi-artifacts/predictive-mcdm-defi-artifacts/data/fetch_fluid_events.py", line 72, in _batch_call
+    r = requests.post(_rpc_endpoint(), json=chunk, timeout=60)
+                      ^^^^^^^^^^^^^^^
+  File "/kaggle/input/datasets/sergeisolovyev/predictive-mcdm-defi-artifacts/predictive-mcdm-defi-artifacts/data/fetch_fluid_events.py", line 63, in _rpc_endpoint
+    raise RuntimeError("ETHEREUM_RPC_URL not set")
+RuntimeError: ETHEREUM_RPC_URL not set

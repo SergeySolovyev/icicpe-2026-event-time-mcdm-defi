@@ -1,5 +1,5 @@
 {
-  "id": "sergeisolovyev/predictive-mcdm-defi-build-panel",
+  "id": "sergeisolovyev/predictive-mcdm-defi-build-per-block-panel",
   "title": "predictive-mcdm-defi build per-block panel",
   "code_file": "build_panel.py",
   "language": "python",

@@ -1,0 +1,8 @@
+protocol,n_rows,seconds,status
+aave_v3,0,0.001680612564086914,THE_GRAPH_API_KEY not set
+spark,0,0.001332998275756836,THE_GRAPH_API_KEY not set
+compound_v3,0,0.09125185012817383,ETHEREUM_RPC_URL not set
+morpho_blue,0,0.35993003845214844,400 Client Error: Bad Request for url: https://blue-api.morpho.org/graphql
+fluid,0,0.12947440147399902,ETHEREUM_RPC_URL not set
+euler_v2,0,0.17751502990722656,404 Client Error: Not Found for url: https://api.goldsky.com/api/public/project_clyzphvgm0o3p01vcfm1f8qju/subgraphs/euler-v2-mainnet/latest/gn
+dsr,0,0.0014615058898925781,ETHEREUM_RPC_URL not set

@@ -1,0 +1,22 @@
+protocol=aave_v3
+elapsed=0.0
+
+Traceback (most recent call last):
+  File "/kaggle/src/script.py", line 241, in <module>
+    df = fn()
+         ^^^^
+  File "/kaggle/src/script.py", line 173, in <lambda>
+    lambda: fetch_aave_events_cached(
+            ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/kaggle/input/datasets/sergeisolovyev/predictive-mcdm-defi-artifacts/predictive-mcdm-defi-artifacts/data/fetch_aave_events.py", line 195, in fetch_aave_events_cached
+    df = fetch_aave_events(start=start, end=end)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/kaggle/input/datasets/sergeisolovyev/predictive-mcdm-defi-artifacts/predictive-mcdm-defi-artifacts/data/fetch_aave_events.py", line 100, in fetch_aave_events
+    data = _post({
+           ^^^^^^^
+  File "/kaggle/input/datasets/sergeisolovyev/predictive-mcdm-defi-artifacts/predictive-mcdm-defi-artifacts/data/fetch_aave_events.py", line 71, in _post
+    r = requests.post(_endpoint(), json=payload, timeout=30)
+                      ^^^^^^^^^^^
+  File "/kaggle/input/datasets/sergeisolovyev/predictive-mcdm-defi-artifacts/predictive-mcdm-defi-artifacts/data/fetch_aave_events.py", line 66, in _endpoint
+    raise RuntimeError("THE_GRAPH_API_KEY not set")
+RuntimeError: THE_GRAPH_API_KEY not set
