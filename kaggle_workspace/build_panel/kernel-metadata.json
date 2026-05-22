@@ -1,0 +1,13 @@
+{
+  "id": "sergeisolovyev/predictive-mcdm-defi-build-panel",
+  "title": "predictive-mcdm-defi build per-block panel",
+  "code_file": "build_panel.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": "true",
+  "enable_gpu": "false",
+  "enable_internet": "true",
+  "dataset_sources": ["sergeisolovyev/predictive-mcdm-defi-artifacts"],
+  "competition_sources": [],
+  "kernel_sources": []
+}
