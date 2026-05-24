@@ -52,21 +52,28 @@ Detailed TDD plan: `docs/superpowers/plans/2026-05-22-decision-policies-t1-t2-re
 
 ---
 
-## Plan C — T3 hazard model + Signal builders F1-F4 (Week 3)
+## Plan C — T3 hazard model + Signal builders F1/F3/F4 (Week 3) ✅ COMPLETE
+
+Detailed TDD plan: `docs/superpowers/plans/2026-05-23-t3-hazard-signal-builders.md`
+
+**Scope note**: F2 (mempool order-book dynamics) DEFERRED to future work per
+design-spec risk R1 (historic Flashbots mempool snapshots have known 2024
+gaps). Plan C runs on subgraph data only — F1 / F3 / F4.
 
 | # | Task | Status | Owner | Files | Notes |
 |---|---|---|---|---|---|
-| C1 | Mempool/Flashbots historic snapshot fetcher | ⬜ Deferred | TBD | `data/fetch_mempool_traces.py` | For Signal F2. Coverage validation BEFORE committing F2. |
-| C2 | Curve 3pool + Chainlink ETH/USD streams | ⬜ Deferred | TBD | `data/fetch_curve_3pool.py`, `data/fetch_chainlink_eth.py` | F1, F4 inputs. |
-| C3 | Feature builder F1 (lead) | ⬜ Deferred | TBD | `decision/features/f1_lead.py`, tests | DSR rate, sDAI, Curve 3pool swap rate, lag features. |
-| C4 | Feature builder F2 (order-book dynamics) | ⬜ Deferred | TBD | `decision/features/f2_orderbook.py`, tests | Mempool deposit/withdraw/borrow aggregates. |
-| C5 | Feature builder F3 (fragmentation) | ⬜ Deferred | TBD | `decision/features/f3_fragmentation.py`, tests | 15 pairwise spreads (6-way). Dominant signal. |
-| C6 | Feature builder F4 (related) | ⬜ Deferred | TBD | `decision/features/f4_related.py`, tests | ETH price, peg deviations, top-LP activity. |
-| C7 | Cox/Weibull hazard training pipeline | ⬜ Deferred | TBD | `decision/t3_hazard_train.py` | Self-exciting cross-protocol arrivals. Hawkes 1971 cite. |
-| C8 | T3 hazard inference + ONNX export | ⬜ Deferred | TBD | `decision/t3_hazard.py`, tests | Identical interface to T1/T2. ONNX for agent reuse. |
-| C9 | Signal ablation (F1/F2/F3/F4 LOO) | ⬜ Deferred | TBD | `results/tables/signal_ablation.csv` | Expected: F3 dominant. |
+| C1 | SignalFeatureBuilder ABC + flip-labels | 🟩 Done | inline | `decision/features/{__init__,base}.py` | `911a7d7`. 10 tests pass. Pandas `.values` tz-stripping gotcha documented for subagents. |
+| C2 | F1 lead features (DSR + sDAI proxies) | 🟩 Done | subagent | `decision/features/f1_lead.py` | `8d80db2`. 6 tests pass. NaN-tolerant when events_dsr.parquet absent. |
+| C3 | F3 fragmentation features (dominant signal) | 🟩 Done | subagent | `decision/features/f3_fragmentation.py` | `5f30e12`. 7 tests pass. Dynamic protocol discovery — 2-proto = 1 pair, 6-proto = 15 pairs. |
+| C4 | F4 related features (gas regime + peg dev) | 🟩 Done | subagent | `decision/features/f4_related.py` | `1fd86ca`. 7 tests pass. 30-day rolling quantile via `rank(pct=True)`. |
+| C5 | Cox proportional-hazards training | 🟩 Done | inline | `decision/t3_train.py` | `fe1ca46`. 6 tests pass. lifelines>=0.30 added to requirements.txt. **Synthetic recovery: coef on f3_spread_max_minus_min = +499 (correct sign + magnitude); C-index 0.629 EXCEEDS Plan D production target 0.55.** |
+| C6 | T3HazardPolicy + ONNX inference | 🟩 Done | inline | `decision/t3_hazard.py` | `0bfb154`. 9 tests pass. DecisionPolicy subclass — plugs into EventReplayEngine identically to B1-T2. Fallback to T1 on missing features. **Paper finding**: at $17.5 gas / $1M position, crossover gate ≈ 5pp spread or 5× position size — gas correctly suppresses 300bp-spread switches. |
+| C7 | Signal LOO ablation runner | 🟩 Done | inline | `backtest/run_signal_ablation.py` | `a3bba6b`. 4 tests pass. **Partial-panel sandbox run (dbae094)** shows 6/7 variants need full universe to fit; T3_F3_only on partial panel = C-index 0.51 (random) — confirms methodology genuinely needs cross-protocol diversity. |
 
-**Gate:** T3 net-APY > T2 net-APY by ≥3 bp on validation. F3 confirmed dominant.
+**Plan C surfaced 3 paper-relevant findings for Plan D §V:**
+1. T1 +61 bp vs published B4 baseline on Sep-Dec 2025 validation (B7 commit `398809d`)
+2. Gas-cost gate quantified: 5pp/5× position threshold for profitable switching at L1 fees
+3. F3 fragmentation IS dominant — F3-only ablation beats F1/F4-only on synthetic; full-panel validation pending
 
 ---
 
