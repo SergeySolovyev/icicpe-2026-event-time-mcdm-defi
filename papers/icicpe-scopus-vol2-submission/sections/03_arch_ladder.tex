@@ -1,0 +1,121 @@
+% Plan D Task D9: Architecture figure for the v2 (SCOPUS Vol-2) paper.
+% Shows the three-level decision-policy ladder
+%   T1 (gas-aware threshold) -> T2 (OU + Bellman optimal stopping) -> T3
+%   (Cox / Weibull hazard regression on F1/F3/F4 signals)
+% all sharing a single per-block panel -> BlockState -> Action ->
+% EventReplayEngine pipeline, with a dashed lateral arrow to the ONNX
+% bridge feeding the Plan E live agent.
+%
+% Visual conventions reuse the v1 (icicpe-2026-submission) architecture
+% figure of 03_methodology.tex:
+%   * data-pipeline boxes: blue!8
+%   * policy / model boxes: orange!12
+%   * output / sink boxes:  green!10
+%   * dashed arrows: out-of-scope bridges (here: ONNX export to Plan E)
+%   * Latex-tipped thick arrows for the in-paper flow.
+%
+% requires tikzlibrary positioning, arrows.meta, fit, backgrounds, calc
+% (load in main.tex preamble:
+%   \usetikzlibrary{positioning,arrows.meta,fit,backgrounds,calc})
+
+\begin{figure}[t]
+  \centering
+  \begin{tikzpicture}[
+      x=1pt, y=1pt,
+      every node/.style={font=\scriptsize, inner sep=2pt},
+      box/.style={draw, rounded corners=2pt, align=center, thick,
+                  minimum width=78pt, minimum height=14pt, fill=blue!8},
+      policy/.style={draw, rounded corners=2pt, align=center, thick,
+                     minimum width=78pt, minimum height=22pt,
+                     fill=orange!12},
+      sink/.style={draw, rounded corners=2pt, align=center, thick,
+                   minimum width=78pt, minimum height=14pt, fill=green!10},
+      bridge/.style={draw, rounded corners=2pt, align=center, thick,
+                     minimum width=70pt, minimum height=14pt,
+                     fill=yellow!18, dashed},
+      arr/.style={-{Latex[length=4pt,width=3pt]}, thick},
+      darr/.style={-{Latex[length=4pt,width=3pt]}, thick, dashed},
+    ]
+    % --- Data row (top) ---
+    \node[box] (panel) at (-90, 130)
+        {\texttt{per\_block\_panel.parquet}\\(3.9M blocks, 6 protocols)};
+    \node[box] (state) at (   0, 130)
+        {\texttt{BlockState}\\builder};
+    \node[box] (gas)   at (  90, 130)
+        {gas + ETH\\price feeds};
+
+    % --- T1 / T2 / T3 ladder ---
+    \node[policy] (t1) at (-95, 75)
+        {\textbf{T1} gas-aware\\$E[\text{dwell}]\!\cdot\!\text{spread}\,V > \text{gas}$};
+    \node[policy] (t2) at (   0, 75)
+        {\textbf{T2} optimal stopping\\$S > S^{*}$ from OU--Bellman};
+    \node[policy] (t3) at (  95, 75)
+        {\textbf{T3} Cox / Weibull hazard\\%
+         $\!\int_{0}^{\infty}\!E[\text{spread}(\tau)](1{-}F(\tau))\,d\tau > \text{gas}$};
+
+    % --- Signal / OU feeds (sub-row labels next to t2/t3) ---
+    \node[anchor=west, font=\scriptsize\itshape, text=gray!60!black]
+       at (-150, 100)
+       {Action $\in \{\texttt{hold}, \texttt{switch\_to}(i)\}$};
+
+    % --- Action + engine row ---
+    \node[box]  (action) at (   0, 25) {\texttt{Action}};
+    \node[sink] (engine) at (  90, 25) {\texttt{EventReplay}\\\texttt{Engine}};
+    \node[sink] (eq)     at (  90,-15) {equity-curve\\parquet (\S V)};
+
+    % --- ONNX bridge (lateral, dashed, out-of-paper Plan E target) ---
+    \node[bridge] (onnx)  at ( 200, 75) {ONNX export};
+    \node[bridge] (agent) at ( 200, 25) {Plan E\\live agent};
+
+    % --- Arrows: data row to BlockState ---
+    \draw[arr] (panel.east) -- (state.west);
+    \draw[arr] (gas.west)   -- (state.east);
+
+    % --- BlockState fan-out into the three policy boxes ---
+    \draw[arr] (state.south) -- ++(0,-8) -| (t1.north);
+    \draw[arr] (state.south) -- (t2.north);
+    \draw[arr] (state.south) -- ++(0,-8) -| (t3.north);
+
+    % --- Gas fan-in into each policy box (gas is in every formula) ---
+    \draw[arr, gray!55, thin] (gas.south) .. controls (60,105) and (-40,105) .. (t1.north east);
+    \draw[arr, gray!55, thin] (gas.south) -- (t3.north);
+
+    % --- Three policies merge into a single Action ---
+    \draw[arr] (t1.south) -- ++(0,-12) -| (action.north);
+    \draw[arr] (t2.south) -- (action.north);
+    \draw[arr] (t3.south) -- ++(0,-12) -| (action.north);
+
+    % --- Action -> engine -> equity curve ---
+    \draw[arr] (action.east) -- (engine.west);
+    \draw[arr] (engine.south) -- (eq.north);
+
+    % --- Dashed lateral: T3 -> ONNX -> live agent (out of paper scope) ---
+    \draw[darr] (t3.east) -- (onnx.west);
+    \draw[darr] (onnx.south) -- (agent.north);
+
+    % --- Per-tier annotation strip (right of T3, above the bridge) ---
+    \node[anchor=west, font=\scriptsize\itshape, align=left,
+          text=gray!60!black]
+       at (150, 130)
+       {\textbf{tiers:} \\
+        T1: closed-form\\
+        T2: OU + Bellman\\
+        T3: hazard reg.};
+  \end{tikzpicture}
+  \caption{Three-tier decision-policy ladder of the SCOPUS Vol-2 paper.
+    A single per-block panel feeds a uniform \texttt{BlockState} into
+    three policy tiers---\textbf{T1} (gas-aware threshold rule),
+    \textbf{T2} (optimal stopping with an OU spread model and a
+    Bellman-derived threshold $S^{*}$), and \textbf{T3} (Cox / Weibull
+    hazard regression on F1/F3/F4 signal-class features)---that all
+    share the same \texttt{Action} interface and the same
+    \texttt{EventReplayEngine}; head-to-head benchmarks against
+    baselines B1--B4 use the identical engine. Gas / ETH-price feeds
+    fan in to every tier (grey arrows) because gas appears in all
+    three thresholds. The dashed lateral arrow indicates the ONNX
+    export bridge that ships T3 to the Plan E live agent (out of paper
+    scope, documented for reproducibility). Box colouring follows the
+    v1 paper: blue = data pipeline, orange = policy / model, green =
+    output sink, yellow / dashed = out-of-paper bridge.}
+  \label{fig:t1t2t3-ladder}
+\end{figure}
