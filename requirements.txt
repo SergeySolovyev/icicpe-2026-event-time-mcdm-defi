@@ -46,3 +46,4 @@ nbconvert>=7.10
 # Testing
 pytest>=8.0
 pytest-cov>=4.1
+lifelines>=0.30
