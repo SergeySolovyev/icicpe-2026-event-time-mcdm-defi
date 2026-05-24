@@ -1,0 +1,8 @@
+variant,c_index,n_train_rows,n_features,fit_status
+T3_full,,,18,fit_error: ValueError: design matrix has only 0 rows after NaN-drop; Cox fit needs >=100 to converge
+T3_no_F1,,,11,fit_error: ValueError: design matrix has only 0 rows after NaN-drop; Cox fit needs >=100 to converge
+T3_no_F3,,,13,fit_error: ValueError: design matrix has only 0 rows after NaN-drop; Cox fit needs >=100 to converge
+T3_no_F4,,,12,fit_error: ValueError: design matrix has only 0 rows after NaN-drop; Cox fit needs >=100 to converge
+T3_F1_only,,,7,fit_error: ValueError: design matrix has only 0 rows after NaN-drop; Cox fit needs >=100 to converge
+T3_F3_only,0.5062024579375263,3931177,5,OK
+T3_F4_only,,,6,fit_error: ValueError: design matrix has only 0 rows after NaN-drop; Cox fit needs >=100 to converge
