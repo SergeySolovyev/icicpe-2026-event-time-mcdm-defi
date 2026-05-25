@@ -181,6 +181,44 @@ def test_clean_flag_removes_pre_existing_files(tmp_path):
     assert (dest / "main.tex").exists()
 
 
+def test_planD_refs_bib_overrides_parent(tmp_path):
+    """When planD_dir has refs.bib, it overrides parent's (deanonymized v2)."""
+    from scripts.build_vol2_submission import build
+
+    parent = tmp_path / "icicpe-2026-submission"
+    planD = tmp_path / "icicpe-scopus-vol2"
+    dest = tmp_path / "icicpe-scopus-vol2-submission"
+    _seed_parent_submission(parent)
+    _seed_planD_drafts(planD)
+    # parent bib has the blind-review anonymized entry; planD bib is deanonymized.
+    (planD / "refs.bib").write_text(
+        "@article{deanon2026,author={Solovev, Sergei S.},title={V2},year={2026},}\n",
+        encoding="utf-8",
+    )
+
+    build(parent_dir=parent, planD_dir=planD, dest_dir=dest)
+
+    text = (dest / "refs.bib").read_text(encoding="utf-8")
+    assert "Solovev" in text
+    assert "Stub Author" not in text
+
+
+def test_parent_refs_bib_used_when_planD_has_none(tmp_path):
+    """Backward-compat: no planD refs.bib falls through to parent."""
+    from scripts.build_vol2_submission import build
+
+    parent = tmp_path / "icicpe-2026-submission"
+    planD = tmp_path / "icicpe-scopus-vol2"
+    dest = tmp_path / "icicpe-scopus-vol2-submission"
+    _seed_parent_submission(parent)
+    _seed_planD_drafts(planD)  # no refs.bib in planD
+
+    build(parent_dir=parent, planD_dir=planD, dest_dir=dest)
+
+    text = (dest / "refs.bib").read_text(encoding="utf-8")
+    assert "Stub Author" in text
+
+
 def test_idempotent_without_clean(tmp_path):
     from scripts.build_vol2_submission import build
 

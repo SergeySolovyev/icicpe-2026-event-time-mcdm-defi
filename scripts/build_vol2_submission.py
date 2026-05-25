@@ -125,9 +125,15 @@ def build(
     written: list[Path] = []
     preserved: list[Path] = []
 
-    # Top-level files - verbatim copy.
+    # Top-level files - verbatim copy from parent, EXCEPT refs.bib which
+    # the Plan D dir owns once deanonymized (V1 parent bib stays as the
+    # blind-review artifact of record; V2 ships the deanonymized one).
     for name in _TOP_LEVEL_FILES:
-        src = parent_dir / name
+        if name == "refs.bib":
+            planD_bib = planD_dir / "refs.bib"
+            src = planD_bib if planD_bib.exists() else parent_dir / name
+        else:
+            src = parent_dir / name
         if not src.exists():
             raise FileNotFoundError(f"parent missing required file: {src}")
         dst = dest_dir / name
