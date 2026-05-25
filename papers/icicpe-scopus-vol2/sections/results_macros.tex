@@ -101,5 +101,6 @@
 
 % --- Placeholder pass-through (Plan D drafts use \PLACEHOLDER{x.xx} until
 % the full per-block matrix runner backfills real numbers). Renders the
-% literal placeholder text so the PDF compiles cleanly during draft.
-\newcommand{\PLACEHOLDER}[1]{\textit{#1}}
+% literal text WITHOUT italics so table column widths stay tight; the
+% paper still reads obviously-draft because the values are literally "xx.xx".
+\newcommand{\PLACEHOLDER}[1]{#1}
