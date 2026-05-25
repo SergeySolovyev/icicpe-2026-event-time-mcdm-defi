@@ -1,0 +1,82 @@
+\section{Introduction}
+\label{sec:introduction}
+
+Deep learning for financial time series has accumulated a strong empirical
+record on single-market benchmarks, but the question of whether a
+\emph{learned architecture} transfers across structurally different
+markets remains largely open. In limit order book (LOB) microstructure,
+convolutional and recurrent backbones such as DeepLOB
+\cite{zhang2019deeplob} and its descendants \cite{briola2021deep,
+lit2025limit} routinely outperform tabular baselines.  In decentralized
+finance (DeFi) lending, by contrast, the published literature has so far
+favored reinforcement learning either on the protocol side
+\cite{bertucci2025rl, xu2023autogov} or recursive least-squares adaptive
+control \cite{agilerate2024}.  A practitioner who has invested in a
+domain-aware recurrent stack for one of these markets faces an honest
+question: must the model be re-engineered from scratch for the other, or
+is the architectural template itself portable?
+
+The two markets are not obviously compatible. LOB mid-price prediction
+operates on \mbox{millisecond-scale} order arrivals with a discrete
+tick lattice and a strong micro\-structural informational asymmetry.
+DeFi lending rates, by contrast, are set deterministically from on-chain
+state via a known piecewise-linear kink function
+$f_{\text{kink}}(u)$ of utilization $u$; they update hourly at most and
+move primarily because of cointegration between protocols
+\cite{gudgeon2020loanable} and slow demand-driven re-pricing
+\cite{baude2025optimal}.  The two are noisy multivariate time series
+with regime-dependent dynamics and a weighted-error preference for large
+moves, but their feature topologies, decision horizons, and competitor
+adversaries differ qualitatively.
+
+\paragraph{Central thesis.}
+We test the conjecture that \emph{the same dual-branch architecture
+trained with the same composite loss generalizes between LOB mid-price
+prediction and DeFi lending-rate forecasting by re-identifying the
+domain-natural decomposition pair.}  In LOB the pair is (price, volume)
+augmented with 21 microstructure features
+\cite{solovev2026lob}; in DeFi it is
+(rate residual $\varepsilon = r - f_{\text{kink}}(u)$,
+utilization with context).  The two BiGRU branches, multi-scale Conv1d
+fusion head, and the composite loss
+$\alpha\,\textsc{MSE} + \beta\,(1{-}\rho_w) + \gamma\,Q_{90}$ are
+unchanged between the two specialisations; only the input subspaces and
+their dimensionality are re-mapped to the target domain.
+
+\paragraph{Contributions.}
+The paper makes four contributions.
+\begin{itemize}
+  \item \textbf{A unified dual-branch recurrent architecture
+    (DA-BiGRU-CNN) tested in two structurally different financial domains
+    --- LOB mid-price and DeFi USDC lending rates --- under the same
+    composite loss.}
+  \item \textbf{A new empirical study: to our knowledge the first
+    published forecast-driven multi-criteria allocator across Aave V3
+    and Compound V3 USDC pools}, trained on $\DataHours{}$ hourly bars
+    spanning \DataStart{}--\DataEnd{} at $\DataCoverage$ panel coverage,
+    with regime structure documented at full coverage.
+  \item \textbf{An honest negative-result protocol.}  We pre-register the
+    headline H1 ($\Delta\textsc{Sharpe} \ge 0.2$) and report
+    $\Delta\textsc{Sharpe} = \SharpeDelta$ with the bootstrap
+    95\% CI $[\BootstrapCILow,\,\BootstrapCIHigh]$ and $p$-value
+    $\BootstrapPvalue$ --- failing to reject H0 under the binding
+    $n_{\text{months}}=4$ test window, exactly as the pre-registration
+    permitted.
+  \item \textbf{Two upstream pull requests to the open-source
+    \texttt{fractal-defi} framework} \cite{krestenko2026fractaldefi}: a
+    Compound V3 Messari loader and a \texttt{Base\-Lending\-Allocation\-Strategy}
+    abstraction with cooldown infrastructure --- both released alongside
+    the paper for reproducibility.
+\end{itemize}
+
+\paragraph{Outline.}
+\Cref{sec:background} reviews LOB microstructure DL, DeFi lending
+mechanics, the impossibility result of \cite{halpern2024fair}, and
+related transfer-learning literature.  \Cref{sec:methodology} gives the
+domain-agnostic architecture and its two specialisations.
+\Cref{sec:lob-recap} summarises the LOB results we treat as prior work.
+\Cref{sec:defi-experiment} reports the DeFi empirical study with data,
+forecaster training, MCDM allocator, headline H1 test, and ablations.
+\Cref{sec:discussion} states what transfers and what does not, and
+\Cref{sec:limitations,sec:conclusion} discuss honest limitations and
+close.
