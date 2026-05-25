@@ -112,3 +112,16 @@ papers/icicpe-2026-submission/*.fdb_latexmk
 papers/icicpe-2026-submission/*.fls
 papers/icicpe-2026-submission/*.synctex.gz
 papers/icicpe-2026-submission/sections/*.aux
+
+# Vol-2 SCOPUS submission build artifacts (mirror; main.pdf tracked)
+papers/icicpe-scopus-vol2-submission/*.aux
+papers/icicpe-scopus-vol2-submission/*.log
+papers/icicpe-scopus-vol2-submission/*.out
+papers/icicpe-scopus-vol2-submission/*.bbl
+papers/icicpe-scopus-vol2-submission/*.blg
+papers/icicpe-scopus-vol2-submission/*.bcf
+papers/icicpe-scopus-vol2-submission/*.run.xml
+papers/icicpe-scopus-vol2-submission/*.fdb_latexmk
+papers/icicpe-scopus-vol2-submission/*.fls
+papers/icicpe-scopus-vol2-submission/*.synctex.gz
+papers/icicpe-scopus-vol2-submission/sections/*.aux

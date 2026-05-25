@@ -70,6 +70,13 @@ _XREF_REWRITES: tuple[tuple[str, str], ...] = (
     (r"sec:methodology-forecaster", "sec:methodology"),
 )
 
+# Rewrites applied to main.tex after copy. V1's \input{sections/05_defi_experiment}
+# refers to a file V2 swapped out via _SWAP; we point it at the new name so the
+# blind-review main.tex stays immutable upstream while V2's version compiles.
+_MAIN_TEX_REWRITES: tuple[tuple[str, str], ...] = (
+    (r"sections/05_defi_experiment", "sections/05_empirical"),
+)
+
 # Files in dest that must be preserved across runs (operator-authored or
 # Plan-D-direct-write outputs). The build script will refuse to overwrite
 # these even when not in --clean mode.
@@ -128,6 +135,7 @@ def build(
     # Top-level files - verbatim copy from parent, EXCEPT refs.bib which
     # the Plan D dir owns once deanonymized (V1 parent bib stays as the
     # blind-review artifact of record; V2 ships the deanonymized one).
+    # main.tex gets a regex rewrite to fix V1's stale \input{} filename.
     for name in _TOP_LEVEL_FILES:
         if name == "refs.bib":
             planD_bib = planD_dir / "refs.bib"
@@ -137,7 +145,13 @@ def build(
         if not src.exists():
             raise FileNotFoundError(f"parent missing required file: {src}")
         dst = dest_dir / name
-        shutil.copyfile(src, dst)
+        if name == "main.tex":
+            text = src.read_text(encoding="utf-8")
+            for old, new in _MAIN_TEX_REWRITES:
+                text = re.sub(old, new, text)
+            dst.write_text(text, encoding="utf-8")
+        else:
+            shutil.copyfile(src, dst)
         written.append(dst)
 
     # Inherited sections - verbatim.
@@ -171,10 +185,12 @@ def build(
         shutil.copyfile(src, dst)
         written.append(dst)
 
-    # Results macros - inherit from parent for now (Plan D Task D-extra
-    # would regenerate from results/tables/h1_significance.csv when the
-    # full panel materialises).
-    macros_src = parent_dir / "sections" / "results_macros.tex"
+    # Results macros - layered (same rule as refs.bib): planD owns when
+    # present, parent is fallback. Lets V2 ship fixed/regenerated macros
+    # while keeping the V1 parent macros as the blind-review artifact.
+    planD_macros = planD_dir / "sections" / "results_macros.tex"
+    parent_macros = parent_dir / "sections" / "results_macros.tex"
+    macros_src = planD_macros if planD_macros.exists() else parent_macros
     if macros_src.exists():
         macros_dst = dest_dir / "sections" / "results_macros.tex"
         shutil.copyfile(macros_src, macros_dst)
