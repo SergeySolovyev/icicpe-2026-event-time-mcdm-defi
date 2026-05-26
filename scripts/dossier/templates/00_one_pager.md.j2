@@ -15,14 +15,23 @@ Ethereum L1 USDC lending pools (Aave V3 + Morpho Blue + Euler V2).
 | **Max DD** | {{ t1_mdd }}% | {{ b1_mdd }}% |
 | **Information Ratio vs B1** | {{ t1_ir }} | — |
 
-## Walk-forward verdict (binding metric: net APY)
+## Walk-forward verdict (binding metric: net APY, 6 windows)
 
-T1 outperformed passive Aave hold in **{{ wf_directional }} of
-{{ wf_n }}** non-overlapping 3-month windows (Nov 2024 – Apr 2026)
-on the **binding fund metric**, net APY (mean ΔAPY = **{{ wf_mean }} pp**,
-paired-bootstrap p = {{ wf_p }}). The full ΔAPY vs ΔSharpe lens
-discussion — including the Sharpe-inflation paradox on positive-
-only return series — is in §02.
+Paired bootstrap across 6 non-overlapping 3-month windows
+(Nov 2024 – Apr 2026), T1 vs each protocol's passive buy-and-hold:
+
+| Contrast | Mean ΔAPY | p(d ≤ 0) | Windows won |
+|---|---:|---:|---:|
+| T1 vs **Aave hold** | **+1.83 pp** | **0.0000** | **6 / 6** |
+| T1 vs **Morpho hold** | **+1.60 pp** | **0.0000** | **6 / 6** |
+| T1 vs Euler hold | +0.48 pp | 0.1985 | 2 / 6 |
+
+T1 strongly outperforms the two largest mature lending protocols
+(Aave V3 + Morpho Blue, ~$24B TVL combined). T1 does not outperform
+passive Euler V2 hold — Euler is the newest in-scope protocol with
+attractive launch APY, and the F3-only fragmentation signal cannot
+preferentially allocate without F1 lead-rate covariate (journal-
+extension scope, see §02 and Vol-2 paper §VII).
 
 ## Capacity
 

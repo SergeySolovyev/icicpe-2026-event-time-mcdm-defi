@@ -8,23 +8,41 @@ ready per `agent/RUNBOOK.md`).
 
 ## TL;DR (1-minute verdict)
 
-On a **$1M position** over the 4-month test window:
+On a **$1M position** over the 4-month test window (Jan – Apr 2026):
 
-| Metric | T1 (this strategy) | B1 (passive Aave hold) | Delta |
-|---|---:|---:|---:|
-| Net APY | **4.56%** | 3.23% | **+133 bp** |
-| Annualized Sharpe | **36.09** | 29.34 | +6.75 |
-| Information Ratio | — | (benchmark) | **9.94** |
-| Max DD | 0.000% | 0.000% | 0 bp |
-| Final equity | $1,014,880 | $1,010,587 | **+$4,293** |
+| Metric | T1 (strategy) | Aave hold | Morpho hold | Euler hold |
+|---|---:|---:|---:|---:|
+| Net APY | **4.56%** | 3.23% | 3.30% | 4.77% |
+| Final equity ($) | **1,014,880** | 1,010,587 | 1,010,841 | 1,015,697 |
+| T1 surplus ($) | — | **+4,293** | **+4,039** | −817 |
+| n rebalances | 39 | 1 | 1 | 1 |
+| Gas spent ($) | $682 | $18 | $18 | $18 |
+
+T1 beats Aave + Morpho by ~$4k each (statistically significant across
+walk-forward 6/6 windows). Trails Euler V2 hold by $817 on test window
+and 4/6 walk-forward windows — closing the Euler gap requires F1
+lead-rate signal (journal-extension scope).
 
 **Walk-forward (6 non-overlapping 3-month windows, Nov 2024 – Apr 2026)**:
-T1 beats B1 (Aave hold) on net APY in **6 of 6 windows** (mean ΔAPY
-= **+1.84 pp**, 95% CI [+1.49, +2.23] pp, paired-bootstrap p = 0.000).
-ΔSharpe runs negative (B1's near-zero vol inflates its Sharpe — the
-known *Sharpe inflation paradox* on continuously-accruing positive-
-return series, López de Prado AFML Ch.4); see §02 for full
-discussion and dual-lens reporting.
+T1 vs each protocol's passive buy-and-hold (paired bootstrap on
+N=6 per-window ΔAPY deltas, B=10,000 resamples):
+
+| Contrast | Mean ΔAPY | 95% CI | p(d≤0) | Wins (of 6) |
+|---|---:|---:|---:|---:|
+| T1 vs **Aave hold** | **+1.83 pp** | [+1.48, +2.23] | **0.0000** | **6 / 6** |
+| T1 vs **Morpho hold** | **+1.60 pp** | [+0.95, +2.15] | **0.0000** | **6 / 6** |
+| T1 vs **Euler hold** | +0.48 pp | [-0.30, +1.49] | 0.1985 | 2 / 6 |
+
+T1 **strongly outperforms** the two mature majors (Aave V3 $19.4B +
+Morpho Blue $4.9B = ~$24B TVL of in-scope universe). T1 **does not**
+outperform passive Euler V2 hold from W3 onward — Euler launched
+late-2024 with attractive yield and remains top-yielder; F3-only
+fragmentation signal is insufficient to preferentially allocate to
+Euler without F1 lead-rate covariate (Maker DSR / Curve 3pool /
+Euler-specific leads). Closing this gap is the explicit
+**journal-extension scope** in Vol-2 §VII. ΔSharpe runs negative
+(B1's near-zero vol inflates its Sharpe — Sharpe inflation paradox,
+López de Prado AFML Ch.4); see §02 for full dual-lens treatment.
 
 **Capacity**: Edge stable up to **$5M**; degrades at **$25M**;
 analytical ceiling **$50M** (Morpho/Euler pool-depth bound).

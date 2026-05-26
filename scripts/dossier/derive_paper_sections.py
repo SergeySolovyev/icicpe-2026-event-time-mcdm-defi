@@ -70,6 +70,29 @@ def main() -> int:
         t1 = sharpe_pivot["t1_threshold"].dropna()
         if len(t1) > 0:
             lines.append(rf"\newcommand{{\WFTOneMeanSharpe}}{{{t1.mean():+.2f}}}")
+
+    # Per-protocol contrast macros (T1 vs each per-protocol buy-and-hold).
+    # These are computed in scripts.dossier.* and saved as
+    # walk_forward_paired_bootstrap_all.csv -- used by paper §V to disclose
+    # honest per-protocol picture (T1 dominates Aave+Morpho, trails Euler).
+    pp_path = ROOT / "results/institutional/tables/walk_forward_paired_bootstrap_all.csv"
+    if pp_path.exists():
+        pp = pd.read_csv(pp_path)
+        # Mapping contrast label -> latex command suffix
+        suffix_map = {
+            "T1 vs Aave hold": "Aave",
+            "T1 vs Morpho hold": "Morpho",
+            "T1 vs Euler hold": "Euler",
+        }
+        for _, row in pp.iterrows():
+            suf = suffix_map.get(row.contrast)
+            if suf is None:
+                continue
+            lines.append(rf"\newcommand{{\WFMeanDeltaAPY{suf}}}{{{row.mean_pp:+.2f}}}")
+            lines.append(rf"\newcommand{{\WFCILow{suf}}}{{{row.ci_low_95:+.2f}}}")
+            lines.append(rf"\newcommand{{\WFCIHigh{suf}}}{{{row.ci_high_95:+.2f}}}")
+            lines.append(rf"\newcommand{{\WFPValue{suf}}}{{{row.p_one_sided_le0:.4f}}}")
+            lines.append(rf"\newcommand{{\WFWins{suf}}}{{{int(row.directional_consistency)}}}")
     text += "\n".join(lines) + "\n"
     macros_path.write_text(text, encoding="utf-8")
     print(f"[derive_paper_sections] wrote {len(lines)-2} walk-forward macros to "

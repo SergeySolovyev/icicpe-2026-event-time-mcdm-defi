@@ -116,10 +116,41 @@ def render_all(*, tables_dir: Path, out_dir: Path) -> None:
     ), encoding="utf-8")
 
     # 02 walk-forward (dual lens: APY primary + Sharpe secondary)
+    # Also: per-protocol buy-and-hold comparison from extended tables.
     tpl = env.get_template("02_walk_forward_robustness.md.j2")
     has_data = not walk.empty and wf_apy["n"] > 0
     apy_table = ""
     sharpe_table = ""
+    per_protocol_apy_table = ""
+    per_protocol_bootstrap_rows = ""
+    # Load per-protocol comparison (computed by scripts.dossier.per_protocol_walk_forward)
+    pp_apy_path = tables_dir / "walk_forward_vs_all_holds.csv"
+    pp_boot_path = tables_dir / "walk_forward_paired_bootstrap_all.csv"
+    if pp_apy_path.exists() and pp_boot_path.exists():
+        pp_apy = pd.read_csv(pp_apy_path)
+        pp_boot = pd.read_csv(pp_boot_path)
+        # Per-window matrix
+        header = "| Window | T1 | Aave hold | Morpho hold | Euler hold | ΔvsAave | ΔvsMorpho | ΔvsEuler |\n"
+        sep = "|---|---:|---:|---:|---:|---:|---:|---:|\n"
+        rows = []
+        for _, r in pp_apy.iterrows():
+            rows.append(
+                f"| {r.window_id} | {r.t1_apy_pct:.2f}% | {r.aave_apy_pct:.2f}% | "
+                f"{r.morpho_apy_pct:.2f}% | {r.euler_apy_pct:.2f}% | "
+                f"{r.delta_t1_vs_aave:+.2f} | {r.delta_t1_vs_morpho:+.2f} | "
+                f"{r.delta_t1_vs_euler:+.2f} |"
+            )
+        per_protocol_apy_table = header + sep + "\n".join(rows) + "\n"
+        # Bootstrap rows
+        boot_rows = []
+        for _, r in pp_boot.iterrows():
+            sig_marker = "**" if r.p_one_sided_le0 < 0.05 else ""
+            boot_rows.append(
+                f"| {r.contrast} | {sig_marker}{r.mean_pp:+.2f} pp{sig_marker} | "
+                f"[{r.ci_low_95:+.2f}, {r.ci_high_95:+.2f}] | "
+                f"{r.p_one_sided_le0:.4f} | {int(r.directional_consistency)} / {int(r.n_windows)} |"
+            )
+        per_protocol_bootstrap_rows = "\n".join(boot_rows)
     if has_data:
         window_ids = sorted(walk["window_id"].unique())
         # Build per-policy lookup once
@@ -166,6 +197,8 @@ def render_all(*, tables_dir: Path, out_dir: Path) -> None:
         delta_apy=delta_apy,
         delta_sharpe=delta_sharpe,
         n_windows=wf_apy["n"] if has_data else 0,
+        per_protocol_apy_table=per_protocol_apy_table,
+        per_protocol_bootstrap_rows=per_protocol_bootstrap_rows,
     ), encoding="utf-8")
 
     # 03 capacity

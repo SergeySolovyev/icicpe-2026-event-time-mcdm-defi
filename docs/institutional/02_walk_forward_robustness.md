@@ -45,6 +45,64 @@ bootstrap on the 6 per-window deltas, reported under
 | Paired-bootstrap p (one-sided ≤ 0) | 0.000 |
 | Directional consistency | **6 / 6** windows |
 
+## T1 vs **all** per-protocol buy-and-hold — honest disclosure
+
+Comparing T1 only against Aave hold understates the true competitive
+landscape. The fairer assessment is T1 against each protocol's passive
+buy-and-hold baseline. Buy-and-hold APY per window is computed directly
+from the per-block APR panel by geometric compounding `Πᵢ(1+rᵢ/BPY)`.
+
+### Per-window net APY: T1 vs each protocol
+
+| Window | T1 | Aave hold | Morpho hold | Euler hold | ΔvsAave | ΔvsMorpho | ΔvsEuler |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| W1 | 11.35% | 9.47% | 8.74% | 8.57% | +1.88 | +2.62 | +2.79 |
+| W2 | 4.78% | 3.42% | 4.58% | 3.62% | +1.36 | +0.20 | +1.15 |
+| W3 | 6.55% | 3.86% | 4.41% | 6.83% | +2.69 | +2.14 | -0.29 |
+| W4 | 6.33% | 4.26% | 4.60% | 6.45% | +2.07 | +1.73 | -0.12 |
+| W5 | 5.08% | 3.78% | 3.82% | 5.42% | +1.31 | +1.26 | -0.34 |
+| W6 | 4.79% | 3.10% | 3.13% | 5.13% | +1.68 | +1.66 | -0.35 |
+
+
+### Paired bootstrap (T1 − protocol_hold) across 6 windows
+
+| Contrast | Mean ΔAPY | 95% CI | p(d ≤ 0) | Wins (of 6) |
+|---|---:|---:|---:|---:|
+| T1 vs Aave hold | **+1.83 pp** | [+1.48, +2.23] | 0.0000 | 6 / 6 |
+| T1 vs Morpho hold | **+1.60 pp** | [+0.95, +2.15] | 0.0000 | 6 / 6 |
+| T1 vs Euler hold | +0.48 pp | [-0.30, +1.49] | 0.1985 | 2 / 6 |
+
+### Interpretation
+
+T1 **strongly outperforms** the two mature lending protocols (Aave V3,
+Morpho Blue) in every window, by mean +1.6 to +1.8 percentage points,
+with paired-bootstrap p ≤ 0.0001 in both contrasts. This is the binding
+fund-relevant claim.
+
+T1 **does not** outperform passive Euler V2 hold on a forward-looking
+basis. Euler V2 launched in late 2024 with attractive APY and has
+remained the top single-protocol yield from window W3 onward; T1's
+F3-only (fragmentation) signal is insufficient to preferentially
+allocate to Euler without an F1 lead-rate covariate (Maker DSR, Curve
+3pool, or Euler-specific leading indicators). The mean ΔAPY = +0.48 pp
+(driven entirely by W1+W2 dominance) is not significantly different
+from zero (p = 0.20, 95% CI crosses zero).
+
+The honest fund-pitch framing is:
+
+- T1 delivers **statistically significant outperformance vs the two
+  largest protocols (Aave + Morpho) representing ~$24B TVL of the
+  in-scope universe**.
+- For investors specifically positioned to harvest Euler V2's
+  yield-premium, single-protocol allocation may be preferable — until
+  the F1 lead-rate channel is operationalized and T3 (Cox hazard)
+  policy fully utilized, which is the **explicit journal-extension
+  scope** (see Vol-2 Limitations §VII).
+- T1 provides **diversification benefit** even when a single protocol
+  has higher mean return: allocator switches when relative spreads
+  flip (W1+W2 case), and is positioned for regime changes where
+  current top-yielder underperforms.
+
 ## Paired ΔSharpe (T1 − B1) — secondary
 
 | Metric | Value |
