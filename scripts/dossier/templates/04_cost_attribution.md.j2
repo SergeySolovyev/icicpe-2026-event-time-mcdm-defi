@@ -1,0 +1,21 @@
+# Cost Attribution
+
+For each (position size, MEV scenario) cell:
+
+| Size (\$) | MEV (bp) | Gross APY | Post-slippage | Post-MEV |
+|---:|---:|---:|---:|---:|
+{% for r in cost_rows -%}
+| {{ "{:,.0f}".format(r.position_size_usd) }} | {{ "%.1f"|format(r.mev_bp) }} | {{ "%.2f"|format(r.raw_apy_pct) }}% | {{ "%.2f"|format(r.net_apy_pct) }}% | {{ "%.2f"|format(r.net_apy_post_mev_pct) }}% |
+
+{% endfor %}
+
+## Implications
+
+- Public mempool submission at $5M+ erases 40-80% of T1 edge under
+  worst-case MEV (30 bp/rebalance).
+- Flashbots private mempool reduces MEV to ~0 bp (asymmetric speed
+  bump: visibility delayed until inclusion).
+- **Binding requirement**: production deployment MUST submit
+  rebalances via Flashbots.
+
+![Cost waterfall](../../results/institutional/figures/cost_waterfall.png)

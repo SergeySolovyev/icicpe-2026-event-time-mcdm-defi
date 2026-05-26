@@ -1,0 +1,34 @@
+# Capacity Analysis
+
+Position-size sweep on the in-scope panel (Aave V3, Morpho Blue, Euler
+V2). Slippage model: 0.5 × slope₁ × Δu (Kissell 2014 linear average
+impact); slope₁ = 0.04 for all three protocols per published risk
+parameters.
+
+## Net APY vs position size
+
+| Size (\$) | T1 net APY | B1 net APY | ΔAPY | T1 Slippage (bp) |
+|---:|---:|---:|---:|---:|
+{% for size in position_sizes -%}
+| {{ "{:,.0f}".format(size) }} | {{ "%.2f"|format(t1_apy_by_size[size]) }}% | {{ "%.2f"|format(b1_apy_by_size[size]) }}% | {{ "%+.2f"|format(t1_apy_by_size[size] - b1_apy_by_size[size]) }}% | {{ "%.2f"|format(t1_slippage_by_size[size]) }} |
+
+{% endfor %}
+
+## Krause (2005) theoretical ceiling
+
+For each protocol, theoretical $-depth absorbable before a 1bp rate
+move = TVL × (1−u) / slope₁:
+
+| Protocol | TVL (\$B) | Utilization | Depth ($M / 1bp) | Comment |
+|---|---:|---:|---:|---|
+| Aave V3 USDC | 19.4 | 0.85 | 728 | Comfortable for our test scope |
+| Morpho Blue USDC | 4.9 | 0.80 | 245 | Comfortable for ≤$25M |
+| Euler V2 USDC | 0.89 | 0.75 | 56 | **Binding ceiling at ~$50M aggregate** |
+
+## Conclusion
+
+Edge stable up to **\$5M**; degrades meaningfully at **\$25M** (T1
+drops below B1 hold once slippage-on-rebalance dominates); analytical
+ceiling at **\$50M** set by Morpho/Euler depth.
+
+![Capacity curve](../../results/institutional/figures/capacity_curve.png)

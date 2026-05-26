@@ -1,0 +1,30 @@
+# Performance Dossier
+
+Per-policy performance over the Jan – Apr 2026 test window ($1M
+initial position, daily-aggregation Sharpe per Lo (2002) convention).
+
+## Headline metrics
+
+| Policy | Net APY | Sharpe | Sortino | Calmar | IR vs B1 | Max DD | DD dur (d) | TTR (d) | CVaR₉₅ | CVaR₉₉ |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+{% for row in metrics_rows -%}
+| {{ row.policy }} | {{ "%.2f"|format(row.net_apy_pct) }}% | {{ "%.2f"|format(row.sharpe) }} | {{ "%.2f"|format(row.sortino) if row.sortino|string != 'inf' else '∞' }} | {{ "%.0f"|format(row.calmar) if row.calmar|string != 'inf' else '∞' }} | {{ "%.2f"|format(row.information_ratio_vs_benchmark) }} | {{ "%.3f"|format(row.max_drawdown_pct) }}% | {{ row.max_drawdown_duration_days }} | {{ row.time_to_recovery_days }} | {{ "%.3f"|format(row.cvar_95_pct) }}% | {{ "%.3f"|format(row.cvar_99_pct) }}% |
+{% endfor %}
+
+## Higher moments
+
+| Policy | Skewness | Excess Kurtosis | Final equity (\$) |
+|---|---:|---:|---:|
+{% for row in metrics_rows -%}
+| {{ row.policy }} | {% if row.skew == row.skew %}{{ "%.2f"|format(row.skew) }}{% else %}—{% endif %} | {% if row.kurtosis_excess == row.kurtosis_excess %}{{ "%.2f"|format(row.kurtosis_excess) }}{% else %}—{% endif %} | {{ "{:,.0f}".format(row.final_equity_usd) }} |
+{% endfor %}
+
+## Notes
+
+- Sharpe annualization at 365 (crypto markets do not close);
+  daily returns from per-block equity per Lo (2002) convention.
+- Sortino target = 0 (USDC numeraire, no risk-free distinction).
+- IR computed only vs B1 always_aave (the natural passive benchmark).
+- CVaR computed as the conditional mean of the α-worst daily returns.
+
+![Institutional summary](../../results/institutional/figures/institutional_summary.png)

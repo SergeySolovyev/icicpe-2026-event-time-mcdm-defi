@@ -1,0 +1,62 @@
+# Risk Register
+
+Each risk: likelihood × impact × mitigation. Likelihood: low / medium
+/ high. Impact: low (≤1% of capital), medium (1-10%), high (>10%).
+
+## A. Smart contract risk
+
+| ID | Risk | Likelihood | Impact | Mitigation |
+|---|---|---|---|---|
+| A1 | Aave V3 exploit | Low | High | Monitor governance forum, multi-protocol diversification |
+| A2 | Morpho Blue exploit | Low | Medium | Same |
+| A3 | Euler V2 exploit (V1 was exploited 2023) | Low-Med | Medium | Tighter cap; vault-isolated markets |
+| A4 | USDC stablecoin issuer risk (Circle) | Low | High | Diversify to USDT/DAI on peg deviation |
+| A5 | ERC-4626 wrapper risk | Low | Medium | Audited contracts only |
+
+## B. Oracle risk
+
+| ID | Risk | Likelihood | Impact | Mitigation |
+|---|---|---|---|---|
+| B1 | Chainlink price feed stale/attacked | Low | Medium | Multi-oracle median + freshness check |
+| B2 | IRM curve params changed by governance | Medium | Low | Monitor proposals; circuit breaker |
+
+## C. Stablecoin depeg
+
+| ID | Risk | Likelihood | Impact | Mitigation |
+|---|---|---|---|---|
+| C1 | USDC depeg ≥1% | Low-Med | High | Auto-withdraw to ETH/USDT |
+| C2 | USDT depeg | Low | Medium | Same |
+| C3 | DAI depeg (Maker dependency) | Low | Low | Not direct exposure |
+
+## D. MEV exposure
+
+| ID | Risk | Likelihood | Impact | Mitigation |
+|---|---|---|---|---|
+| D1 | Sandwich attack on rebalance | High | Medium-High | Flashbots private mempool (binding) |
+| D2 | Front-running on signal | Medium | Low | Asymmetric speed bump; latency monitoring |
+
+## E. Governance
+
+| ID | Risk | Likelihood | Impact | Mitigation |
+|---|---|---|---|---|
+| E1 | Protocol parameter change (kink, slope) | Medium | Low-Med | Monitor proposals + circuit breaker |
+| E2 | Aave governance attack via flash loan | Low | High | No specific; community-monitored |
+| E3 | Morpho Blue isolated-market parameters | Low | Low | Market-level monitoring |
+
+## F. Operational
+
+| ID | Risk | Likelihood | Impact | Mitigation |
+|---|---|---|---|---|
+| F1 | Agent downtime | Medium | Low | systemd watchdog + multi-region redundancy |
+| F2 | Private key compromise | Low | High | Multisig for >$1M; HSM for production keys |
+| F3 | RPC provider outage | Medium | Low | Multi-provider failover (Alchemy + Infura + own) |
+| F4 | Gas price spike | Medium | Low | Price ceiling; pause above N gwei |
+
+## G. Capacity / liquidity
+
+| ID | Risk | Likelihood | Impact | Mitigation |
+|---|---|---|---|---|
+| G1 | Pool TVL collapse (depositor flight) | Low-Med | Medium | Auto position size reduction |
+| G2 | Concentration risk in small pools | Med | Medium | Hard position cap per pool: 5% of pool TVL |
+
+**Total: 21 risks across 7 categories, all with explicit mitigations.**
