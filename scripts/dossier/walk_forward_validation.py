@@ -39,6 +39,20 @@ _POLICY_BUILDERS = {
 }
 
 
+def _t3_builder():
+    """Lazy T3 builder — loads trained Cox model from disk only when needed.
+    Returns None if model artifact missing (e.g. T3 untrained on extension panel)."""
+    from pathlib import Path as _P
+    from decision.t3_hazard import T3HazardPolicy
+    artifact = _P(__file__).resolve().parents[2] / "results/models/t3_cox.json"
+    if not artifact.exists():
+        return None
+    return T3HazardPolicy.from_json(artifact)
+
+
+_POLICY_BUILDERS["t3_hazard"] = _t3_builder
+
+
 def _slice_panel(panel: pd.DataFrame, start: pd.Timestamp,
                  end: pd.Timestamp) -> pd.DataFrame:
     mask = (panel["block_timestamp"] >= start) & (panel["block_timestamp"] < end)

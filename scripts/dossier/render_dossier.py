@@ -123,13 +123,14 @@ def render_all(*, tables_dir: Path, out_dir: Path) -> None:
     sharpe_table = ""
     per_protocol_apy_table = ""
     per_protocol_bootstrap_rows = ""
-    # Load per-protocol comparison (computed by scripts.dossier.per_protocol_walk_forward)
+    # Load per-protocol comparisons (computed by inline scripts in this session)
     pp_apy_path = tables_dir / "walk_forward_vs_all_holds.csv"
     pp_boot_path = tables_dir / "walk_forward_paired_bootstrap_all.csv"
+    nxm_path = tables_dir / "walk_forward_NxM_contrasts.csv"
+    nxm_table = ""
     if pp_apy_path.exists() and pp_boot_path.exists():
         pp_apy = pd.read_csv(pp_apy_path)
-        pp_boot = pd.read_csv(pp_boot_path)
-        # Per-window matrix
+        # Per-window matrix: T1 vs each protocol hold (kept for backward-compat)
         header = "| Window | T1 | Aave hold | Morpho hold | Euler hold | ΔvsAave | ΔvsMorpho | ΔvsEuler |\n"
         sep = "|---|---:|---:|---:|---:|---:|---:|---:|\n"
         rows = []
@@ -141,16 +142,39 @@ def render_all(*, tables_dir: Path, out_dir: Path) -> None:
                 f"{r.delta_t1_vs_euler:+.2f} |"
             )
         per_protocol_apy_table = header + sep + "\n".join(rows) + "\n"
-        # Bootstrap rows
-        boot_rows = []
-        for _, r in pp_boot.iterrows():
-            sig_marker = "**" if r.p_one_sided_le0 < 0.05 else ""
-            boot_rows.append(
-                f"| {r.contrast} | {sig_marker}{r.mean_pp:+.2f} pp{sig_marker} | "
-                f"[{r.ci_low_95:+.2f}, {r.ci_high_95:+.2f}] | "
-                f"{r.p_one_sided_le0:.4f} | {int(r.directional_consistency)} / {int(r.n_windows)} |"
+    if nxm_path.exists():
+        # N x M policy x protocol-hold contrast matrix
+        nxm = pd.read_csv(nxm_path)
+        # Pivot to wide format: rows = policies, cols = protocol holds
+        policies = ["t1_threshold", "t2_optimal_stopping", "t3_hazard", "b4_mcdm_ema"]
+        policies = [p for p in policies if p in nxm.policy.unique()]
+        holds = ["aave", "morpho", "euler"]
+
+        def _cell(policy: str, hold: str) -> str:
+            sub = nxm[(nxm.policy == policy) & (nxm.protocol_hold == hold)]
+            if sub.empty:
+                return "—"
+            r = sub.iloc[0]
+            sig = "**" if r.p_one_sided_le0 < 0.05 else ""
+            return (
+                f"{sig}{r.mean_pp:+.2f}pp{sig}<br>"
+                f"p={r.p_one_sided_le0:.4f}<br>"
+                f"{int(r.directional_consistency)}/{int(r.n_windows)}"
             )
-        per_protocol_bootstrap_rows = "\n".join(boot_rows)
+
+        hdr = "| Policy | vs Aave V3 hold | vs Morpho Blue hold | vs Euler V2 hold |\n"
+        sep_row = "|---|---:|---:|---:|\n"
+        body_rows = []
+        for p in policies:
+            label = {
+                "t1_threshold": "**T1** threshold",
+                "t2_optimal_stopping": "**T2** OU stopping",
+                "t3_hazard": "**T3** Cox hazard",
+                "b4_mcdm_ema": "B4 MCDM-EMA (hourly)",
+            }.get(p, p)
+            cells = [_cell(p, h) for h in holds]
+            body_rows.append(f"| {label} | " + " | ".join(cells) + " |")
+        nxm_table = hdr + sep_row + "\n".join(body_rows) + "\n"
     if has_data:
         window_ids = sorted(walk["window_id"].unique())
         # Build per-policy lookup once
@@ -199,6 +223,7 @@ def render_all(*, tables_dir: Path, out_dir: Path) -> None:
         n_windows=wf_apy["n"] if has_data else 0,
         per_protocol_apy_table=per_protocol_apy_table,
         per_protocol_bootstrap_rows=per_protocol_bootstrap_rows,
+        nxm_table=nxm_table,
     ), encoding="utf-8")
 
     # 03 capacity

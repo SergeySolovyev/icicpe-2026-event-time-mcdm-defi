@@ -1,0 +1,10 @@
+policy,contrast,protocol_hold,mean_pp,ci_low_95,ci_high_95,p_one_sided_le0,directional_consistency,n_windows
+t1_threshold,t1_threshold vs aave_hold,aave,1.8316716804717725,1.4819218781282526,2.228768623846888,0.0,6,6
+t1_threshold,t1_threshold vs morpho_hold,morpho,1.6004322541754767,0.9540321597563869,2.150743780626874,0.0,6,6
+t1_threshold,t1_threshold vs euler_hold,euler,0.47507959917058384,-0.296892355098551,1.4868814923404525,0.1985,2,6
+t2_optimal_stopping,t2_optimal_stopping vs aave_hold,aave,1.6248324931653402,1.2988868033256311,2.027299407415395,0.0,6,6
+t2_optimal_stopping,t2_optimal_stopping vs morpho_hold,morpho,1.3935930668690444,0.7700378702490296,1.9146103696132315,0.0,6,6
+t2_optimal_stopping,t2_optimal_stopping vs euler_hold,euler,0.26824041186415126,-0.4705058078869673,1.2303608544763145,0.2661,2,6
+b4_mcdm_ema,b4_mcdm_ema vs aave_hold,aave,0.9162242665028,0.5497034133418844,1.3186671223229063,0.0,6,6
+b4_mcdm_ema,b4_mcdm_ema vs morpho_hold,morpho,0.6849848402065039,-0.09620039533224656,1.5037820299749647,0.0491,5,6
+b4_mcdm_ema,b4_mcdm_ema vs euler_hold,euler,-0.44036781479838916,-1.4793533017219456,0.8488907439550059,0.7645,2,6

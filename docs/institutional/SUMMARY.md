@@ -23,26 +23,38 @@ walk-forward 6/6 windows). Trails Euler V2 hold by $817 on test window
 and 4/6 walk-forward windows — closing the Euler gap requires F1
 lead-rate signal (journal-extension scope).
 
-**Walk-forward (6 non-overlapping 3-month windows, Nov 2024 – Apr 2026)**:
-T1 vs each protocol's passive buy-and-hold (paired bootstrap on
-N=6 per-window ΔAPY deltas, B=10,000 resamples):
+**Scope disclaimer (read first)**: Vol-2 designed for **6 protocols**
+(Aave V3 + Compound V3 + Spark + Morpho Blue + Fluid + Euler V2);
+empirical panel covers **3 of 6** (Aave + Morpho + Euler, ~$25B /
+~$54B TVL). Compound/Spark/Fluid + Maker DSR signal fetchers failed
+during Kaggle data build → queued for journal-extension. Ladder also
+**3 tiers designed** (T1, T2, T3); on F3-only features (F1/F4
+deferred above), T3's hazard rule analytically reduces to T1's
+threshold — empirically confirmed on test window; walk-forward
+verification in progress at submission time.
 
-| Contrast | Mean ΔAPY | 95% CI | p(d≤0) | Wins (of 6) |
-|---|---:|---:|---:|---:|
-| T1 vs **Aave hold** | **+1.83 pp** | [+1.48, +2.23] | **0.0000** | **6 / 6** |
-| T1 vs **Morpho hold** | **+1.60 pp** | [+0.95, +2.15] | **0.0000** | **6 / 6** |
-| T1 vs **Euler hold** | +0.48 pp | [-0.30, +1.49] | 0.1985 | 2 / 6 |
+**Walk-forward N×M matrix** (6 non-overlapping 3-month windows
+Nov 2024 – Apr 2026; paired bootstrap N=6 per-window ΔAPY, B=10,000
+resamples, seed=42):
 
-T1 **strongly outperforms** the two mature majors (Aave V3 $19.4B +
-Morpho Blue $4.9B = ~$24B TVL of in-scope universe). T1 **does not**
-outperform passive Euler V2 hold from W3 onward — Euler launched
-late-2024 with attractive yield and remains top-yielder; F3-only
-fragmentation signal is insufficient to preferentially allocate to
-Euler without F1 lead-rate covariate (Maker DSR / Curve 3pool /
-Euler-specific leads). Closing this gap is the explicit
-**journal-extension scope** in Vol-2 §VII. ΔSharpe runs negative
-(B1's near-zero vol inflates its Sharpe — Sharpe inflation paradox,
-López de Prado AFML Ch.4); see §02 for full dual-lens treatment.
+| Policy | vs Aave V3 hold | vs Morpho Blue hold | vs Euler V2 hold |
+|---|---:|---:|---:|
+| **T1** threshold | **+1.83pp** p=0.0000 (6/6) | **+1.60pp** p=0.0000 (6/6) | +0.48pp p=0.20 (2/6) |
+| **T2** OU stopping | **+1.62pp** p=0.0000 (6/6) | **+1.39pp** p=0.0000 (6/6) | +0.27pp p=0.27 (2/6) |
+| B4 MCDM-EMA (hourly) | **+0.92pp** p=0.0000 (6/6) | +0.68pp p=0.05 (5/6) | −0.44pp p=0.76 (2/6) |
+
+**Three concentric claims by decreasing strength**:
+
+1. **Strong**: T1 and T2 strongly outperform Aave + Morpho holds in
+   6/6 windows by 1.4–1.8 pp. ~$25B addressable TVL.
+2. **Mid**: T1 wins W1+W2 against Euler (Euler launch ramp), shows
+   diversification value during regime transitions.
+3. **Honest gap**: No policy outperforms passive Euler V2 hold from
+   W3 onward — F1 lead-rate signal needed (journal-extension scope).
+
+ΔSharpe runs negative (B1 near-zero vol inflates Sharpe — *Sharpe
+inflation paradox*, López de Prado AFML Ch.4); see §02 for full
+dual-lens treatment.
 
 **Capacity**: Edge stable up to **$5M**; degrades at **$25M**;
 analytical ceiling **$50M** (Morpho/Euler pool-depth bound).
