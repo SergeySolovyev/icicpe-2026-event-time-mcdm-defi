@@ -3,13 +3,13 @@
 Five-phase ramp from Sepolia testnet to fund-LP allocation. **No
 phase >$25M without 12 months of mainnet track record at lower sizes.**
 
-| Phase | Network | Size | Duration | Success criteria | Abort conditions |
+| Phase | Network | Size | Duration | Success criteria (ALL must pass to unlock next) | Abort conditions (ANY triggers fallback to prior phase) |
 |---|---|---|---|---|---|
-| 0 | Sepolia | $10K notional | 1 week | ≥10 switches, no agent crashes, Flashbots dry-run path verified | Unhandled exception, history.parquet corruption |
-| 1 | Mainnet shadow | $0 (paper trade) | 4 weeks | Allocations match backtest predictions ±5%; gas within 2× model | Systematic deviation > 10% |
-| 2 | Mainnet live | $10K | 4 weeks | Net APY > Aave by 20 bp; zero kill-switch events | Net APY < Aave −50 bp; any safety event |
-| 3 | Mainnet scale | $100K | 8 weeks | Net APY > Aave + 30 bp; max DD < 50 bp; uptime > 99% | Net APY < Aave; DD > 100 bp |
-| 4 | Fund LP allocation | $1M+ | Ongoing | Track record on public Dune dashboard | Per investor mandate |
+| 0 | Sepolia | $10K notional | 1 week | ≥10 switches logged · Flashbots dry-run path end-to-end verified · zero unhandled exceptions · `agent/state/runbook_first_run.log` operator sign-off committed | Unhandled exception · history.parquet corruption on restart · Flashbots auth-key signature mismatch |
+| 1 | Mainnet shadow | $0 (paper trade) | 4 weeks | Allocations match backtest ±5 % in $-weighted attribution · gas costs within 2× model · uptime ≥ 99 % · zero divergence alerts | Systematic deviation > 10 % over 5 rebalances · uptime < 95 % |
+| 2 | Mainnet live | $10K | 4 weeks | Net APY > Aave hold + 20 bp annualized · max DD < 25 bp · zero kill-switch events · all SLAs from §06 met | Net APY < Aave − 50 bp · DD > 50 bp · any safety event · LP withdrawal request |
+| 3 | Mainnet scale | $100K | 8 weeks | Net APY > Aave + 30 bp · max DD < 50 bp · uptime ≥ 99 % · ≥ 30 rebalances logged · public Dune dashboard live | Net APY < Aave · DD > 100 bp · uptime < 95 % · public attestation failure |
+| 4 | Fund LP allocation | $1M+ | Ongoing | Track record on public Dune dashboard with on-chain attestation · 2/20 fee structure documented · LP agreements signed · custody arrangement audited | Per investor mandate or any prior-phase abort condition |
 
 ## Public PnL transparency
 
