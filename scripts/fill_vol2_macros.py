@@ -25,6 +25,7 @@ def main() -> int:
         "b4_mcdm_ema": "EMA",
         "t1_threshold": "TOne",
         "t2_optimal_stopping": "TTwo",
+        "t3_hazard": "TThree",  # added when --include-t3 row is present
     }
 
     lines = [
@@ -36,6 +37,12 @@ def main() -> int:
     ]
 
     for p, prefix in POLICY_PREFIX.items():
+        if p not in matrix.index:
+            # Provide --- placeholders so latex never sees undefined macros.
+            for suf in ("APY", "NRebal", "GasUSD", "MaxDD", "FinalEquity"):
+                lines.append(rf"\newcommand{{\{prefix}{suf}}}{{---}}")
+            lines.append(r"")
+            continue
         r = matrix.loc[p]
         lines += [
             rf"\newcommand{{\{prefix}APY}}{{{r.net_apy_pct:.2f}\%}}",
@@ -49,10 +56,14 @@ def main() -> int:
     H1_PREFIX = {
         "H1a": "HOneA",
         "H1b": "HOneB",
+        "H1c": "HOneC",                # T3 vs T2 (present after --include-t3)
         "H1aux_t1_vs_b1": "HOneAux",
     }
     for hyp, prefix in H1_PREFIX.items():
         if hyp not in h1.index:
+            for suf in ("Delta", "CIlow", "CIhigh", "Pvalue", "NMonths"):
+                lines.append(rf"\newcommand{{\{prefix}{suf}}}{{---}}")
+            lines.append(r"")
             continue
         r = h1.loc[hyp]
         lines += [
@@ -73,6 +84,10 @@ def main() -> int:
         for p, prefix in POLICY_PREFIX.items():
             sub = regime[(regime.quarter == q) & (regime.policy == p)]
             if sub.empty:
+                # Safe default so latex never sees undefined macro.
+                lines.append(
+                    rf"\newcommand{{\{prefix}APY{qsuf}}}{{---}}"
+                )
                 continue
             r = sub.iloc[0]
             lines.append(

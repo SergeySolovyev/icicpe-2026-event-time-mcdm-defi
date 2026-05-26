@@ -1,0 +1,25 @@
+{
+  "feature_names": [
+    "f3_spread_aave_v3_vs_euler_v2",
+    "f3_spread_aave_v3_vs_morpho_blue",
+    "f3_spread_euler_v2_vs_morpho_blue",
+    "f3_spread_max_minus_min",
+    "f3_spread_top2",
+    "f3_dispersion_std",
+    "f3_top_protocol_id"
+  ],
+  "coefficients": {
+    "f3_spread_aave_v3_vs_euler_v2": -0.21269440073259716,
+    "f3_spread_aave_v3_vs_morpho_blue": -6.270039571290651,
+    "f3_spread_euler_v2_vs_morpho_blue": -1.50898207662313,
+    "f3_spread_max_minus_min": -6.389067955832937,
+    "f3_spread_top2": -20.13491820210932,
+    "f3_dispersion_std": 60.04714326488797,
+    "f3_top_protocol_id": -0.4434017760000658
+  },
+  "baseline_mean_hazard": 0.0025459873836972107,
+  "c_index": 0.6280156890895711,
+  "n_train_rows": 50902,
+  "horizon_blocks": 7200,
+  "penalizer": 0.001
+}

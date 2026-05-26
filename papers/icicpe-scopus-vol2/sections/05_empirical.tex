@@ -75,6 +75,7 @@ end-to-end equity.
     \midrule
     \textbf{T1 Threshold}  & \textbf{\TOneAPY}   & \TOneNRebal            & \TOneGasUSD            & \TOneMaxDD \\
     T2 Optimal stopping    & \TTwoAPY            & \TTwoNRebal            & \TTwoGasUSD            & \TTwoMaxDD \\
+    T3 Cox hazard          & \TThreeAPY          & \TThreeNRebal          & \TThreeGasUSD          & \TThreeMaxDD \\
     \bottomrule
   \end{tabular}
   \\[0.3em]
@@ -104,6 +105,7 @@ empirical-EWMA threshold of T1.
     \midrule
     $H_{1}^{a}$: T1 vs B4           & \HOneADelta   & [\HOneACIlow, \HOneACIhigh]   & \HOneAPvalue \\
     $H_{1}^{b}$: T2 vs T1           & \HOneBDelta   & [\HOneBCIlow, \HOneBCIhigh]   & \HOneBPvalue \\
+    $H_{1}^{c}$: T3 vs T2           & \HOneCDelta   & [\HOneCCIlow, \HOneCCIhigh]   & \HOneCPvalue \\
     $H_{1}^{\text{aux}}$: T1 vs B1  & \textbf{\HOneAuxDelta} & [\HOneAuxCIlow, \HOneAuxCIhigh] & \textbf{\HOneAuxPvalue} \\
     \bottomrule
   \end{tabular}
@@ -155,6 +157,7 @@ mean-reversion regime more efficiently than T1's threshold heuristic.
     B4 MCDM-EMA      & \EMAAPYQone     & \EMAAPYQtwo \\
     \textbf{T1 Threshold} & \textbf{\TOneAPYQone} & \TOneAPYQtwo \\
     T2 OU stopping   & \TTwoAPYQone    & \textbf{\TTwoAPYQtwo} \\
+    T3 Cox hazard    & \TThreeAPYQone  & \TThreeAPYQtwo \\
     \bottomrule
   \end{tabular}
 \end{table}

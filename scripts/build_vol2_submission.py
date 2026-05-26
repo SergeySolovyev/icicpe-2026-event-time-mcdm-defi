@@ -154,9 +154,12 @@ def build(
             shutil.copyfile(src, dst)
         written.append(dst)
 
-    # Inherited sections - verbatim.
+    # Inherited sections - verbatim from parent, except where planD
+    # owns an override (same layering rule as refs.bib / results_macros).
     for name in _INHERIT_VERBATIM:
-        src = parent_dir / "sections" / name
+        planD_section = planD_dir / "sections" / name
+        parent_section = parent_dir / "sections" / name
+        src = planD_section if planD_section.exists() else parent_section
         if not src.exists():
             raise FileNotFoundError(f"parent missing inherited section: {src}")
         dst = dest_dir / "sections" / name
