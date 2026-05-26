@@ -75,6 +75,9 @@ _XREF_REWRITES: tuple[tuple[str, str], ...] = (
 # blind-review main.tex stays immutable upstream while V2's version compiles.
 _MAIN_TEX_REWRITES: tuple[tuple[str, str], ...] = (
     (r"sections/05_defi_experiment", "sections/05_empirical"),
+    # Vol-2 drops the §IV LOB recap entirely (it was a bridge from the
+    # hourly DA-BiGRU-CNN story which V2 no longer claims as motivation).
+    (r"\\input\{sections/04_lob_recap\.tex\}\s*\n", ""),
 )
 
 # Files in dest that must be preserved across runs (operator-authored or
@@ -166,12 +169,22 @@ def build(
         shutil.copyfile(src, dst)
         written.append(dst)
 
-    # Inherited sections with xref rewrite.
+    # Inherited sections with xref rewrite - layered: planD owns when
+    # present, parent is fallback. xref rewrites are only applied to the
+    # parent fallback path; planD-owned sections are assumed to be
+    # already V2-internal (no stale labels).
     for name in _INHERIT_REWRITE:
-        src = parent_dir / "sections" / name
-        if not src.exists():
-            raise FileNotFoundError(f"parent missing inherited section: {src}")
-        text = src.read_text(encoding="utf-8")
+        planD_section = planD_dir / "sections" / name
+        parent_section = parent_dir / "sections" / name
+        if planD_section.exists():
+            shutil.copyfile(planD_section, dest_dir / "sections" / name)
+            written.append(dest_dir / "sections" / name)
+            continue
+        if not parent_section.exists():
+            raise FileNotFoundError(
+                f"parent missing inherited section: {parent_section}"
+            )
+        text = parent_section.read_text(encoding="utf-8")
         text = _rewrite_xrefs(text)
         dst = dest_dir / "sections" / name
         dst.write_text(text, encoding="utf-8")

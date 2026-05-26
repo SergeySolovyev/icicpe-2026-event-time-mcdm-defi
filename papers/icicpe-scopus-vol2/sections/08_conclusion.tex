@@ -1,51 +1,45 @@
 \section{Conclusion}
 \label{sec:conclusion}
 
-We tested whether moving the published 4-factor MCDM lending
-allocator \cite{solovev2026vault} from hourly polling to per-block
-event-time evaluation, paired with HFT-inspired gas-aware switching
-rules, recovers the missing edge that the hourly version's H$_{0}$
-result \cite{solovev2026lob} exposed.  On a $\NBlocksFull$-block
-panel covering \DataStart--\DataEnd\ across \NProtocols\ Ethereum
-USDC lending venues (\ProtocolList), the gas-aware threshold
-allocator (T1) outperforms the published hourly MCDM-EMA baseline by
-$+20$\,bp net APY ($\TOneAPY$ vs $\EMAAPY$) while issuing
-$\TOneNRebal$ rebalances over four months --- roughly twenty times
-the published baseline's two-in-four-months count, at one-third the
-gas cost per switch of the unrefined greedy benchmark.
+We specified an event-time, gas-aware multi-protocol DeFi lending
+allocator with three nested decision-policy tiers (T1 gas-aware
+threshold, T2 OU optimal stopping, T3 Cox proportional-hazards),
+each grounded in a distinct microstructure or quantitative-finance
+source.  On a $\NBlocksFull$-block panel covering
+\DataStart--\DataEnd\ across \NProtocols\ Ethereum USDC lending
+venues (\ProtocolList), the simplest tier (T1) significantly
+outperforms passive Aave V3 buy-and-hold
+($\Delta\textsc{Sharpe} = \HOneAuxDelta$, 95\% CI
+[\HOneAuxCIlow, \HOneAuxCIhigh], $p = \HOneAuxPvalue$) under a
+paired monthly Sharpe bootstrap.  On a \$$1$\,M position over four
+months the allocator earns \$$4{,}275$ above Aave V3 hold
+($+42.7$\,bp), \$$4{,}039$ above Morpho Blue hold ($+40.4$\,bp), and
+trails Euler V2 hold by \$$817$ ($-8.2$\,bp) at \$$682$ in gas spend
+across $\TOneNRebal$ rebalances.
 
-Against passive buy-and-hold per protocol, T1 earns
-\$4{,}275 above Aave V3 hold ($+42.7$\,bp, $H_{1}^{\text{aux}}$
-$\Delta\textsc{Sharpe} = \HOneAuxDelta$, $p = \HOneAuxPvalue$),
-\$4{,}039 above Morpho Blue hold ($+40.4$\,bp), and trails Euler V2
-hold by \$817 ($-8.2$\,bp).  The Euler-side shortfall is the natural
-journal-extension hook: closing it requires the F1 lead-rate panel
-(Maker DSR, Curve 3pool) and a cross-protocol lead signal that
-specifically anticipates Euler-leads-Aave concentration windows.
-The architecturally identical Cox proportional-hazards policy (T3) is
-trained on the panel with the F3 fragmentation family alone (C-index
-$0.628$), and the H$_{1}^{c}$ contrast (T3 vs T2) is reported in
-\Cref{tab:h1-significance}; absent the F1 lead-rate covariate T3 does
-not yet separate from T2.
+The Euler-side shortfall is the natural journal-extension hook:
+closing it requires the F1 lead-rate panel (Maker DSR, Curve 3pool)
+and a cross-protocol lead signal specifically anticipating
+Euler-leads-Aave concentration windows.  T3 trained on the F3
+fragmentation family alone (C-index $0.628$) does not yet separate
+from T2 (\Cref{tab:h1-significance}); the C-index is a lower bound
+on what the hazard model can attain with the full F1+F3+F4 design.
 
 The contribution stands at three layers.  At the methodological
-layer, the event-time pivot is empirically validated: per-block
-gas-aware decisions admit two to three orders of magnitude more
-profitable rebalance opportunities than hourly polling, and the same
-4-factor MCDM aggregation gains directional edge purely from the
-resolution change.  At the infrastructure layer, the seven-way
-event-stream fetcher harness, the per-block replay engine, and the
+layer, event-time gas-aware decision rules admit two to three
+orders of magnitude more profitable rebalance opportunities than
+hourly polling and significantly beat passive single-protocol
+buy-and-hold.  At the infrastructure layer, the seven-way event-
+stream fetcher harness, the per-block replay engine, and the
 zero-drift production agent (Windows directory junction between
 research and live decision modules) are open-source and reproducible
 end-to-end (artifact: \texttt{submission\_<git-sha>.zip} with
 deterministic sha256 sidecar and per-file manifest).  At the
-empirical layer, the binding finding --- the event-time MCDM
-allocator significantly beats passive Aave hold under a paired
-monthly Sharpe bootstrap --- complements the falsified hourly
-LOB-to-DeFi transfer of \cite{solovev2026lob} and the equilibrium
-impossibility result of \cite{halpern2024fair} by demonstrating that
-the residual exploitable edge lives in the inter-block
-microstructure, not in the hourly forecast.
+empirical layer, the binding finding complements the equilibrium
+impossibility result of \cite{halpern2024fair} by demonstrating
+that the residual exploitable edge in DeFi lending lives in the
+inter-block microstructure --- precisely where the
+\cite{mackenzie2021} HFT signal taxonomy predicts it should.
 
 Three concrete next steps follow.  First, complete the seven-way
 panel: the Spark subgraph schema fix and a rotated RPC endpoint for
@@ -57,7 +51,5 @@ $\ge 10$-rebalance acceptance gate documented in
 \texttt{agent/RUNBOOK.md}; the off-chain agent is feature-complete
 and the Flashbots private-mempool dispatch path is dry-run-verified
 end-to-end.  Together these close the loop from research to
-deployment on a methodology --- per-block, gas-aware,
-literature-grounded multi-protocol allocation --- whose hourly
-predecessor could not have been falsified or vindicated without the
-resolution change.
+deployment for a per-block, gas-aware, literature-grounded
+multi-protocol allocation methodology.

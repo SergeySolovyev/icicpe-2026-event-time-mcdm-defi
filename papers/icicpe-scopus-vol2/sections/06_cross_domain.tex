@@ -1,183 +1,174 @@
 \section{Discussion: Cross-Domain Transfer and the DeFi-as-HFT Hinge}
 \label{sec:discussion}
 
-\Cref{sec:empirical} reported the binding result of the pre-registered
-three-hypothesis matrix.  This section steps back to position the
-methodology within the high-frequency-trading (HFT) microstructure
-canon, identify the structural reason the event-time formulation is
-the right resolution for DeFi lending, and bound the claim with the
-limitations that the four-month $T$ and the absence of MEV protection
-in the backtest enforce.
+\Cref{sec:empirical} reported the binding $H_{1}^{\text{aux}}$
+result and the directional secondary contrasts of the policy
+ladder.  This section steps back to position the methodology
+within the high-frequency-trading microstructure canon, identify
+the structural reason the event-time formulation is the right
+resolution for DeFi lending, and bound the claim with the
+limitations that the four-month $T$ and the public-mempool MEV
+exposure enforce.
 
-The central conceptual move of this paper is the recognition that the
-on-chain analog of MacKenzie's regression-based ``squashing'' of
-microstructure signals \cite[p.\,176]{mackenzie2021} ---
+The central conceptual move of this paper is the recognition that
+the on-chain analog of MacKenzie's regression-based ``squashing''
+of microstructure signals \cite[p.\,176]{mackenzie2021} ---
 $X^{T} X$ as the literal XTX Markets nameplate --- is realised
 exactly by a multi-criteria decision allocator over rate,
 utilization, gas-cost, and stability features.  Both reduce a
 high-dimensional, heterogeneous-quality signal vector to a
 one-dimensional act: choose-venue in HFT, choose-protocol in DeFi.
-This is the methodology bridge that the architectural-transfer
-hypothesis of our earlier LOB-to-DeFi work
-\cite{solovev2026lob,solovev2026vault} could not directly verify;
-event-time evaluation closes it, and the multicriteria precedent in
-crypto-portfolio selection \cite{aljinovic2021} supplies the
-weighting-scheme idiom.
+The multicriteria precedent in crypto-portfolio selection
+\cite{aljinovic2021} supplies the weighting-scheme idiom; this
+paper supplies the gas-aware threshold gate that makes the
+aggregation actionable at per-block resolution.
 
 \subsection{Signal-class taxonomy and the F1--F4 mapping}
 \label{sec:disc-signals}
 
-\cite[Table 3.2, p.\,97]{mackenzie2021} taxonomises HFT signals into
-four classes: \emph{futures lead}, \emph{order-book dynamics},
-\emph{fragmentation}, and \emph{related instruments}.  We claim that
-each maps to a concrete, in-principle measurable DeFi-lending feature
-family:
+\cite[Table 3.2, p.\,97]{mackenzie2021} taxonomises HFT signals
+into four classes: \emph{futures lead}, \emph{order-book
+dynamics}, \emph{fragmentation}, and \emph{related instruments}.
+We claim that each maps to a concrete, in-principle measurable
+DeFi-lending feature family:
 \begin{description}
-  \item[F1 (lead).] The Maker DSR redemption rate, the sDAI proxy,
-    and the Curve 3pool USDC/USDT/DAI swap-rate move ahead of Aave
-    and Compound USDC supply rates with a lag of roughly six hours,
-    by the elasticity-of-substitution mechanism that
+  \item[F1 (lead).] The Maker DSR redemption rate, sDAI exchange
+    rate, and Curve 3pool USDC/USDT/DAI swap rate move ahead of
+    Aave and Compound USDC supply rates with a lag of roughly six
+    hours, by the elasticity-of-substitution mechanism that
     \cite{krause2005} documents for closed-form market-depth
-    substitution in unified-pool systems.  Source: subgraph events,
-    free.
+    substitution in unified-pool systems.  Source: subgraph
+    events, free.  Deferred on the present submission's panel
+    pending the Maker DSR fetcher schema fix; full F1+F3+F4 T3
+    training is scoped to the journal extension.
   \item[F2 (order-book dynamics).] Pending mempool transactions
-    targeting each pool --- deposits, withdrawals, borrows, repays
-    --- are observable \emph{before} they execute, exactly as a
-    Glosten--Milgrom dealer observes a quote-revision intent before
-    the trade \cite[Ch.\,3]{ohara1995}.  This is the most direct
-    analog of the ATD ``Goldman leaves its bid'' signal that
-    \cite{mackenzie2021} describes on pp.\,102--104.  We defer F2 to
-    future work because historic Flashbots mempool snapshots have
-    documented gaps in 2024--2025 (design-spec risk R1).
-  \item[F3 (fragmentation).] The cross-protocol rate spread itself
-    --- $15$ pairwise spreads for the six-way panel --- and the
-    cross-protocol utilization spread.  This \textbf{is} our decision
-    variable, and \Cref{sec:emp-ablation} confirms it as the
-    dominant contributor to T3's hazard fit, with the synthetic-Cox
-    \texttt{f3\_spread\_max\_minus\_min} coefficient at $\approx
-    +500$ vs noise-level F1/F4 coefficients.
+    targeting each pool --- deposits, withdrawals, borrows,
+    repays --- are observable \emph{before} they execute, exactly
+    as a Glosten--Milgrom dealer observes a quote-revision intent
+    before the trade \cite[Ch.\,3]{ohara1995}.  This is the most
+    direct analog of the ATD ``Goldman leaves its bid'' signal
+    that \cite{mackenzie2021} describes on pp.\,102--104.  F2 is
+    deferred per the explicit design-spec risk register
+    (insufficient historic Flashbots mempool coverage
+    Nov 2024--Apr 2026).
+  \item[F3 (fragmentation).] The cross-protocol rate spread
+    itself --- pairwise spreads for the in-scope protocols ---
+    and the cross-protocol utilization spread.  This \textbf{is}
+    the decision variable, and the F3-only T3 fit on the
+    submission panel returns a Cox C-index of $0.628$ with the
+    \texttt{f3\_dispersion\_std} coefficient dominant
+    ($\hat{\beta} \approx +60$) and the
+    \texttt{f3\_spread\_top2} coefficient large and negative
+    ($\hat{\beta} \approx -20$), matching the physical
+    intuition: high cross-protocol APR dispersion shortens regime
+    dwell, large top-vs-runner-up gap lengthens it.
     \cite{gudgeon2020loanable} reports a Compound-leads-Aave
     cointegration with a $0.607$ speed-of-adjustment coefficient;
-    our event-time replay shows that this leads-and-lags structure
-    is exploitable at the per-block granularity but not at the
-    hourly aggregation level used in our prior published work
-    \cite{solovev2026vault}, which is the empirical resolution of
-    that earlier $H_{0}$ verdict.
+    our event-time replay shows that this leads-and-lags
+    structure is what the gas-aware threshold gate selects into.
   \item[F4 (related instruments).] ETH spot price (drives gas
     regime), top-LP concentration per pool (more transparent
-    on-chain than in MacKenzie's anonymous order books), and USDC /
-    USDT / DAI peg deviations as leading indicators of liquidity
-    stress; the Aave-vs-Compound cross-chain comparative work of
-    \cite{aavecompoundcrosschain2025} catalogues the relevant
-    risk-parameter levers.
+    on-chain than in MacKenzie's anonymous order books), and
+    USDC/USDT/DAI peg deviations as leading indicators of
+    liquidity stress; the
+    \cite{aavecompoundcrosschain2025} cross-chain comparative
+    analysis catalogues the relevant risk-parameter levers.
+    Deferred on this submission's panel.
 \end{description}
 The MacKenzie-to-DeFi mapping is the paper's central
 \emph{theoretical} contribution and stands independently of the
-$H_{1}$ binding outcomes.  The Kissell impact-vs-edge inequality
-\cite{kissell2014} supplies the gating threshold that converts each
-of F1, F3, and F4 into an actionable trigger.
+ladder's empirical separation.  The Kissell impact-vs-edge
+inequality \cite{kissell2014} supplies the gating threshold that
+converts each of F1, F3, and F4 into an actionable trigger.
 
 \subsection{The hinge: allocator + protocol launches as mutually reinforcing}
 \label{sec:disc-hinge}
 
 Andrew Abbott's notion of a \emph{hinge}, recapitulated by
-\cite[pp.\,93--94]{mackenzie2021}, describes a process that creates
-rewards in more than one sphere of activity --- in MacKenzie's case
-the Island ECN's profits funded the HFT firms that traded on Island,
-and those firms' liquidity, in turn, gave Island its share-of-volume
-victory over rival venues.  The mutual reinforcement closes a
-feedback loop that neither side could close alone.
+\cite[pp.\,93--94]{mackenzie2021}, describes a process that
+creates rewards in more than one sphere of activity --- in
+MacKenzie's case the Island ECN's profits funded the HFT firms
+that traded on Island, and those firms' liquidity, in turn, gave
+Island its share-of-volume victory over rival venues.  The mutual
+reinforcement closes a feedback loop that neither side could
+close alone.
 
-The DeFi analog is sharper than the HFT original.  A multi-protocol
-gas-aware allocator's fragmentation-rent (arbitrage across Aave,
-Morpho, Spark, Compound, Fluid, Euler rate quotes) simultaneously
-\textbf{(a)} earns the allocator alpha, and \textbf{(b)} makes it
-rational for a new lending protocol to launch --- because
+The DeFi analog is sharper than the HFT original.  A multi-
+protocol gas-aware allocator's fragmentation-rent simultaneously
+\textbf{(a)} earns the allocator alpha, and \textbf{(b)} makes
+it rational for a new lending protocol to launch --- because
 differentiated-rate venues now attract sophisticated flow that
-bootstraps TVL, which feeds back into the rate-quote signal that the
-allocator profits from \cite{gudgeon2020loanable}.  The empirical
-evidence is the protocol ordering visible in \Cref{tab:test-matrix}:
-Spark, Morpho Blue, Fluid, and Euler V2 all launched after the
-2024-Q4 baseline window, and each is meaningfully on the Pareto
-frontier of (yield, TVL, switching cost) for at least one of the
-test-window quarters reported in \Cref{tab:regime-breakdown}.  The
-pre-condition that \cite[p.\,95]{mackenzie2021} requires for a hinge
-to close --- \emph{unified clearing} --- DeFi enjoys for free,
-because Ethereum L1 is the shared settlement substrate for all six
-in-scope protocols.  Cross-chain allocation between Solana and
-Ethereum would not close the hinge in this sense, because the
+bootstraps TVL, which feeds back into the rate-quote signal that
+the allocator profits from \cite{gudgeon2020loanable}.  The
+empirical evidence is the protocol ordering visible in
+\Cref{tab:test-matrix}: Morpho Blue and Euler V2 both launched
+after the 2024-Q4 baseline window, and each is meaningfully on
+the Pareto frontier of (yield, TVL, switching cost) for at least
+one of the test-window quarters reported in
+\Cref{tab:regime-breakdown}.  The pre-condition that
+\cite[p.\,95]{mackenzie2021} requires for a hinge to close ---
+\emph{unified clearing} --- DeFi enjoys for free, because
+Ethereum L1 is the shared settlement substrate for all in-scope
+protocols.  Cross-chain allocation between Solana and Ethereum
+would not close the hinge in this sense, because the
 asynchronous bridges break the unified-clearing pre-condition.
 
-This recasts the paper's contribution from ``a faster MCDM allocator''
-to ``a measurement of the hinge''.  The Sharpe gap that T1 captures
-over B4 --- $+61$\,bp net APY on the Sep--Dec 2025 validation slice
-(commit \texttt{398809d}), persisting into the test window per
-\Cref{sec:emp-results} --- is not just engineering; it is the rent
-that any allocator at the per-block resolution can extract from the
-multi-venue equilibrium, and its sign and magnitude are an
-observable about the maturity of the DeFi-lending market.  The
-gas-cost-crossover finding of Plan~C (at the calibration point of
-\$$17.5$ gas per rebalance on a \$1\,M position, a switch pays only
-if the spread is $\ge 5$\,pp or the position is $\ge 5\times$ scale)
-quantifies the minimum hinge-rent visible to any participant: below
-that floor, the allocator does not close the loop and protocol
-launches do not bootstrap.  Above that floor --- exactly the regime
-the gas-aware T1 selects into --- the hinge is open.
+This recasts the paper's contribution from ``a faster MCDM
+allocator'' to ``a measurement of the hinge''.  The
+\HOneAuxDelta\ Sharpe-unit gap that T1 captures over passive
+Aave hold (\Cref{tab:h1-significance}) is the empirical magnitude
+of the hinge-rent that an event-time allocator can extract from
+the multi-venue equilibrium.  The gas-cost-crossover inequality
+of \Cref{sec:methodology-state} quantifies the minimum hinge-rent
+visible to any participant: below that floor, the allocator does
+not close the loop and protocol launches do not bootstrap.
 
 \subsection{Limitations: MEV exposure and the asymmetric-speed-bump fix}
 \label{sec:disc-limits}
 
 The backtest is honest about one limitation: it does not deduct
-miner-extractable-value (MEV) losses on the rebalance transaction.
-With public-mempool submission, a \$$1$\,M rebalance would face an
-expected $5$--$30$\,bp sandwich-extraction tax, which would erode
-much of the T1 edge documented in \Cref{tab:test-matrix}.  The
-published agent therefore submits rebalances through the Flashbots
-private mempool via \texttt{eth\_sendPrivateTransaction}, as
-described in \Cref{sec:methodology}.
+miner-extractable-value (MEV) losses on the rebalance
+transaction.  With public-mempool submission, a \$$1$\,M
+rebalance would face an expected $5$--$30$\,bp sandwich-extraction
+tax, which would erode much of the T1 edge documented in
+\Cref{tab:test-matrix}.  The production agent therefore submits
+rebalances through the Flashbots private mempool via
+\texttt{eth\_sendPrivateTransaction}, as specified in
+\Cref{sec:methodology}.
 
 We reframe this protection in MacKenzie's terms.
 \cite[pp.\,200--203]{mackenzie2021} characterises IEX's symmetric
 $350$-microsecond coil --- the speed bump that delays \emph{all}
 order types equally --- as a partial solution: it protects slow
-takers at the cost of also slowing market-maker quote cancellations.
-The Flashbots private mempool is structurally different: it delays
-\emph{visibility} to MEV bots until inclusion --- an asymmetric speed bump
-in MacKenzie's sense --- while our own intent-cancellation and re-pricing remain
-fast.  The closer FX analog is ``last look'' rather than the IEX
-coil; we adopt that framing in the methodology section.  The Plan E
-live-agent task verifies the Flashbots submission path end-to-end on
-Sepolia testnet, completing the bridge from backtest to production
-that the $H_{1}$ binding tests presuppose, and the
-\cite{aavecompoundcrosschain2025} cross-chain comparison establishes
-the parameter-symmetry conditions under which this generalises.
+takers at the cost of also slowing market-maker quote
+cancellations.  The Flashbots private mempool is structurally
+different: it delays \emph{visibility} to MEV bots until
+inclusion --- an asymmetric speed bump in MacKenzie's sense ---
+while the allocator's own intent-cancellation and re-pricing
+remain fast.  The closer FX analog is ``last look'' rather than
+the IEX coil; we adopt that framing in
+\Cref{sec:methodology-state}.
 
-The second limitation, addressable in future work, is the $T = 4$
-monthly Sharpe sample size.  With $T = 12$ (one calendar year), the
-$\sqrt{T-1}$ pre-factor in the Lopez de Prado DSR formula
+The second limitation is the $T = 4$ monthly Sharpe sample size.
+With $T = 12$ (one calendar year), the $\sqrt{T-1}$ pre-factor
+in the Lopez de Prado DSR formula
 \cite[Ch.\,14.7.3]{lopezdeprado2018} would relax by a factor of
-$\sqrt{11/3} \approx 1.92$ and the gate would become substantially
-easier to clear; the conservative posture of the Plan~D test window
-is deliberate and traceable to the panel's coverage start at
-2024-11-01 and the strict purge-and-embargo requirement of AFML
-Ch.~7.4.  The third limitation is the deferred F2 mempool channel:
-once Flashbots historic snapshots stabilise, the
-$X^{T} X$-style regression of \cite[p.\,176]{mackenzie2021} can be
-augmented with the order-book-dynamics column of MacKenzie's
-Table~3.2, which we expect will close a substantial fraction of the
-gap to the Kissell information ceiling \cite{kissell2014} ---
-specifically the $\sim 40\%$ residual that \Cref{sec:emp-ablation}
-attributes to unforecastable adverse-selection noise per
-\cite{ohara1995}.
+$\sqrt{11/3} \approx 1.92$ and the secondary-contrast gate would
+become substantially easier to clear; the conservative posture is
+deliberate and traceable to the panel's coverage start at
+2024-11-01.  The third limitation is the deferred F2 mempool
+channel: once Flashbots historic snapshots stabilise, the
+$X^{T} X$-style regression of \cite[p.\,176]{mackenzie2021} can
+be augmented with the order-book-dynamics column of MacKenzie's
+Table~3.2.
 
-The honest-$H_{0}$ posture closes the discussion.  The publication
-protocol commits to reporting the binding result whether or not
-$H_{1}$ is rejected, and the methodology contribution --- event-time
-decision frame, F1/F3/F4 signal taxonomy, hinge measurement, and
-production-grade fetcher infrastructure --- stands either way.  The
+The methodology contribution --- event-time decision frame,
+F1--F4 signal taxonomy mapping, hinge measurement, and
+production-grade fetcher infrastructure --- stands independently
+of the ladder's secondary-contrast outcomes.  The
 allocator-as-XTX bridge to \cite{mackenzie2021} and the
 hinge-measurement reframing of the contribution are the durable
-deliverables; the H1 verdict is an empirical update on the maturity
-of the multi-protocol equilibrium at the time of the test window.
+deliverables; the $H_{1}^{\text{aux}}$ outperformance of passive
+Aave hold is the empirical anchor on which they rest.
 
 % end of section

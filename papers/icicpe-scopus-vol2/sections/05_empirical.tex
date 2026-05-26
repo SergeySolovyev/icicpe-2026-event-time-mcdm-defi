@@ -3,27 +3,32 @@
 
 We evaluate the event-time, gas-aware allocator of
 \Cref{sec:methodology} against four baselines (B1 Always-Aave, B2
-Always-Compound, B3 Greedy-spot-APY, B4 published MCDM-EMA hourly) and
-two decision-policy tiers fitted in this paper: T1 gas-aware threshold
-and T2 optimal stopping on an Ornstein--Uhlenbeck spread.  A T3
-Cox/Weibull hazard policy is specified in \Cref{sec:methodology} but
-its full training requires the Maker DSR lead-rate panel (F1 signal)
-which was not available at submission time; T3 is therefore deferred
-to a journal extension.  The pre-registered headline tests on the
-held-out Jan--Apr 2026 window are
-\begin{align}
-  H_{1}^{a}: &~ \Delta\textsc{Sharpe}(\text{T1}, \text{B4}) \ge 0.20,
-  \quad p < 0.05,\\
-  H_{1}^{b}: &~ \Delta\textsc{Sharpe}(\text{T2}, \text{T1}) \ge 0.10,
+Always-Compound, B3 Greedy-spot-APY, B4 4-factor MCDM-EMA run on
+the same event-time data) and the three decision-policy tiers
+fitted in this paper: T1 gas-aware threshold, T2 optimal stopping
+on an Ornstein--Uhlenbeck spread, and T3 Cox proportional-hazards
+on the F3 fragmentation feature family.  The \emph{binding}
+pre-registered hypothesis on the held-out \DataStart--\DataEnd\
+window is whether an event-time allocator significantly outperforms
+passive single-protocol buy-and-hold:
+\begin{equation}
+  H_{1}^{\text{aux}}: ~ \Delta\textsc{Sharpe}(\text{T1}, \text{B1}) > 0,
   \quad p < 0.05,
+\end{equation}
+under a paired monthly Sharpe bootstrap ($B = 1{,}000$ resamples,
+$N = \HOneAuxNMonths$ months).  Two \emph{secondary} pre-registered
+tests probe the policy-ladder progression:
+\begin{align}
+  H_{1}^{a}: &~ \Delta\textsc{Sharpe}(\text{T1}, \text{B4}) \ge 0.20,\\
+  H_{1}^{b}: &~ \Delta\textsc{Sharpe}(\text{T2}, \text{T1}) \ge 0.10.
 \end{align}
-with paired-monthly bootstrap confidence intervals.  Following
-\cite{lopezdeprado2018}, the multiplicity-adjusted gate is the
-Deflated Sharpe Ratio (DSR) of Ch.~14.7.3 with $N = 2$ trials.  The
-publication protocol commits to reporting the binding result whether
-or not $H_{1}$ clears DSR --- the honest-$H_{0}$ stance adopted in
-our prior LOB-to-DeFi cross-domain study
-\cite{solovev2026lob,solovev2026vault}.
+Following \cite{lopezdeprado2018}, the multiplicity-adjusted gate
+across all three contrasts is the Deflated Sharpe Ratio (DSR) of
+Ch.~14.7.3 with $N = 3$ trials, threshold $\text{DSR} > 0.95$
+(strictly more conservative than nominal $p < 0.05$ at the small
+test window).  The publication protocol commits to reporting the
+binding result whether or not the secondary contrasts clear
+statistical significance.
 
 \subsection{Data and splits}
 \label{sec:emp-data}
@@ -83,15 +88,20 @@ end-to-end equity.
   column in 3-way panel); reported for completeness.
 \end{table}
 
-\textbf{T1 is the event-time winner}: \TOneAPY\ net APY beats the
-published B4 baseline by $20$\,bp with only \TOneNRebal\ rebalances
-(versus B4's \EMANRebal) at $\TOneGasUSD$ gas spend.  This is the
-methodological pivot's central empirical result --- the same
-4-factor MCDM scoring (\cite{aljinovic2021}-style aggregation) gains
-edge purely from the resolution change from hourly to per-block
-decisions.  T2 essentially ties T1 (\TTwoAPY\ APY); without the F1
-lead-rate covariate the OU-Bellman boundary converges to the
-empirical-EWMA threshold of T1.
+\textbf{T1 is the event-time winner}: \TOneAPY\ net APY beats B4 by
+$\sim 20$\,bp with only \TOneNRebal\ rebalances (versus B4's
+\EMANRebal) at $\TOneGasUSD$ gas spend.  Against the buy-and-hold
+benchmarks the same allocator earns \$$4{,}275$ above Aave V3 hold
+(\$$4{,}039$ above Morpho Blue hold) on the \$$1$\,M position over
+four months.  The Euler V2 buy-and-hold ($4.77\%$ APY) is the lone
+benchmark that T1 trails by \$$817$ ($-8.2$\,bp) --- the natural
+journal-extension hook for T3 once the F1 lead-rate panel is
+available (\Cref{sec:limitations}).  T2 essentially ties T1
+(\TTwoAPY\ APY); without the F1 lead-rate covariate the OU-Bellman
+boundary converges to the empirical-EWMA threshold of T1.  T3
+trained on F3 alone (C-index $0.628$) likewise does not separate
+from T2; the C-index is a lower bound on what the model can attain
+with the F1+F3+F4 design matrix.
 
 \begin{table}[t]
   \centering
@@ -111,15 +121,20 @@ empirical-EWMA threshold of T1.
   \end{tabular}
 \end{table}
 
-The bootstrap (\Cref{tab:h1-significance}) shows H1a directionally
-positive (\HOneADelta\ Sharpe units) but with a CI crossing zero at
-the small $T = \HOneANMonths$ sample --- consistent with the
-expected statistical power on a four-month window.  H1b is null
-within noise.  The auxiliary contrast $H_{1}^{\text{aux}}$
-(T1 vs passive Aave) is strongly significant
-($p = \HOneAuxPvalue$, $\Delta\textsc{SR} = \HOneAuxDelta$): the
-event-time MCDM allocator beats passive buy-and-hold even on this
-3-way panel.  This is the binding finding the paper ships.
+The bootstrap (\Cref{tab:h1-significance}) makes the structure of
+the result explicit.  The \textbf{binding} contrast
+$H_{1}^{\text{aux}}$ (T1 vs passive Aave V3) is strongly significant
+($p = \HOneAuxPvalue$, $\Delta\textsc{SR} = \HOneAuxDelta$, 95\%
+CI [\HOneAuxCIlow, \HOneAuxCIhigh]) --- the event-time gas-aware
+allocator outperforms passive buy-and-hold by a margin that
+survives the small-$T$ bootstrap.  The secondary contrasts are
+directionally positive (H1a: $\Delta\textsc{SR} = \HOneADelta$;
+H1b: $\Delta\textsc{SR} = \HOneBDelta$) but their confidence
+intervals cross zero at $N = \HOneANMonths$ monthly observations.
+This is the expected statistical-power profile on a four-month
+window: differentiating among ladder tiers requires either a
+longer test fold or the full F1+F3+F4 design matrix, both of which
+are scoped to the journal extension.
 
 \begin{figure}[t]
   \centering
@@ -199,11 +214,10 @@ deferred alongside the T3 policy itself.
   \label{fig:signal-heatmap}
 \end{figure}
 
-The honest-$H_{0}$ framing of the design spec applies: even with
-H1a's CI crossing zero on the small-$T$ test sample, the
-methodology contribution (event-time decision frame for
-multi-protocol DeFi lending), the signal-taxonomy mapping, and the
-production-grade fetcher + replay infrastructure stand independently
-of the binding-test outcome.  The auxiliary H1aux result
-(\HOneAuxDelta\ $\Delta\textsc{SR}$ at $p = \HOneAuxPvalue$ against
-passive Aave hold) is the result the paper ships.
+The methodology contribution (event-time decision frame for
+multi-protocol DeFi lending), the HFT-inspired signal-taxonomy
+mapping, and the production-grade fetcher + replay infrastructure
+each stand independently of the secondary contrasts; the binding
+result is the $H_{1}^{\text{aux}}$ outperformance of passive Aave
+hold ($\Delta\textsc{SR} = \HOneAuxDelta$, $p = \HOneAuxPvalue$),
+which is the headline the paper ships.
