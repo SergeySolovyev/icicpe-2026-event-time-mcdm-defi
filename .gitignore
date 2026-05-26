@@ -125,3 +125,7 @@ papers/icicpe-scopus-vol2-submission/*.fdb_latexmk
 papers/icicpe-scopus-vol2-submission/*.fls
 papers/icicpe-scopus-vol2-submission/*.synctex.gz
 papers/icicpe-scopus-vol2-submission/sections/*.aux
+
+# Plan D equity-curve parquets (regenerable from backtest.run_test_matrix)
+results/tables/equity/*.parquet
+

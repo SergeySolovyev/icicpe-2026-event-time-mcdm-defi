@@ -1,2 +1,4 @@
-metric,predictive,ema,delta,bootstrap_p_value,ci_low,ci_high,n_months,target
-monthly_sharpe,554.7621577759071,1455.163438936739,-900.401281160832,1.0,-1799.5720371970408,-1.2305251246232771,4,0.2
+hypothesis,policy_a,policy_b,delta_sharpe_point,ci_low_95,ci_high_95,nominal_p,n_months,n_bootstrap
+H1a,t1_threshold,b4_mcdm_ema,1.667495143162837,-6.458753017961711,11.031266502591345,0.121,4,1000
+H1b,t2_optimal_stopping,t1_threshold,-0.07532600507957639,-8.575019633055552,3.8048381177498065,0.578,4,1000
+H1aux_t1_vs_b1,t1_threshold,b1_always_aave,5.04786665207402,2.6914759491636673,17.898861944083478,0.011,4,1000
