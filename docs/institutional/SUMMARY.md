@@ -18,6 +18,14 @@ On a **$1M position** over the 4-month test window:
 | Max DD | 0.000% | 0.000% | 0 bp |
 | Final equity | $1,014,880 | $1,010,587 | **+$4,293** |
 
+**Walk-forward (6 non-overlapping 3-month windows, Nov 2024 – Apr 2026)**:
+T1 beats B1 (Aave hold) on net APY in **6 of 6 windows** (mean ΔAPY
+= **+1.84 pp**, 95% CI [+1.49, +2.23] pp, paired-bootstrap p = 0.000).
+ΔSharpe runs negative (B1's near-zero vol inflates its Sharpe — the
+known *Sharpe inflation paradox* on continuously-accruing positive-
+return series, López de Prado AFML Ch.4); see §02 for full
+discussion and dual-lens reporting.
+
 **Capacity**: Edge stable up to **$5M**; degrades at **$25M**;
 analytical ceiling **$50M** (Morpho/Euler pool-depth bound).
 **Live track record**: pre-mainnet — see `07_live_trial_plan.md`

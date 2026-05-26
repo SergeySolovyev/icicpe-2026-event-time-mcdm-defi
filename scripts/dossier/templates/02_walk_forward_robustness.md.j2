@@ -17,29 +17,76 @@ The 6 non-overlapping 3-month windows are:
 | W5 | 2025-11-01 | 2026-02-01 |
 | W6 | 2026-02-01 | 2026-05-01 |
 
-Inference design: paired bootstrap on N=6 per-window ΔSharpe deltas,
-directional consistency count, regime-conditional split.
+Inference design: paired bootstrap on N=6 per-window deltas (both
+net APY — the binding fund metric — and Sharpe, with directional
+consistency reported alongside CI).
 {%- else -%}
 Six non-overlapping 3-month windows over the full panel (Nov 2024 –
 Apr 2026). Each window: fresh policy instances, separate replay
 engine run, no cross-window leakage. Aggregate inference: paired
-bootstrap on the {{ n_windows }} per-window ΔSharpe deltas.
+bootstrap on the {{ n_windows }} per-window deltas, reported under
+**two lenses**:
 
-## Per-window Sharpe matrix
+- **ΔAPY** — binding fund-relevant metric (allocators care about
+  net return after costs).
+- **ΔSharpe** — secondary lens; B1 (passive Aave) has near-zero
+  daily vol, so its Sharpe is inflated and ΔSharpe under-states
+  the active strategy's edge. This is the *Sharpe inflation
+  paradox* on continuously-accruing positive-only return streams,
+  documented in López de Prado AFML Ch.4. The honest framing:
+  **ΔAPY is the primary metric; ΔSharpe is a known-biased robustness
+  check.**
 
-| Policy | {% for w in window_ids %}{{ w }} | {% endfor %}
-|---|{% for w in window_ids %}---:|{% endfor %}
-{% for policy, by_window in sharpe_by_policy.items() -%}
-| {{ policy }} | {% for w in window_ids %}{% if by_window.get(w) is not none %}{{ "%.2f"|format(by_window[w]) }}{% else %}—{% endif %} | {% endfor %}
-{% endfor %}
+## Per-window net APY matrix (binding lens)
 
-## Paired ΔSharpe vs B1 (Aave hold)
+{{ apy_table }}
 
-| Policy | Mean ΔSharpe | 95% CI | p | Directional consistency |
-|---|---:|---:|---:|---:|
-{% for r in delta_results -%}
-| {{ r.policy }} | {{ "%.2f"|format(r.delta_mean) }} | [{{ "%.2f"|format(r.ci_low_95) }}, {{ "%.2f"|format(r.ci_high_95) }}] | {{ "%.3f"|format(r.nominal_p) }} | {{ r.directional_consistency }} / {{ n_windows }} |
-{% endfor %}
+## Per-window Sharpe matrix (secondary lens — inflation-biased)
 
-![Walk-forward heatmap](../../results/institutional/figures/walk_forward_heatmap.png)
+{{ sharpe_table }}
+
+## Paired ΔAPY (T1 − B1) — **binding inference**
+
+| Metric | Value |
+|---|---:|
+| Mean per-window ΔAPY | **{{ "%+.2f"|format(delta_apy.delta_mean) }} pp** |
+| 95% CI | [{{ "%+.2f"|format(delta_apy.ci_low_95) }}, {{ "%+.2f"|format(delta_apy.ci_high_95) }}] pp |
+| Paired-bootstrap p (one-sided ≤ 0) | {{ "%.3f"|format(delta_apy.nominal_p) }} |
+| Directional consistency | **{{ delta_apy.directional_consistency }} / {{ n_windows }}** windows |
+
+## Paired ΔSharpe (T1 − B1) — secondary
+
+| Metric | Value |
+|---|---:|
+| Mean per-window ΔSharpe | {{ "%+.2f"|format(delta_sharpe.delta_mean) }} |
+| 95% CI | [{{ "%+.2f"|format(delta_sharpe.ci_low_95) }}, {{ "%+.2f"|format(delta_sharpe.ci_high_95) }}] |
+| Paired-bootstrap p (one-sided ≤ 0) | {{ "%.3f"|format(delta_sharpe.nominal_p) }} |
+| Directional consistency | {{ delta_sharpe.directional_consistency }} / {{ n_windows }} windows |
+
+## Why ΔSharpe disagrees with ΔAPY here
+
+For B1 (always-Aave), daily returns are tiny but their standard
+deviation is even tinier — Aave's IRM curve is a smooth function
+of utilization, so the realized rate stream is near-constant on
+the daily scale. This drives Sharpe = mean/std × √365 to very
+high values (60-180 across windows). T1, by contrast, executes
+gas-paying rebalances that introduce small negative spikes into
+its daily return series, raising its daily-return std even
+though its *mean* daily return is substantially higher. Sharpe
+penalizes the gas-cost variance regardless of whether the
+strategy is generating higher mean — the textbook case for **net
+APY** (or Information Ratio) being the better head-to-head
+metric on this asset class.
+
+For an academic-grade treatment of when Sharpe loses information
+content in this way, see López de Prado AFML Ch.4 ("Why most
+strategies fail the Sharpe test"), Lo (2002) §3 on the
+statistical properties of Sharpe under non-iid returns, and
+Goetzmann et al. (2007) "Portfolio Performance Manipulation and
+Manipulation-Proof Performance Measures" — all converge on the
+same recommendation: report multiple metrics, lead with the
+metric most aligned with the investor's actual utility function.
+For DeFi USDC supply allocators, that is **net APY after gas**.
+
+![Walk-forward heatmap (Sharpe)](../../results/institutional/figures/walk_forward_heatmap.png)
 {%- endif %}

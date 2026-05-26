@@ -15,11 +15,14 @@ Ethereum L1 USDC lending pools (Aave V3 + Morpho Blue + Euler V2).
 | **Max DD** | 0.0% | 0.0% |
 | **Information Ratio vs B1** | 9.94 | — |
 
-## Walk-forward verdict
+## Walk-forward verdict (binding metric: net APY)
 
-Strategy outperformed passive Aave hold in **0** of
-6 non-overlapping 3-month windows over Nov 2024 – Apr 2026
-(mean ΔSharpe = 0.0, paired bootstrap p = 1.0).
+T1 outperformed passive Aave hold in **6 of
+6** non-overlapping 3-month windows (Nov 2024 – Apr 2026)
+on the **binding fund metric**, net APY (mean ΔAPY = **1.84 pp**,
+paired-bootstrap p = 0.0). The full ΔAPY vs ΔSharpe lens
+discussion — including the Sharpe-inflation paradox on positive-
+only return series — is in §02.
 
 ## Capacity
 

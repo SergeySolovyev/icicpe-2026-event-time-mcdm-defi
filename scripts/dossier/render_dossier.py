@@ -23,37 +23,49 @@ def _load_metric_row(metrics: pd.DataFrame, policy: str) -> pd.Series:
     return metrics.set_index("policy").loc[policy]
 
 
-def _wf_t1_vs_b1(walk: pd.DataFrame):
-    """Return (wf_directional, wf_mean, wf_p, mean_boots_or_None, n).
+def _paired_wf(walk: pd.DataFrame, value_col: str,
+               a: str = "t1_threshold", b: str = "b1_always_aave"):
+    """Generic per-window paired bootstrap on `value_col` for (a - b).
 
-    Computes paired bootstrap over per-window (T1 - B1) Sharpe deltas.
-    Returns five Nones if walk_forward.csv is empty or missing
-    required policies."""
+    Returns dict with: directional, mean_delta, ci_low, ci_high, p,
+    boots (None if empty), n. Used for both Sharpe and APY contrasts."""
+    null = {"directional": 0, "mean_delta": 0.0, "ci_low": 0.0,
+            "ci_high": 0.0, "p": 1.0, "boots": None, "n": 0,
+            "deltas": []}
     if walk.empty:
-        return 0, 0.0, 1.0, None, 0
+        return null
     pivot = walk.pivot_table(
         index="window_id", columns="policy",
-        values="sharpe", aggfunc="first",
+        values=value_col, aggfunc="first",
     )
-    if "t1_threshold" not in pivot.columns or "b1_always_aave" not in pivot.columns:
-        return 0, 0.0, 1.0, None, 0
-    delta = (pivot["t1_threshold"] - pivot["b1_always_aave"]).dropna()
+    if a not in pivot.columns or b not in pivot.columns:
+        return null
+    delta = (pivot[a] - pivot[b]).dropna()
     n = len(delta)
     if n == 0:
-        return 0, 0.0, 1.0, None, 0
+        return null
     rng = np.random.default_rng(42)
     d = delta.to_numpy()
     boots = np.empty(2000)
     for i in range(2000):
         idx = rng.integers(0, n, size=n)
         boots[i] = d[idx].mean()
-    return (
-        int((delta > 0).sum()),
-        float(delta.mean()),
-        float((boots <= 0).mean()),
-        boots,
-        n,
-    )
+    return {
+        "directional": int((delta > 0).sum()),
+        "mean_delta": float(delta.mean()),
+        "ci_low": float(np.percentile(boots, 2.5)),
+        "ci_high": float(np.percentile(boots, 97.5)),
+        "p": float((boots <= 0).mean()),
+        "boots": boots,
+        "n": n,
+        "deltas": delta.to_list(),
+    }
+
+
+def _wf_t1_vs_b1(walk: pd.DataFrame):
+    """Backward-compat wrapper for the old Sharpe-only signature."""
+    r = _paired_wf(walk, value_col="sharpe")
+    return (r["directional"], r["mean_delta"], r["p"], r["boots"], r["n"])
 
 
 def render_all(*, tables_dir: Path, out_dir: Path) -> None:
@@ -74,9 +86,15 @@ def render_all(*, tables_dir: Path, out_dir: Path) -> None:
     t1 = _load_metric_row(metrics, "t1_threshold")
     b1 = _load_metric_row(metrics, "b1_always_aave")
 
+    # Two paired-bootstrap lenses on per-window deltas:
+    # ΔAPY = binding fund-relevant metric (allocators care about net return)
+    # ΔSharpe = secondary lens; B1's near-zero vol inflates its Sharpe,
+    # so ΔSharpe under-states T1's edge.
+    wf_apy = _paired_wf(walk, value_col="net_apy_pct")
+    wf_sharpe = _paired_wf(walk, value_col="sharpe")
     wf_directional, wf_mean, wf_p, mean_boots, wf_n = _wf_t1_vs_b1(walk)
 
-    # 00 one-pager
+    # 00 one-pager (use ΔAPY as binding directional metric)
     tpl = env.get_template("00_one_pager.md.j2")
     (out_dir / "00_one_pager.md").write_text(tpl.render(
         t1_apy=round(t1.net_apy_pct, 2), b1_apy=round(b1.net_apy_pct, 2),
@@ -87,8 +105,8 @@ def render_all(*, tables_dir: Path, out_dir: Path) -> None:
         b1_calmar="∞" if not np.isfinite(b1.calmar) else int(b1.calmar),
         t1_mdd=round(t1.max_drawdown_pct, 3), b1_mdd=round(b1.max_drawdown_pct, 3),
         t1_ir=round(t1.information_ratio_vs_benchmark, 2),
-        wf_directional=wf_directional, wf_n=wf_n if wf_n else 6,
-        wf_mean=round(wf_mean, 2), wf_p=round(wf_p, 3),
+        wf_directional=wf_apy["directional"], wf_n=wf_apy["n"] if wf_apy["n"] else 6,
+        wf_mean=round(wf_apy["mean_delta"], 2), wf_p=round(wf_apy["p"], 3),
     ), encoding="utf-8")
 
     # 01 performance
@@ -97,33 +115,57 @@ def render_all(*, tables_dir: Path, out_dir: Path) -> None:
         metrics_rows=metrics.to_dict(orient="records"),
     ), encoding="utf-8")
 
-    # 02 walk-forward
+    # 02 walk-forward (dual lens: APY primary + Sharpe secondary)
     tpl = env.get_template("02_walk_forward_robustness.md.j2")
-    has_data = not walk.empty and wf_n > 0
+    has_data = not walk.empty and wf_apy["n"] > 0
+    apy_table = ""
+    sharpe_table = ""
     if has_data:
-        sharpe_by_policy = {}
         window_ids = sorted(walk["window_id"].unique())
-        for policy in walk["policy"].unique():
-            sharpe_by_policy[policy] = walk[walk.policy == policy].set_index(
-                "window_id")["sharpe"].to_dict()
-        delta_results = [{
-            "policy": "t1_threshold",
-            "delta_mean": wf_mean,
-            "ci_low_95": float(np.percentile(mean_boots, 2.5)),
-            "ci_high_95": float(np.percentile(mean_boots, 97.5)),
-            "nominal_p": wf_p,
-            "directional_consistency": wf_directional,
-        }]
+        # Build per-policy lookup once
+        def _table(value_col: str, fmt: str) -> str:
+            policies_order = ["b1_always_aave", "b4_mcdm_ema",
+                              "t1_threshold", "t2_optimal_stopping"]
+            policies = [p for p in policies_order
+                        if p in walk["policy"].unique()]
+            header = "| Policy | " + " | ".join(window_ids) + " |\n"
+            sep = "|---|" + "|".join(["---:"] * len(window_ids)) + "|\n"
+            rows = []
+            for p in policies:
+                sub = walk[walk.policy == p].set_index("window_id")[value_col].to_dict()
+                cells = [
+                    (fmt.format(sub[w]) if w in sub else "—")
+                    for w in window_ids
+                ]
+                rows.append(f"| {p} | " + " | ".join(cells) + " |")
+            return header + sep + "\n".join(rows) + "\n"
+
+        apy_table = _table("net_apy_pct", "{:.2f}%")
+        sharpe_table = _table("sharpe", "{:.2f}")
+        delta_apy = {
+            "delta_mean": wf_apy["mean_delta"],
+            "ci_low_95": wf_apy["ci_low"],
+            "ci_high_95": wf_apy["ci_high"],
+            "nominal_p": wf_apy["p"],
+            "directional_consistency": wf_apy["directional"],
+        }
+        delta_sharpe = {
+            "delta_mean": wf_sharpe["mean_delta"],
+            "ci_low_95": wf_sharpe["ci_low"],
+            "ci_high_95": wf_sharpe["ci_high"],
+            "nominal_p": wf_sharpe["p"],
+            "directional_consistency": wf_sharpe["directional"],
+        }
     else:
-        sharpe_by_policy = {}
-        window_ids = []
-        delta_results = []
+        delta_apy = None
+        delta_sharpe = None
     (out_dir / "02_walk_forward_robustness.md").write_text(tpl.render(
         has_data=has_data,
-        sharpe_by_policy=sharpe_by_policy,
-        window_ids=window_ids,
-        delta_results=delta_results,
-        n_windows=wf_n,
+        apy_table=apy_table,
+        sharpe_table=sharpe_table,
+        delta_apy=delta_apy,
+        delta_sharpe=delta_sharpe,
+        n_windows=wf_apy["n"] if has_data else 0,
     ), encoding="utf-8")
 
     # 03 capacity
