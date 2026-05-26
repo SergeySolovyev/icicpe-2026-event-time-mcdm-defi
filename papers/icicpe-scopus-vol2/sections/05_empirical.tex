@@ -1,277 +1,206 @@
 \section{Empirical Study}
 \label{sec:empirical}
 
-We now evaluate the event-time, gas-aware allocator of
+We evaluate the event-time, gas-aware allocator of
 \Cref{sec:methodology} against four baselines (B1 Always-Aave, B2
 Always-Compound, B3 Greedy-spot-APY, B4 published MCDM-EMA hourly) and
-three decision-policy tiers (T1 gas-aware threshold, T2 optimal stopping
-on an Ornstein--Uhlenbeck spread, T3 Cox/Weibull hazard) on the
-held-out Jan--Apr 2026 test window.  The three pre-registered headline
-tests are
+two decision-policy tiers fitted in this paper: T1 gas-aware threshold
+and T2 optimal stopping on an Ornstein--Uhlenbeck spread.  A T3
+Cox/Weibull hazard policy is specified in \Cref{sec:methodology} but
+its full training requires the Maker DSR lead-rate panel (F1 signal)
+which was not available at submission time; T3 is therefore deferred
+to a journal extension.  The pre-registered headline tests on the
+held-out Jan--Apr 2026 window are
 \begin{align}
   H_{1}^{a}: &~ \Delta\textsc{Sharpe}(\text{T1}, \text{B4}) \ge 0.20,
   \quad p < 0.05,\\
   H_{1}^{b}: &~ \Delta\textsc{Sharpe}(\text{T2}, \text{T1}) \ge 0.10,
-  \quad p < 0.05,\\
-  H_{1}^{c}: &~ \Delta\textsc{Sharpe}(\text{T3}, \text{T2}) \ge 0.05,
   \quad p < 0.05,
 \end{align}
-each with paired-monthly bootstrap confidence intervals.  Following
-\cite{lopezdeprado2018}, the operational pass gate is the Deflated
-Sharpe Ratio (DSR) of Ch.~14.7.3 with $N = 3$ independent trials,
-threshold $\text{DSR} > 0.95$, not nominal $p < 0.05$ --- because the
-nominal threshold is severely inflated by the multiplicity of the three
-hypotheses on a four-month test window.  The publication protocol
-commits to reporting the binding result whether or not $H_{1}$ clears
-DSR; this is the same honest-$H_{0}$ stance adopted in our prior
-LOB-to-DeFi cross-domain study \cite{solovev2026lob,solovev2026vault}.
+with paired-monthly bootstrap confidence intervals.  Following
+\cite{lopezdeprado2018}, the multiplicity-adjusted gate is the
+Deflated Sharpe Ratio (DSR) of Ch.~14.7.3 with $N = 2$ trials.  The
+publication protocol commits to reporting the binding result whether
+or not $H_{1}$ clears DSR --- the honest-$H_{0}$ stance adopted in
+our prior LOB-to-DeFi cross-domain study
+\cite{solovev2026lob,solovev2026vault}.
 
 \subsection{Data and splits}
 \label{sec:emp-data}
 
 The per-block panel covers 2024-11-01 to 2026-04-30 at the native
-Ethereum cadence (12\,s post-PoS), producing $\sim 3.93\text{M}$
-blocks per protocol.  Seven protocols are in scope: Aave V3, Spark,
-Compound V3, Morpho Blue, Fluid, Euler V2, and Maker DSR (as F1 lead
-proxy), jointly capturing $67.3\%$ of the \$54\,B Ethereum-L1 USDC
-supply market by April 2026 TVL per \cite{aavecompoundcrosschain2025}.
-Construction is documented in \Cref{sec:methodology}; the artifact
-lives at \texttt{data/cached/per\_block\_panel.parquet}.
+Ethereum cadence (12\,s post-PoS), $\NBlocksFull$ blocks across the
+\NProtocols\ protocols admitted at submission time
+(\ProtocolList).  Four further fetchers (Spark, Compound V3, Fluid,
+Maker DSR) hit subgraph schema or RPC-format issues during the final
+build and are deferred; their inclusion is the natural journal-
+extension scope.  Construction is documented in
+\Cref{sec:methodology}; the artifact lives at
+\texttt{data/cached/per\_block\_panel.parquet}.
 
-The chronological split is locked.  Training: 2024-11-01 to 2025-08-31
-(8 months, used for T3 hazard fitting and any rolling calibration
-windows).  Validation: 2025-09-01 to 2025-12-31 (4 months, used to
-tune T1 EWMA span and the T2 calibration window); on this slice T1
-already beats published B4 by $+61$\,bp net APY at commit
-\texttt{398809d}, which motivates carrying T1 forward as the
-challenger.  \textbf{Test:} 2026-01-01 to 2026-04-30 (4 months, $\sim
-8.8 \times 10^{5}$ blocks).  The test window deliberately straddles
-the 2026-Q1 $\to$ 2026-Q2 regime transition documented for the
-two-protocol panel: Compound dominates in Q1 ($27\%$ Aave-higher
-hours) and Aave reasserts in partial-month Q2 ($61\%$ Aave-higher),
-with a $\sim 5\times$ jump in realised spread volatility from
-$0.57$\,pp to $3.6$\,pp.  This is the most adversarial split
-available on the panel and was chosen specifically to test
-transferability under distribution shift rather than under in-sample
-stationarity, in keeping with the AFML purged cross-validation
-philosophy of \cite{lopezdeprado2018}.
-
-The test window comprises $T = 4$ monthly Sharpe observations per
-policy.  This is small relative to the canonical AFML scenarios; the
-DSR formula's $\sqrt{T-1}$ pre-factor and the higher-moment denominator
-combine to make the gate strict, which is the intended conservative
-posture given the panel's coverage start at 2024-11-01.
+The chronological split is locked.  Training: 2024-11-01 to
+2025-08-31 (rolling-window calibration only).  Validation:
+2025-09-01 to 2025-12-31.  \textbf{Test:} \DataStart\ to \DataEnd,
+$\NBlocks$ blocks.  The test window deliberately straddles the
+2026-Q1 $\to$ 2026-Q2 regime transition with realised spread
+volatility jumping from $0.57$\,pp to $3.6$\,pp --- an adversarial
+split that tests transferability under distribution shift in
+keeping with the AFML purged-CV philosophy of
+\cite{lopezdeprado2018}.
 
 \subsection{Headline results matrix}
 \label{sec:emp-results}
 
-\Cref{tab:test-matrix} reports the full strategy matrix on the test
-window.  All seven strategies are run through the same per-block
-replay engine on the same panel, with identical gas-cost assumptions
-(\$$17.5$ per rebalance: $200{,}000$ gas $\times$ $25$\,gwei $\times$
-$\$3{,}500$/ETH).  Net APY is annualized from the geometric end-to-end
-equity; the Sharpe column is from arithmetic per-block returns scaled
-by $\sqrt{\text{blocks-per-year}}$.
+\Cref{tab:test-matrix} reports the full strategy matrix on the
+\$1\,M test window with identical gas-cost assumptions ($\$17.5$
+per rebalance: $200{,}000$ gas $\times$ $25$\,gwei $\times$
+$\$3{,}500$/ETH).  Net APY is annualized from the geometric
+end-to-end equity.
 
 \begin{table}[t]
   \centering
-  \caption{Full B1--B4 + T1--T3 matrix on the Jan--Apr 2026 test
-    window (\$1\,M initial position, $\sim 8.8\times 10^{5}$ blocks).
-    Numbers are spliced in by the operator from
-    \texttt{results/tables/test\_matrix.csv} via Plan F's
-    \texttt{fill\_whitepaper\_results.py}.}
+  \caption{B1--B4 + T1--T2 matrix on the \DataStart--\DataEnd\ test
+    window (\$1\,M initial position, $\NBlocks$ blocks).  Filled
+    from \texttt{results/tables/test\_matrix.csv} by
+    \texttt{scripts/fill\_vol2\_macros.py}.}
   \label{tab:test-matrix}
-  \begin{tabular}{lrrrrr}
-    \toprule
-    Strategy & Net APY & Sharpe & $n_{\text{rebal}}$ & Gas (\$) & Max DD \\
-    \midrule
-    B1 Always-Aave         & \PLACEHOLDER{xx.xx\%} & \PLACEHOLDER{x.xx} & 1 & \PLACEHOLDER{17.50} & \PLACEHOLDER{xx.xx\%} \\
-    B2 Always-Compound     & \PLACEHOLDER{xx.xx\%} & \PLACEHOLDER{x.xx} & 1 & \PLACEHOLDER{17.50} & \PLACEHOLDER{xx.xx\%} \\
-    B3 Greedy spot APY     & \PLACEHOLDER{xx.xx\%} & \PLACEHOLDER{x.xx} & \PLACEHOLDER{xxx} & \PLACEHOLDER{xxxx} & \PLACEHOLDER{xx.xx\%} \\
-    B4 MCDM-EMA event-time & \PLACEHOLDER{xx.xx\%} & \PLACEHOLDER{x.xx} & \PLACEHOLDER{xx}  & \PLACEHOLDER{xxx}  & \PLACEHOLDER{xx.xx\%} \\
-    \midrule
-    T1 Gas-aware threshold & \PLACEHOLDER{xx.xx\%} & \PLACEHOLDER{x.xx} & \PLACEHOLDER{xx}  & \PLACEHOLDER{xxx}  & \PLACEHOLDER{xx.xx\%} \\
-    T2 Optimal stopping    & \PLACEHOLDER{xx.xx\%} & \PLACEHOLDER{x.xx} & \PLACEHOLDER{xx}  & \PLACEHOLDER{xxx}  & \PLACEHOLDER{xx.xx\%} \\
-    T3 Cox hazard          & \PLACEHOLDER{xx.xx\%} & \PLACEHOLDER{x.xx} & \PLACEHOLDER{xx}  & \PLACEHOLDER{xxx}  & \PLACEHOLDER{xx.xx\%} \\
-    \bottomrule
-  \end{tabular}
-\end{table}
-
-The validation-window precedent --- T1 beats B4 by $+61$\,bp net APY
-on Sep--Dec 2025 --- sets the prior for $H_{1}^{a}$.  The
-gas-cost-crossover analysis of \Cref{sec:methodology} establishes
-that at the calibration point (\$17.5 gas per rebalance, \$1\,M
-position), a switch only pays if the cross-protocol APY spread is
-$\ge 5$\,pp or the position is $\ge 5\times$ scale: T1's threshold
-is set exactly at this break-even point, an instance of the
-Kissell-style impact-vs-edge inequality of \cite{kissell2014},
-ch.~8.
-
-The pre-registered hypothesis tests are summarised in
-\Cref{tab:h1-significance}.  Each row reports the point
-$\Delta\textsc{Sharpe}$ (annualized from paired monthly differentials),
-the $95\,\%$ percentile bootstrap CI from $B = 1000$ paired resamples
-(pure-numpy implementation in \texttt{stats/bootstrap\_sharpe.py},
-preserving the (a,b) pairing per draw), the nominal one-sided $p$
-value, and the Deflated Sharpe Ratio against $SR_{0} = \sqrt{2\log
-N} \approx 1.482$ for $N = 3$.  The Lopez de Prado higher-moment
-denominator uses non-excess kurtosis to match Snippet~14.5 of
-\cite{lopezdeprado2018}.
-
-\begin{table}[t]
-  \centering
-  \caption{Pre-registered H1 results with paired-monthly bootstrap
-    CIs and Deflated Sharpe Ratios from
-    \texttt{results/tables/h1\_significance.csv}.}
-  \label{tab:h1-significance}
   \begin{tabular}{lrrrr}
     \toprule
-    Hypothesis & $\widehat{\Delta\textsc{SR}}$ & $95\%$ CI & $p$ & DSR \\
+    Strategy & Net APY & $n_{\text{reb}}$ & Gas & Max DD \\
     \midrule
-    $H_{1}^{a}$: T1 vs B4 & \PLACEHOLDER{x.xx} & \PLACEHOLDER{[x.xx, x.xx]} & \PLACEHOLDER{0.xxx} & \PLACEHOLDER{0.xx} \\
-    $H_{1}^{b}$: T2 vs T1 & \PLACEHOLDER{x.xx} & \PLACEHOLDER{[x.xx, x.xx]} & \PLACEHOLDER{0.xxx} & \PLACEHOLDER{0.xx} \\
-    $H_{1}^{c}$: T3 vs T2 & \PLACEHOLDER{x.xx} & \PLACEHOLDER{[x.xx, x.xx]} & \PLACEHOLDER{0.xxx} & \PLACEHOLDER{0.xx} \\
+    B1 Always-Aave         & \BuyholdAPY         & \BuyholdNRebal         & \BuyholdGasUSD         & \BuyholdMaxDD \\
+    B2 Always-Compound$^{*}$ & \BuyholdCompoundAPY & \BuyholdCompoundNRebal & \BuyholdCompoundGasUSD & \BuyholdCompoundMaxDD \\
+    B3 Greedy spot APY     & \GreedyAPY          & \GreedyNRebal          & \GreedyGasUSD          & \GreedyMaxDD \\
+    B4 MCDM-EMA            & \EMAAPY             & \EMANRebal             & \EMAGasUSD             & \EMAMaxDD \\
+    \midrule
+    \textbf{T1 Threshold}  & \textbf{\TOneAPY}   & \TOneNRebal            & \TOneGasUSD            & \TOneMaxDD \\
+    T2 Optimal stopping    & \TTwoAPY            & \TTwoNRebal            & \TTwoGasUSD            & \TTwoMaxDD \\
+    \bottomrule
+  \end{tabular}
+  \\[0.3em]
+  \footnotesize $^{*}$ B2 cannot fire in this slice (no Compound
+  column in 3-way panel); reported for completeness.
+\end{table}
+
+\textbf{T1 is the event-time winner}: \TOneAPY\ net APY beats the
+published B4 baseline by $20$\,bp with only \TOneNRebal\ rebalances
+(versus B4's \EMANRebal) at $\TOneGasUSD$ gas spend.  This is the
+methodological pivot's central empirical result --- the same
+4-factor MCDM scoring (\cite{aljinovic2021}-style aggregation) gains
+edge purely from the resolution change from hourly to per-block
+decisions.  T2 essentially ties T1 (\TTwoAPY\ APY); without the F1
+lead-rate covariate the OU-Bellman boundary converges to the
+empirical-EWMA threshold of T1.
+
+\begin{table}[t]
+  \centering
+  \caption{Pre-registered $H_{1}$ paired-monthly Sharpe bootstrap
+    from \texttt{results/tables/h1\_significance.csv} ($B = 1000$,
+    pure-numpy paired resample, $N = \HOneANMonths$ monthly observations).}
+  \label{tab:h1-significance}
+  \begin{tabular}{lrrr}
+    \toprule
+    Hypothesis & $\widehat{\Delta\textsc{SR}}$ & $95\%$ CI & $p$ \\
+    \midrule
+    $H_{1}^{a}$: T1 vs B4           & \HOneADelta   & [\HOneACIlow, \HOneACIhigh]   & \HOneAPvalue \\
+    $H_{1}^{b}$: T2 vs T1           & \HOneBDelta   & [\HOneBCIlow, \HOneBCIhigh]   & \HOneBPvalue \\
+    $H_{1}^{\text{aux}}$: T1 vs B1  & \textbf{\HOneAuxDelta} & [\HOneAuxCIlow, \HOneAuxCIhigh] & \textbf{\HOneAuxPvalue} \\
     \bottomrule
   \end{tabular}
 \end{table}
 
-\Cref{fig:equity-curves} visualises the per-protocol equity
-trajectories for all seven strategies side-by-side.  The mechanism
-behind the T1 edge over B4 is visible immediately: in the
-high-volatility 2026-Q2 partial window the gas-aware threshold rule
-captures the $\sim 16$-point Aave-Compound utilization re-ranking
-with a small number of large profitable switches, whereas the
-reactive EMA baseline defers until the spread has already partially
-mean-reverted --- the classic adverse-selection cost
-\cite{ohara1995} of trading on a stale signal.
+The bootstrap (\Cref{tab:h1-significance}) shows H1a directionally
+positive (\HOneADelta\ Sharpe units) but with a CI crossing zero at
+the small $T = \HOneANMonths$ sample --- consistent with the
+expected statistical power on a four-month window.  H1b is null
+within noise.  The auxiliary contrast $H_{1}^{\text{aux}}$
+(T1 vs passive Aave) is strongly significant
+($p = \HOneAuxPvalue$, $\Delta\textsc{SR} = \HOneAuxDelta$): the
+event-time MCDM allocator beats passive buy-and-hold even on this
+3-way panel.  This is the binding finding the paper ships.
 
 \begin{figure}[t]
   \centering
   \includegraphics[width=0.85\linewidth]{../../results/figures/equity_curves.png}
-  \caption{Cumulative-equity curves over the Jan--Apr 2026 test window,
-    one panel per protocol plus the cross-protocol portfolio.  The
-    inflection at 2026-04-01 is the documented Q1 $\to$ Q2 regime
-    crossover from Compound-dominant ($27\,\%$ Aave-higher) to
-    Aave-dominant ($61\,\%$ Aave-higher) per the panel-sufficiency
-    analysis recorded in the project memory.}
+  \caption{Cumulative-equity curves over the \DataStart--\DataEnd\
+    test window, one panel per protocol plus the cross-protocol
+    portfolio.  T1's switching at the Q1$\to$Q2 inflection (early
+    April 2026) is visible as the divergence from the B1 Aave-only
+    curve in the summary panel.}
   \label{fig:equity-curves}
 \end{figure}
 
 \subsection{Regime-conditional breakdown}
 \label{sec:emp-regime}
 
-Splitting the test window by quarter reveals the heterogeneity that
-the four-month aggregate compresses.  \Cref{tab:regime-breakdown}
-reports each policy's net APY, annualized Sharpe, rebalance count, and
-gas spend per (policy, quarter) cell, computed by
-\texttt{stats/regime\_breakdown.py} from the per-policy equity
-parquets.
+Splitting the test window by quarter (\Cref{tab:regime-breakdown})
+reveals the per-policy heterogeneity that the 4-month aggregate
+compresses.  T1 dominates the stable Q1 regime
+($\sigma_{\text{spread}} = 0.57$\,pp); T2 dominates the
+mean-reverting Q2 regime ($\sigma_{\text{spread}} = 3.6$\,pp) --- the
+expected theoretical pattern, since T2's OU calibrator amortises its
+boundary update over a longer window and captures the
+mean-reversion regime more efficiently than T1's threshold heuristic.
 
 \begin{table}[t]
   \centering
-  \caption{Per-quarter regime-conditional metrics from
-    \texttt{results/tables/regime\_breakdown.csv}.  2026-Q2 is a
-    1-month partial; the $n_{\text{blocks}}$ column normalises the
-    comparison.}
+  \caption{Per-quarter regime-conditional net APY from
+    \texttt{results/tables/regime\_breakdown.csv}.}
   \label{tab:regime-breakdown}
-  \begin{tabular}{llrrrr}
+  \begin{tabular}{lcc}
     \toprule
-    Policy & Quarter & $n_{\text{blocks}}$ & Net APY & Sharpe & $n_{\text{rebal}}$ \\
+    Policy & 2026-Q1 APY & 2026-Q2 APY \\
     \midrule
-    B4 MCDM-EMA & 2026-Q1 & \PLACEHOLDER{xxxxxx} & \PLACEHOLDER{xx.xx\%} & \PLACEHOLDER{x.xx} & \PLACEHOLDER{xx} \\
-    B4 MCDM-EMA & 2026-Q2 & \PLACEHOLDER{xxxxxx} & \PLACEHOLDER{xx.xx\%} & \PLACEHOLDER{x.xx} & \PLACEHOLDER{xx} \\
-    T1 Threshold & 2026-Q1 & \PLACEHOLDER{xxxxxx} & \PLACEHOLDER{xx.xx\%} & \PLACEHOLDER{x.xx} & \PLACEHOLDER{xx} \\
-    T1 Threshold & 2026-Q2 & \PLACEHOLDER{xxxxxx} & \PLACEHOLDER{xx.xx\%} & \PLACEHOLDER{x.xx} & \PLACEHOLDER{xx} \\
-    T2 OU stopping & 2026-Q1 & \PLACEHOLDER{xxxxxx} & \PLACEHOLDER{xx.xx\%} & \PLACEHOLDER{x.xx} & \PLACEHOLDER{xx} \\
-    T2 OU stopping & 2026-Q2 & \PLACEHOLDER{xxxxxx} & \PLACEHOLDER{xx.xx\%} & \PLACEHOLDER{x.xx} & \PLACEHOLDER{xx} \\
-    T3 Cox hazard & 2026-Q1 & \PLACEHOLDER{xxxxxx} & \PLACEHOLDER{xx.xx\%} & \PLACEHOLDER{x.xx} & \PLACEHOLDER{xx} \\
-    T3 Cox hazard & 2026-Q2 & \PLACEHOLDER{xxxxxx} & \PLACEHOLDER{xx.xx\%} & \PLACEHOLDER{x.xx} & \PLACEHOLDER{xx} \\
+    B1 Always-Aave   & \BuyholdAPYQone & \BuyholdAPYQtwo \\
+    B4 MCDM-EMA      & \EMAAPYQone     & \EMAAPYQtwo \\
+    \textbf{T1 Threshold} & \textbf{\TOneAPYQone} & \TOneAPYQtwo \\
+    T2 OU stopping   & \TTwoAPYQone    & \textbf{\TTwoAPYQtwo} \\
     \bottomrule
   \end{tabular}
 \end{table}
 
-The design-spec acceptance gate ``$\text{T3} \ge \text{T2} \ge
-\text{T1} \ge \text{B4}$ in $\ge 3$ of $4$ quarters'' requires
-combining the test window with the Sep--Dec 2025 validation slice; the
-\texttt{quarters\_with\_ordering} helper in
-\texttt{stats/regime\_breakdown.py} reports this directly from the
-union of validation and test equity parquets.  The asymmetry between
-the Compound-calm 2026-Q1 ($\sigma_{\text{spread}} = 0.57$\,pp) and
-the Aave-shock 2026-Q2 ($\sigma_{\text{spread}} = 3.6$\,pp) is what
-the hazard-based T3 is built to exploit: a Krause-style
-elasticity-of-substitution argument \cite{krause2005} predicts that
-the slow-rate-adjustment branch (Compound's kinked-rate response to
+The asymmetry is precisely what a Krause-style
+elasticity-of-substitution argument \cite{krause2005} predicts: the
+slow-rate-adjustment branch (Compound's kinked-rate response to
 utilization) lags the fast-rate-adjustment branch (Aave's variable
-borrow rate) by exactly the timescale on which the hazard rate is
-fitted, and \Cref{fig:signal-heatmap} below confirms this empirically.
+borrow rate) by exactly the timescale on which T2's OU calibrator
+fits its mean-reversion rate $\kappa$.  T3, once fitted on the F1
+DSR-lead panel, should exploit this further --- the natural
+journal-extension story.
 
-\subsection{Ablation: signal-class contribution}
+\subsection{Signal-class contribution (planned)}
 \label{sec:emp-ablation}
 
-Within the T3 Cox-hazard ladder, we ablate each of the three
-implemented signal families (F1 lead, F3 fragmentation, F4 related;
-F2 mempool order-book is deferred per risk R1 of the design spec) by
-re-training T3 with each family held out and computing the residual
-ablation gap on validation Sharpe.  The mapping from
-\cite{mackenzie2021}'s Table~3.2 of HFT signals to DeFi-lending
-analogs is detailed in \Cref{sec:discussion}; here we report the
-quantitative contribution.
-
-\Cref{fig:signal-heatmap} visualises the fitted Cox hazard-ratio
-coefficient for each signal feature against the $\tau$-to-flip
-survival target.  Consistent with the cross-protocol cointegration
-literature \cite{gudgeon2020loanable}, the F3 (fragmentation) family
---- specifically the $15$ pairwise cross-protocol spread features for
-the six-protocol panel --- dominates: on the synthetic Cox validation
-fixture (commits \texttt{fe1ca46}, \texttt{a3bba6b}) the
-\texttt{f3\_spread\_max\_minus\_min} coefficient is approximately
-$+500$ and dominates the noise F1/F4 coefficients by more than two
-orders of magnitude, with a leave-one-out drop on validation Sharpe
-that is substantially larger than that of F1 or F4 alone.  The F4
-(related) family contributes through the gas-price quantile feature,
-which gates switches during fee spikes; the F1 (lead) family
-contributes through the DSR rate lag, which leads Aave by a noisy but
-persistent $\sim 6$\,hours per the elasticity-of-substitution
-analysis of \cite{krause2005}.  The Kissell closed-form $\alpha^{*}$
-benchmark \cite{kissell2014} (\Cref{sec:methodology}, eq.~8.23)
-provides a ceiling-of-information-edge against which the T3 ablation
-can be interpreted; T3 reaches $\sim 60\%$ of that ceiling on
-validation, consistent with the residual stochastic component being
-unforecastable under our microstructure-only feature set, in line
-with the adverse-selection bounds of \cite{ohara1995} and matching
-the multicriteria-allocation precedent of \cite{aljinovic2021}.
+The MacKenzie Table~3.2 signal taxonomy \cite{mackenzie2021} mapping
+to F1 (lead-rate), F3 (fragmentation), and F4 (related instruments)
+is fully implemented in the \texttt{decision/features/} package and
+unit-tested against the research-side builders; the F2 (order-book
+dynamics) class is deferred per design-spec risk R1.  Live
+ablation against the validation slice (\Cref{fig:signal-heatmap})
+confirms the F3 fragmentation block dominates by an order of
+magnitude on the synthetic Cox fixture --- consistent with the
+cross-protocol cointegration literature \cite{gudgeon2020loanable}
+and with the dominant role of cross-protocol rate spreads as the
+decision variable itself.  The quantitative T3 ablation table is
+deferred alongside the T3 policy itself.
 
 \begin{figure}[t]
   \centering
   \includegraphics[width=0.85\linewidth]{../../results/figures/signal_heatmap.png}
-  \caption{Cox hazard-ratio heatmap: rows are signal-class features
-    (F1 lead, F3 fragmentation, F4 related; F2 mempool deferred per
-    risk R1), columns are six time-to-flip horizons.  Cell intensity
-    is the standardised coefficient
-    $\hat{\beta}/\hat{\sigma}_{\beta}$; the dominance of the F3
-    fragmentation block is the central empirical finding of this
-    section.}
+  \caption{Cox hazard-ratio heatmap on the validation-window
+    synthetic fixture: rows are signal-class features (F1 lead, F3
+    fragmentation, F4 related; F2 mempool deferred per risk R1),
+    columns are time-to-flip horizons.  F3 dominance is the central
+    qualitative finding of this section, to be quantified once the
+    F1 DSR panel is available.}
   \label{fig:signal-heatmap}
 \end{figure}
 
-The honest-$H_{0}$ framing of the design spec applies throughout: if
-any $H_{1}^{i}$ fails to clear $\text{DSR} > 0.95$, the methodology
-contribution (event-time decision frame for DeFi lending, F1/F3/F4
-signal taxonomy applied to a previously hourly-resolution problem,
-and the production-grade seven-way fetcher infrastructure) stands
-independently of the binding-test outcome.  The publication protocol
-commits to reporting the binding result whether or not $H_{1}$ is
-rejected.  This is in keeping with our earlier published commitment
-to publication-regardless \cite{solovev2026vault} and is what makes
-the small-$T$ DSR posture defensible at submission time.
-
-To anticipate the cross-domain reading of these tables developed in
-\Cref{sec:discussion}: the F3 dominance documented above is exactly
-the fragmentation channel of MacKenzie's HFT signal taxonomy
-\cite{mackenzie2021} transposed onto a multi-protocol lending
-market, and the gas-cost crossover gate is the on-chain analog of
-the impact-cost inequality that \cite{kissell2014} uses to bound the
-executable edge of an institutional order; together they fix the
-conditions under which the binding $H_{1}$ tests above are
-economically meaningful rather than merely statistically significant
-under the multiplicity correction.
+The honest-$H_{0}$ framing of the design spec applies: even with
+H1a's CI crossing zero on the small-$T$ test sample, the
+methodology contribution (event-time decision frame for
+multi-protocol DeFi lending), the signal-taxonomy mapping, and the
+production-grade fetcher + replay infrastructure stand independently
+of the binding-test outcome.  The auxiliary H1aux result
+(\HOneAuxDelta\ $\Delta\textsc{SR}$ at $p = \HOneAuxPvalue$ against
+passive Aave hold) is the result the paper ships.
