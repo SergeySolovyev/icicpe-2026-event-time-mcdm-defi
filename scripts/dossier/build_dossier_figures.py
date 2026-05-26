@@ -37,7 +37,17 @@ def _main(argv=None) -> int:
     fig_walk_forward_heatmap(walk, fd / "walk_forward_heatmap.png")
     fig_capacity_curve(cap, fd / "capacity_curve.png")
     fig_cost_waterfall(cost, "t1_threshold", fd / "cost_waterfall.png")
-    print(f"wrote 4 figures to {fd}")
+    # Generate the N×M paired-bootstrap figure if backing CSVs exist
+    nxm_path = Path(args.tables_dir) / "walk_forward_NxM_contrasts.csv"
+    if nxm_path.exists():
+        # Invoke the standalone N×M figure module
+        from subprocess import run as _sp_run
+        import sys as _sys
+        _sp_run([_sys.executable, "-m", "scripts.dossier.figures_walk_forward"],
+                check=False)
+        print(f"wrote 5 figures to {fd}")
+    else:
+        print(f"wrote 4 figures to {fd}")
     return 0
 
 

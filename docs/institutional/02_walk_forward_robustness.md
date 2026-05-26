@@ -175,4 +175,6 @@ same recommendation: report multiple metrics, lead with the
 metric most aligned with the investor's actual utility function.
 For DeFi USDC supply allocators, that is **net APY after gas**.
 
-![Walk-forward heatmap (Sharpe)](../../results/institutional/figures/walk_forward_heatmap.png)
+![Walk-forward N×M: per-window APY + paired-bootstrap deltas](../../results/institutional/figures/walk_forward_nxm.png)
+
+![Walk-forward Sharpe heatmap (secondary lens)](../../results/institutional/figures/walk_forward_heatmap.png)
