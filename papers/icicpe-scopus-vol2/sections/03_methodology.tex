@@ -5,7 +5,7 @@ We specify the allocator as a pure function
 $\textrm{decide}: \textsc{BlockState} \to \textsc{Action}$ evaluated
 on every Ethereum block.  Three nested policy tiers (T1, T2, T3)
 share the same interface, each progressively richer in the
-microstructure information it consumes.  \Cref{fig:arch-ladder}
+microstructure information it consumes.  \Cref{fig:t1t2t3-ladder}
 sketches the ladder and the shared per-block panel
 $\to$ \textsc{BlockState} $\to$ \textsc{Action} pipeline that is
 common to backtest replay and live agent.

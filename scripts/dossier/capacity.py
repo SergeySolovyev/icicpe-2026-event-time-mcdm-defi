@@ -21,7 +21,7 @@ def capacity_sweep(
     *,
     position_sizes_usd: list[float] = (1e5, 1e6, 5e6, 2.5e7, 5e7),
     policies: tuple[str, ...] = (
-        "b1_always_aave", "b4_mcdm_ema", "t1_threshold", "t2_optimal_stopping",
+        "b1_always_aave", "t1_threshold", "t2_optimal_stopping",
     ),
     equity_dir: Path = Path("results/tables/equity"),
 ) -> pd.DataFrame:

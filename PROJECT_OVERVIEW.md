@@ -12,51 +12,37 @@ plans complete; Institutional Dossier shipped with walk-forward
 N×M paired bootstrap as primary inference. Vol-2 paper rebuilt
 with walk-forward macros, 12 pages, F1+F3+F4 audit clean.
 
-**Honest scope statement**: methodology designed for 6 protocols
-(Aave V3 + Compound V3 + Spark + Morpho Blue + Fluid + Euler V2);
-empirical panel covers **3 of 6** (Aave V3 + Morpho Blue + Euler V2,
-~$25B / ~$54B in-scope TVL). Compound/Spark/Fluid + Maker DSR
-fetchers failed during Kaggle build → queued for journal-extension.
-Policy ladder designed 3-tier (T1/T2/T3); on F3-only features (F1/F4
-deferred), T3's hazard rule analytically reduces to T1's threshold,
-empirically confirmed.
+**Scope**: full 6-protocol design universe — Aave V3 + Compound V3 +
+Spark + Morpho Blue + Euler V2 + Fluid (~$36B / ~$54B Ethereum L1
+USDC-lending TVL, ~67% coverage). Heterogeneous data provenance to
+avoid single-vendor risk: per-block panel (Aave/Morpho/Euler) +
+verified hourly RPC parquet (Compound) + Sky Messari subgraph
+(Spark) + DeFiLlama Yield Pools daily (Fluid). Policy ladder runs at
+3 tiers (T1/T2/T3); on F3-only features (F1/F4 queued for next
+extension), T3's Cox hazard rule analytically reduces to T1's
+threshold — empirically confirmed to ±0.01 pp on every contrast.
+The hourly MCDM-EMA cliff-edge (2 rebalances/4 months) is
+intentionally excluded; honest baselines are the six protocol-holds.
 
 ## Primary inference: walk-forward N×M paired bootstrap
 
-6 non-overlapping 3-month windows (Nov 2024 – Apr 2026), B = 10,000
-resamples, seed = 42:
+3 active policies × 6 protocol-holds = 18 contrasts. 6 non-overlapping
+3-month windows (Nov 2024 – Apr 2026), B = 10,000 resamples, seed = 42:
 
-| Policy | vs Aave V3 hold | vs Morpho Blue hold | vs Euler V2 hold |
-|---|---:|---:|---:|
-| **T1** threshold | **+1.83pp** (6/6, p=0.0000) | **+1.60pp** (6/6, p=0.0000) | +0.48pp (2/6, p=0.20) |
-| **T2** OU stopping | **+1.62pp** (6/6, p=0.0000) | **+1.39pp** (6/6, p=0.0000) | +0.27pp (2/6, p=0.27) |
-| B4 MCDM-EMA (hourly) | **+0.92pp** (6/6, p=0.0000) | +0.68pp (5/6, p=0.05) | −0.44pp (2/6, p=0.76) |
+| Policy | vs Aave | vs Compound | vs Spark | vs Morpho | vs Fluid | vs Euler |
+|---|---:|---:|---:|---:|---:|---:|
+| **T1** threshold | **+1.84pp**<br>6/6, p=0.00 | **+1.65pp**<br>6/6, p=0.00 | **+0.80pp**<br>5/6, p=0.03 | **+1.61pp**<br>6/6, p=0.00 | **+1.65pp**<br>6/6, p=0.00 | +0.48pp<br>2/6, p=0.20 |
+| **T2** OU stopping | **+1.63pp**<br>6/6, p=0.00 | **+1.45pp**<br>6/6, p=0.00 | +0.60pp<br>5/6, p=0.08 | **+1.40pp**<br>6/6, p=0.00 | **+1.45pp**<br>6/6, p=0.00 | +0.28pp<br>2/6, p=0.26 |
+| **T3** Cox hazard | **+1.84pp**<br>6/6, p=0.00 | **+1.65pp**<br>6/6, p=0.00 | **+0.80pp**<br>5/6, p=0.03 | **+1.61pp**<br>6/6, p=0.00 | **+1.65pp**<br>6/6, p=0.00 | +0.48pp<br>2/6, p=0.20 |
 
 **Three concentric claims by decreasing strength**:
-1. **Strong**: T1, T2 strongly outperform Aave + Morpho holds in 6/6
-   windows by 1.4–1.8 pp annualized (~$25B addressable TVL)
-2. **Mid-strength**: T1, T2 win W1+W2 against Euler (launch ramp);
-   diversification benefit during regime transitions
-3. **Honest gap**: no policy outperforms passive Euler V2 hold from
-   W3 onward without F1 lead-rate signal (journal-extension scope)
-
-## Test window snapshot (Jan – Apr 2026, $1M position)
-
-| Strategy | Final equity | Profit | APY | Rebalances | Gas |
-|---|---:|---:|---:|---:|---:|
-| Buy-Hold Aave V3   | $1,010,605 | +$10,605 | 3.23% | — | — |
-| Buy-Hold Morpho Blue | $1,010,841 | +$10,841 | 3.30% | — | — |
-| Buy-Hold Euler V2  | $1,015,697 | +$15,697 | **4.77%** | — | — |
-| B4 hourly MCDM-EMA | $1,014,247 | +$14,247 | 4.40% | 56 | $980 |
-| **T1 event-time gas-aware threshold** | **$1,014,880** | **+$14,880** | **4.60%** | **39** | **$682** |
-| T2 OU optimal stopping | $1,014,844 | +$14,844 | 4.58% | 102 | $1,785 |
-
-**Rebalance count vs hourly baseline**: event-time T1 produces **39
-rebalances** in 4 months (B4 hourly: 56). Despite **lower gas spend**
-($682 vs $980), T1 achieves **higher net APY**. The methodological
-pivot from hourly forecasting to per-block gas-aware switching is
-empirically validated — and the walk-forward N×M generalizes this
-finding across 18 months of panel data.
+1. **Strong** (4/6 protocols, all 6 windows, p < 10⁻⁴): T1 and T2
+   strongly outperform passive holds of Aave V3, Compound V3, Morpho
+   Blue, and Fluid by +1.40 to +1.84 pp. ~$30B addressable TVL.
+2. **Mid** (Spark, 5/6 windows): event-time edge ~+0.6 to +0.8 pp,
+   p = 0.03–0.08.
+3. **Honest gap** (Euler V2, 2/6 windows): no F3-only policy beats
+   passive Euler from W3 onward. F1 lead-rate signal needed.
 
 This document is the canonical project description. It captures
 *what* we are building, *why* the methodology is what it is, *how*

@@ -80,9 +80,12 @@ def main() -> int:
         pp = pd.read_csv(pp_path)
         # Mapping contrast label -> latex command suffix
         suffix_map = {
-            "T1 vs Aave hold": "Aave",
-            "T1 vs Morpho hold": "Morpho",
-            "T1 vs Euler hold": "Euler",
+            "T1 vs Aave hold":     "Aave",
+            "T1 vs Compound hold": "Compound",
+            "T1 vs Spark hold":    "Spark",
+            "T1 vs Morpho hold":   "Morpho",
+            "T1 vs Euler hold":    "Euler",
+            "T1 vs Fluid hold":    "Fluid",
         }
         for _, row in pp.iterrows():
             suf = suffix_map.get(row.contrast)

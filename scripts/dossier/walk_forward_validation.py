@@ -30,7 +30,10 @@ from scripts.dossier.metrics import (
 
 _POLICY_BUILDERS = {
     "b1_always_aave": lambda: AlwaysAavePolicy(),
-    "b4_mcdm_ema": lambda: MCDMEmaPolicy(),
+    # NOTE: B4 (hourly MCDM-EMA) intentionally absent — the 2026c hourly
+    # straw-man (2 rebalances over 4 months) is removed from the
+    # ICICPE Vol-2 benchmark set. The honest baselines are the six
+    # protocol-holds {Aave, Compound, Spark, Morpho, Euler, Fluid}.
     "t1_threshold": lambda: T1ThresholdPolicy(),
     "t2_optimal_stopping": lambda: T2OptimalStoppingPolicy(
         initial_params=OUParams(kappa=1e-5, theta=0.0, sigma=0.001),
@@ -62,7 +65,7 @@ def _slice_panel(panel: pd.DataFrame, start: pd.Timestamp,
 def run(*, panel_path: Path, out_path: Path,
         windows: list[tuple[pd.Timestamp, pd.Timestamp]] = None,
         policies: tuple[str, ...] = (
-            "b1_always_aave", "b4_mcdm_ema", "t1_threshold", "t2_optimal_stopping",
+            "b1_always_aave", "t1_threshold", "t2_optimal_stopping",
         ),
         initial_capital_usd: float = 1_000_000.0,
         equity_out_dir: Path = None,

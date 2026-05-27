@@ -61,22 +61,26 @@ def main() -> int:
             "t1_threshold": "T1",
             "t2_optimal_stopping": "T2",
             "t3_hazard": "T3",
-            "b4_mcdm_ema": "B4",
         }) + " vs " + nxm_clean["protocol_hold"].map({
             "aave": "Aave",
+            "compound": "Compound",
+            "spark": "Spark",
             "morpho": "Morpho",
             "euler": "Euler",
+            "fluid": "Fluid",
         }) + " hold"
     )
     # Sort by policy then by protocol
-    policy_order = {"T1": 0, "T2": 1, "T3": 2, "B4": 3}
-    proto_order = {"Aave": 0, "Morpho": 1, "Euler": 2}
+    policy_order = {"T1": 0, "T2": 1, "T3": 2}
+    proto_order = {"Aave": 0, "Compound": 1, "Spark": 2,
+                   "Morpho": 3, "Euler": 4, "Fluid": 5}
     nxm_clean["_p"] = nxm_clean["policy"].map({
         "t1_threshold": 0, "t2_optimal_stopping": 1,
-        "t3_hazard": 2, "b4_mcdm_ema": 3,
+        "t3_hazard": 2,
     })
     nxm_clean["_h"] = nxm_clean["protocol_hold"].map({
-        "aave": 0, "morpho": 1, "euler": 2,
+        "aave": 0, "compound": 1, "spark": 2,
+        "morpho": 3, "euler": 4, "fluid": 5,
     })
     nxm_clean = nxm_clean.sort_values(["_p", "_h"]).reset_index(drop=True)
     y = np.arange(len(nxm_clean))

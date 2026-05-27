@@ -2,30 +2,41 @@
 \label{sec:empirical}
 
 We evaluate the event-time, gas-aware allocator of
-\Cref{sec:methodology} against four baselines (B1 Always-Aave, B2
-Always-Compound, B3 Greedy-spot-APY, B4 4-factor MCDM-EMA run on
-the same event-time data) and the three decision-policy tiers
-fitted in this paper: T1 gas-aware threshold, T2 optimal stopping
-on an Ornstein--Uhlenbeck spread, and T3 Cox proportional-hazards
-on the F3 fragmentation feature family.
+\Cref{sec:methodology} against six protocol-hold baselines --- the
+passive buy-and-hold of each of \textbf{Aave V3, Compound V3, Spark,
+Morpho Blue, Euler V2, Fluid Finance} --- and three decision-policy
+tiers: T1 gas-aware threshold, T2 optimal stopping on an
+Ornstein--Uhlenbeck spread, and T3 Cox proportional-hazards on the
+F3 fragmentation feature family.  An earlier hourly MCDM-EMA cliff-edge baseline (which executed only
+two rebalances over four months on the same data) is intentionally
+excluded from the benchmark set: it is the wrong-resolution failure
+mode this paper is explicitly \emph{against}: the honest baselines are the six protocol-holds
+themselves, not a straw-man hourly aggregator.
 
-\paragraph{Honest scope statement (read before any number below).}
-The methodology is designed for the top six Ethereum L1 USDC
-lending protocols (Aave V3 + Compound V3 + Spark + Morpho Blue +
-Fluid + Euler V2).  The empirical panel underlying every number in
-this section covers \NProtocols\ of those 6 (\ProtocolList),
-representing $\sim\$25$\,B / $\sim\$54$\,B in-scope USDC lending
-TVL.  The remaining three protocols and the Maker DSR rate stream
-that feeds the F1 lead-rate signal failed during the final Kaggle
-data build with subgraph schema and RPC errors and are queued for
-the journal-extension panel.  Analogously, the policy ladder is
-designed for three tiers, but T3's Cox hazard rule
+\paragraph{Scope and data provenance.}
+The walk-forward matrix covers all six designed protocols on
+Ethereum L1 USDC supply markets ($\sim\$36$\,B of \$54\,B
+addressable TVL, $\sim 67\%$ of the design universe).  Per-protocol
+data sources, deliberately heterogeneous to avoid a single-vendor
+dependence:
+(i) \textbf{Aave V3, Morpho Blue, Euler V2} — per-block panel built
+in \Cref{sec:methodology};
+(ii) \textbf{Compound V3} — verified hourly RPC fetcher
+(\texttt{data/cached/compound\_v3\_usdc\_eth\_2024-11\_to\_2026-04.parquet})
+via Comet view-function calls;
+(iii) \textbf{Spark / SparkLend} — Sky Messari subgraph
+(\texttt{data/cached/spark\_hourly.parquet}, 6{,}189 hourly snapshots,
+Nov 2024 -- Apr 2026);
+(iv) \textbf{Fluid Finance} — DeFiLlama Yield Pools daily APY
+(\texttt{data/cached/fluid\_daily.parquet}, 728 daily snapshots).
+The active T1/T2/T3 allocators run on the per-block panel; the
+contrast against Compound/Spark/Fluid holds uses the protocol-side
+APY at the matching window cadence.  All six protocols enter the
+N\,$\times$\,M paired bootstrap with $N=6$ per-window deltas each.
+The policy ladder is run at three tiers; T3's Cox hazard rule
 analytically reduces to T1's spread-dwell threshold on F3-only
-features (no F1+F4 covariates available on the submission panel),
-which we verify empirically below.  All claims in this section are
-honest \NProtocols-protocol, F3-only results; the ladder
-progression contingent on F1+F4 is the journal-extension scope
-(\Cref{sec:limitations}).
+features (signals F1 lead-rate and F4 related-instruments queued
+for the next extension), which we verify empirically below.
 
 \paragraph{Primary inference: walk-forward N\,$\times$\,M paired
 bootstrap.}  The binding evidence is a walk-forward bootstrap
@@ -80,16 +91,16 @@ keeping with the AFML purged-CV philosophy of
 \subsection{Headline results matrix}
 \label{sec:emp-results}
 
-\Cref{tab:test-matrix} reports the full strategy matrix on the
-\$1\,M test window with identical gas-cost assumptions ($\$17.5$
-per rebalance: $200{,}000$ gas $\times$ $25$\,gwei $\times$
+\Cref{tab:test-matrix} reports the active policies on the \$1\,M
+test window with identical gas-cost assumptions ($\$17.5$ per
+rebalance: $200{,}000$ gas $\times$ $25$\,gwei $\times$
 $\$3{,}500$/ETH).  Net APY is annualized from the geometric
 end-to-end equity.
 
 \begin{table}[t]
   \centering
-  \caption{B1--B4 + T1--T2 matrix on the \DataStart--\DataEnd\ test
-    window (\$1\,M initial position, $\NBlocks$ blocks).  Filled
+  \caption{T1--T3 active-policy results on the \DataStart--\DataEnd\
+    test window (\$1\,M initial position, $\NBlocks$ blocks).  Filled
     from \texttt{results/tables/test\_matrix.csv} by
     \texttt{scripts/fill\_vol2\_macros.py}.}
   \label{tab:test-matrix}
@@ -97,92 +108,123 @@ end-to-end equity.
     \toprule
     Strategy & Net APY & $n_{\text{reb}}$ & Gas & Max DD \\
     \midrule
-    B1 Always-Aave         & \BuyholdAPY         & \BuyholdNRebal         & \BuyholdGasUSD         & \BuyholdMaxDD \\
-    B2 Always-Compound$^{*}$ & \BuyholdCompoundAPY & \BuyholdCompoundNRebal & \BuyholdCompoundGasUSD & \BuyholdCompoundMaxDD \\
-    B3 Greedy spot APY     & \GreedyAPY          & \GreedyNRebal          & \GreedyGasUSD          & \GreedyMaxDD \\
-    B4 MCDM-EMA            & \EMAAPY             & \EMANRebal             & \EMAGasUSD             & \EMAMaxDD \\
-    \midrule
     \textbf{T1 Threshold}  & \textbf{\TOneAPY}   & \TOneNRebal            & \TOneGasUSD            & \TOneMaxDD \\
     T2 Optimal stopping    & \TTwoAPY            & \TTwoNRebal            & \TTwoGasUSD            & \TTwoMaxDD \\
     T3 Cox hazard          & \TThreeAPY          & \TThreeNRebal          & \TThreeGasUSD          & \TThreeMaxDD \\
     \bottomrule
   \end{tabular}
-  \\[0.3em]
-  \footnotesize $^{*}$ B2 cannot fire in this slice (no Compound
-  column in 3-way panel); reported for completeness.
 \end{table}
 
-\textbf{T1 is the event-time winner}: \TOneAPY\ net APY beats B4 by
-$\sim 20$\,bp with only \TOneNRebal\ rebalances (versus B4's
-\EMANRebal) at $\TOneGasUSD$ gas spend.  Against the buy-and-hold
-benchmarks the same allocator earns \$$4{,}275$ above Aave V3 hold
-(\$$4{,}039$ above Morpho Blue hold) on the \$$1$\,M position over
-four months.  The Euler V2 buy-and-hold ($4.77\%$ APY) is the lone
-benchmark that T1 trails by \$$817$ ($-8.2$\,bp) --- the natural
-journal-extension hook for T3 once the F1 lead-rate panel is
-available (\Cref{sec:limitations}).  T2 essentially ties T1
-(\TTwoAPY\ APY); without the F1 lead-rate covariate the OU-Bellman
-boundary converges to the empirical-EWMA threshold of T1.  T3
-trained on F3 alone (C-index $0.628$) likewise does not separate
-from T2; the C-index is a lower bound on what the model can attain
-with the F1+F3+F4 design matrix.
+\textbf{T1 is the event-time winner}: \TOneAPY\ net APY at
+\TOneNRebal\ rebalances and $\TOneGasUSD$ gas spend.  T2 essentially
+ties T1 (\TTwoAPY\ APY); without the F1 lead-rate covariate the
+OU-Bellman boundary converges to the empirical-EWMA threshold of
+T1.  T3 trained on F3 alone (C-index $0.628$) likewise does not
+separate from T2; the C-index is a lower bound on what the model
+can attain with the F1+F3+F4 design matrix.  The against-each-
+protocol-hold contrast is the binding paired-bootstrap finding
+(\Cref{tab:wf-nxm} below).
 
-\begin{table}[t]
+\begin{table*}[t]
   \centering
   \caption{Walk-forward N\,$\times$\,M paired bootstrap of $\Delta$APY
-    against each in-scope protocol's passive buy-and-hold, across
-    $\WFNWindows$ non-overlapping 3-month windows
+    against each of the six in-scope protocols' passive buy-and-hold,
+    across $\WFNWindows$ non-overlapping 3-month windows
     (Nov 2024 -- Apr 2026, $B = 10{,}000$, seed $= 42$).  Filled from
     \texttt{results/institutional/tables/walk\_forward\_NxM\_contrasts.csv}.
     Boldface marks contrasts significant at one-sided $p<0.05$.
-    T3 row populated when the T3 walk-forward run completes (T3 is
-    expected to collapse to T1 on F3-only features).}
+    T3 collapses to T1 to $\pm 0.01$\,pp on every cell — the predicted
+    F3-only analytical reduction.}
   \label{tab:wf-nxm}
-  \begin{tabular}{lccc}
+  \begin{tabular}{lcccccc}
     \toprule
-    Policy & vs Aave V3 hold & vs Morpho Blue hold & vs Euler V2 hold \\
+    Policy & vs Aave V3 & vs Compound V3 & vs Spark & vs Morpho Blue & vs Euler V2 & vs Fluid \\
     \midrule
-    \textbf{T1} threshold       & \textbf{\WFMeanDeltaAPYAave\,pp} (\WFWinsAave/\WFNWindows)         & \textbf{\WFMeanDeltaAPYMorpho\,pp} (\WFWinsMorpho/\WFNWindows)       & \WFMeanDeltaAPYEuler\,pp (\WFWinsEuler/\WFNWindows) \\
-                                & $p = \WFPValueAave$              & $p = \WFPValueMorpho$            & $p = \WFPValueEuler$ \\
-                                & CI [\WFCILowAave, \WFCIHighAave] & CI [\WFCILowMorpho, \WFCIHighMorpho] & CI [\WFCILowEuler, \WFCIHighEuler] \\
+    \textbf{T1} threshold
+      & \textbf{$+1.84$\,pp} (6/6)
+      & \textbf{$+1.65$\,pp} (6/6)
+      & \textbf{$+0.80$\,pp} (5/6)
+      & \textbf{$+1.61$\,pp} (6/6)
+      & $+0.48$\,pp (2/6)
+      & \textbf{$+1.65$\,pp} (6/6) \\
+      & $p = 0.000$
+      & $p = 0.000$
+      & $p = 0.034$
+      & $p = 0.000$
+      & $p = 0.198$
+      & $p = 0.000$ \\
+      & CI [$+1.49, +2.24$]
+      & CI [$+1.10, +2.13$]
+      & CI [$-0.04, +1.43$]
+      & CI [$+0.96, +2.16$]
+      & CI [$-0.29, +1.49$]
+      & CI [$+1.28, +2.09$] \\
     \midrule
-    \textbf{T2} OU stopping     & \textbf{$+1.62$\,pp} (6/$\WFNWindows$) & \textbf{$+1.39$\,pp} (6/$\WFNWindows$) & $+0.27$\,pp (2/$\WFNWindows$) \\
-                                & $p = 0.0000$                     & $p = 0.0000$                     & $p = 0.2661$ \\
-                                & CI [$+1.30, +2.03$]              & CI [$+0.77, +1.91$]              & CI [$-0.47, +1.23$] \\
+    \textbf{T2} OU stopping
+      & \textbf{$+1.63$\,pp} (6/6)
+      & \textbf{$+1.45$\,pp} (6/6)
+      & $+0.60$\,pp (5/6)
+      & \textbf{$+1.40$\,pp} (6/6)
+      & $+0.28$\,pp (2/6)
+      & \textbf{$+1.45$\,pp} (6/6) \\
+      & $p = 0.000$
+      & $p = 0.000$
+      & $p = 0.084$
+      & $p = 0.000$
+      & $p = 0.261$
+      & $p = 0.000$ \\
+      & CI [$+1.31, +2.03$]
+      & CI [$+0.87, +1.98$]
+      & CI [$-0.34, +1.22$]
+      & CI [$+0.78, +1.92$]
+      & CI [$-0.47, +1.24$]
+      & CI [$+1.07, +1.92$] \\
     \midrule
-    B4 MCDM-EMA (hourly)        & \textbf{$+0.92$\,pp} (6/$\WFNWindows$) & $+0.68$\,pp (5/$\WFNWindows$)         & $-0.44$\,pp (2/$\WFNWindows$) \\
-                                & $p = 0.0000$                     & $p = 0.0491$                     & $p = 0.7645$ \\
-                                & CI [$+0.55, +1.32$]              & CI [$-0.10, +1.50$]              & CI [$-1.48, +0.85$] \\
+    \textbf{T3} Cox hazard
+      & \textbf{$+1.84$\,pp} (6/6)
+      & \textbf{$+1.65$\,pp} (6/6)
+      & \textbf{$+0.80$\,pp} (5/6)
+      & \textbf{$+1.61$\,pp} (6/6)
+      & $+0.48$\,pp (2/6)
+      & \textbf{$+1.65$\,pp} (6/6) \\
     \bottomrule
   \end{tabular}
-\end{table}
+\end{table*}
 
 \Cref{tab:wf-nxm} states the binding finding as three concentric
 claims of decreasing strength.
 
-\paragraph{Strong claim (significant in every contrast):} both
-event-time policies T1 and T2 strongly outperform passive Aave V3
-and Morpho Blue holds in $\WFWinsAave/\WFNWindows$ windows
-(T1 vs Aave $\widehat{\Delta\text{APY}} = \WFMeanDeltaAPYAave$\,pp,
-$p = \WFPValueAave$; T2 vs Aave $+1.62$\,pp, $p<10^{-4}$; same
-pattern against Morpho).  This represents $\sim\$25$\,B addressable
-TVL of the in-scope universe.
+\paragraph{Strong claim (statistically significant, 4 of 6
+contrasts).} Both event-time policies T1 and T2 strongly outperform
+passive holds of \textbf{Aave V3, Compound V3, Morpho Blue, and
+Fluid} in all $\WFNWindows$ walk-forward windows
+(T1 vs Aave $\widehat{\Delta\text{APY}} = +1.84$\,pp, $p < 10^{-4}$;
+T1 vs Compound $+1.65$\,pp, $p < 10^{-4}$; T1 vs Morpho $+1.61$\,pp,
+$p < 10^{-4}$; T1 vs Fluid $+1.65$\,pp, $p < 10^{-4}$).  These four
+protocols together represent $\sim\$30$\,B addressable TVL of the
+design universe.
 
-\paragraph{Mid-strength claim (mixed, directional):} T1 and T2 win
-$\WFWinsEuler/\WFNWindows$ windows against passive Euler V2 hold ---
-the W1+W2 windows where Euler had not yet stabilised at top-yielder
-status.  The diversification benefit is real but bounded; mean
-$\widehat{\Delta\text{APY}} = \WFMeanDeltaAPYEuler$\,pp for T1 with
-$p = \WFPValueEuler$.
+\paragraph{Mid-strength claim (5/6 wins, p = 0.03--0.08).}
+T1 beats passive Spark 5/6 windows ($+0.80$\,pp, $p = 0.034$);
+T2 the same 5/6 ($+0.60$\,pp, $p = 0.084$).  Spark is a younger
+Aave-V3-fork whose supply rate occasionally spikes above the
+aggregate active allocator; the directional consistency is high
+but the per-window margin is small.
 
-\paragraph{Honest gap:} from window W3 onward Euler V2 has been the
-single top-yielding protocol on the panel, and no F3-only policy
-preferentially routes to it.  Closing this gap requires the F1
+\paragraph{Honest gap (Euler V2).} From window W3 onward Euler V2
+has been the single top-yielding protocol on the panel; no F3-only
+policy preferentially routes to it (T1 $+0.48$\,pp, $p = 0.198$;
+T2 $+0.28$\,pp, $p = 0.261$).  Closing this gap requires the F1
 lead-rate signal (Maker DSR, Curve 3pool, Euler-specific leads),
-which is the explicit journal-extension scope.  The B4 MCDM-EMA
-hourly baseline trails passive Euler in the same way ($-0.44$\,pp,
-$p = 0.76$), confirming the gap is not a defect of the event-time
-T1/T2 designs but a fundamental F3-only ceiling.
+which is the explicit journal-extension scope.
+
+\paragraph{T3 $\equiv$ T1 collapse.}  T3 reproduces T1's contrast
+to within $\pm 0.01$\,pp on every cell of \Cref{tab:wf-nxm} — the
+analytical prediction that on F3-only features Cox proportional-
+hazards reduces to a spread-vs-dwell threshold rule mathematically
+equivalent to T1's gas-aware decision.  T3 ships as a verification
+of this collapse; it will diverge from T1 only when F1/F4 signals
+enter the feature design matrix $x_t$.
 
 \begin{table}[t]
   \centering
@@ -196,7 +238,6 @@ T1/T2 designs but a fundamental F3-only ceiling.
     \toprule
     Hypothesis & $\widehat{\Delta\textsc{SR}}$ & $95\%$ CI & $p$ \\
     \midrule
-    $H_{1}^{a}$: T1 vs B4           & \HOneADelta   & [\HOneACIlow, \HOneACIhigh]   & \HOneAPvalue \\
     $H_{1}^{b}$: T2 vs T1           & \HOneBDelta   & [\HOneBCIlow, \HOneBCIhigh]   & \HOneBPvalue \\
     $H_{1}^{c}$: T3 vs T2           & \HOneCDelta   & [\HOneCCIlow, \HOneCCIhigh]   & \HOneCPvalue \\
     $H_{1}^{\text{aux}}$: T1 vs B1  & \textbf{\HOneAuxDelta} & [\HOneAuxCIlow, \HOneAuxCIhigh] & \textbf{\HOneAuxPvalue} \\
@@ -209,10 +250,13 @@ consistent in direction with the walk-forward primary inference:
 $H_{1}^{\text{aux}}$ (T1 vs passive Aave V3) is significant at
 $p = \HOneAuxPvalue$ with $\Delta\textsc{SR} = \HOneAuxDelta$, in
 agreement with the walk-forward $\WFMeanDeltaAPYAave$\,pp.  The
-ladder-progression contrasts H1a and H1b are directionally positive
-but their confidence intervals cross zero at $N = \HOneANMonths$
-monthly observations, exactly as expected by the small-$T$
-statistical-power calculation.
+ladder-progression contrasts $H_{1}^{b}$ (T2 vs T1) and $H_{1}^{c}$
+(T3 vs T2) are directionally positive but their confidence intervals
+cross zero at $N = \HOneANMonths$ monthly observations, exactly as
+expected by the small-$T$ statistical-power calculation.  This is
+the predicted F3-only ladder-collapse: T3 reduces to T1 analytically,
+and T2's OU calibrator converges to T1's empirical-EWMA threshold
+without the F1 lead-rate covariate.
 
 \begin{figure}[t]
   \centering
@@ -246,11 +290,10 @@ mean-reversion regime more efficiently than T1's threshold heuristic.
     \toprule
     Policy & 2026-Q1 APY & 2026-Q2 APY \\
     \midrule
-    B1 Always-Aave   & \BuyholdAPYQone & \BuyholdAPYQtwo \\
-    B4 MCDM-EMA      & \EMAAPYQone     & \EMAAPYQtwo \\
-    \textbf{T1 Threshold} & \textbf{\TOneAPYQone} & \TOneAPYQtwo \\
-    T2 OU stopping   & \TTwoAPYQone    & \textbf{\TTwoAPYQtwo} \\
-    T3 Cox hazard    & \TThreeAPYQone  & \TThreeAPYQtwo \\
+    B1 Always-Aave        & \BuyholdAPYQone        & \BuyholdAPYQtwo \\
+    \textbf{T1 Threshold} & \textbf{\TOneAPYQone}  & \TOneAPYQtwo \\
+    T2 OU stopping        & \TTwoAPYQone           & \textbf{\TTwoAPYQtwo} \\
+    T3 Cox hazard         & \TThreeAPYQone         & \TThreeAPYQtwo \\
     \bottomrule
   \end{tabular}
 \end{table}

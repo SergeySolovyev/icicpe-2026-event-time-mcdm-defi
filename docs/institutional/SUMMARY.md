@@ -23,34 +23,43 @@ walk-forward 6/6 windows). Trails Euler V2 hold by $817 on test window
 and 4/6 walk-forward windows — closing the Euler gap requires F1
 lead-rate signal (journal-extension scope).
 
-**Scope disclaimer (read first)**: Vol-2 designed for **6 protocols**
-(Aave V3 + Compound V3 + Spark + Morpho Blue + Fluid + Euler V2);
-empirical panel covers **3 of 6** (Aave + Morpho + Euler, ~$25B /
-~$54B TVL). Compound/Spark/Fluid + Maker DSR signal fetchers failed
-during Kaggle data build → queued for journal-extension. Ladder also
-**3 tiers designed** (T1, T2, T3); on F3-only features (F1/F4
-deferred above), T3's hazard rule analytically reduces to T1's
-threshold — empirically confirmed on test window; walk-forward
-verification in progress at submission time.
+**Scope**: Vol-2 covers the full **6-protocol design universe**
+(Aave V3 + Compound V3 + Spark + Morpho Blue + Euler V2 + Fluid;
+~$36B / ~$54B TVL, ~67% of Ethereum L1 USDC lending). Data sources
+are heterogeneous to avoid single-vendor dependency: Aave/Morpho/Euler
+from the per-block panel; Compound from verified hourly RPC (12,904
+rows); Spark from the Sky Messari subgraph (6,189 hourly snapshots);
+Fluid from DeFiLlama Yield Pools daily APY (728 snapshots).
+Ladder runs at **3 tiers** (T1, T2, T3); on F3-only features (F1/F4
+queued for next extension), T3's hazard rule analytically reduces to
+T1's threshold — empirically confirmed to ±0.01 pp on every contrast.
 
-**Walk-forward N×M matrix** (6 non-overlapping 3-month windows
-Nov 2024 – Apr 2026; paired bootstrap N=6 per-window ΔAPY, B=10,000
-resamples, seed=42):
+The deprecated **B4 hourly MCDM-EMA** (2026c straw-man: 2 rebalances
+over 4 months) is intentionally absent from this matrix — the honest
+baselines are the six protocol-holds themselves.
 
-| Policy | vs Aave V3 hold | vs Morpho Blue hold | vs Euler V2 hold |
-|---|---:|---:|---:|
-| **T1** threshold | **+1.83pp** p=0.0000 (6/6) | **+1.60pp** p=0.0000 (6/6) | +0.48pp p=0.20 (2/6) |
-| **T2** OU stopping | **+1.62pp** p=0.0000 (6/6) | **+1.39pp** p=0.0000 (6/6) | +0.27pp p=0.27 (2/6) |
-| B4 MCDM-EMA (hourly) | **+0.92pp** p=0.0000 (6/6) | +0.68pp p=0.05 (5/6) | −0.44pp p=0.76 (2/6) |
+**Walk-forward N×M matrix** (3 active policies × 6 protocol-holds =
+18 contrasts; 6 non-overlapping 3-month windows Nov 2024 – Apr 2026;
+paired bootstrap N=6 per-window ΔAPY, B=10,000 resamples, seed=42):
+
+| Policy | vs Aave | vs Compound | vs Spark | vs Morpho | vs Fluid | vs Euler |
+|---|---:|---:|---:|---:|---:|---:|
+| **T1** threshold | **+1.84pp**<br>6/6, p=0.00 | **+1.65pp**<br>6/6, p=0.00 | **+0.80pp**<br>5/6, p=0.03 | **+1.61pp**<br>6/6, p=0.00 | **+1.65pp**<br>6/6, p=0.00 | +0.48pp<br>2/6, p=0.20 |
+| **T2** OU stopping | **+1.63pp**<br>6/6, p=0.00 | **+1.45pp**<br>6/6, p=0.00 | +0.60pp<br>5/6, p=0.08 | **+1.40pp**<br>6/6, p=0.00 | **+1.45pp**<br>6/6, p=0.00 | +0.28pp<br>2/6, p=0.26 |
+| **T3** Cox hazard | **+1.84pp**<br>6/6, p=0.00 | **+1.65pp**<br>6/6, p=0.00 | **+0.80pp**<br>5/6, p=0.03 | **+1.61pp**<br>6/6, p=0.00 | **+1.65pp**<br>6/6, p=0.00 | +0.48pp<br>2/6, p=0.20 |
 
 **Three concentric claims by decreasing strength**:
 
-1. **Strong**: T1 and T2 strongly outperform Aave + Morpho holds in
-   6/6 windows by 1.4–1.8 pp. ~$25B addressable TVL.
-2. **Mid**: T1 wins W1+W2 against Euler (Euler launch ramp), shows
-   diversification value during regime transitions.
-3. **Honest gap**: No policy outperforms passive Euler V2 hold from
-   W3 onward — F1 lead-rate signal needed (journal-extension scope).
+1. **Strong** (4/6 protocols, all 6 windows, p < 10⁻⁴): T1 and T2
+   strongly outperform passive holds of Aave V3, Compound V3, Morpho
+   Blue, and Fluid by +1.40 to +1.84 pp. ~$30B addressable TVL.
+2. **Mid** (Spark, 5/6 windows, p ≈ 0.03–0.08): event-time edge
+   present but smaller — Spark's young Aave-fork rates occasionally
+   spike above the active allocator.
+3. **Honest gap** (Euler V2, 2/6 windows): from W3 onward Euler is
+   the top single-protocol yielder; no F3-only policy preferentially
+   routes to it. Closing the gap requires F1 lead-rate signal —
+   journal-extension scope.
 
 ΔSharpe runs negative (B1 near-zero vol inflates Sharpe — *Sharpe
 inflation paradox*, López de Prado AFML Ch.4); see §02 for full

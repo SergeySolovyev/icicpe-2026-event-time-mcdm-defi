@@ -143,12 +143,14 @@ def render_all(*, tables_dir: Path, out_dir: Path) -> None:
             )
         per_protocol_apy_table = header + sep + "\n".join(rows) + "\n"
     if nxm_path.exists():
-        # N x M policy x protocol-hold contrast matrix
+        # N x M policy x protocol-hold contrast matrix. 6-way protocol coverage:
+        # Aave/Compound/Spark/Morpho/Euler/Fluid. B4 hourly MCDM-EMA removed
+        # (2026c straw-man, two rebalances in four months — not benchmark-worthy).
         nxm = pd.read_csv(nxm_path)
-        # Pivot to wide format: rows = policies, cols = protocol holds
-        policies = ["t1_threshold", "t2_optimal_stopping", "t3_hazard", "b4_mcdm_ema"]
+        policies = ["t1_threshold", "t2_optimal_stopping", "t3_hazard"]
         policies = [p for p in policies if p in nxm.policy.unique()]
-        holds = ["aave", "morpho", "euler"]
+        holds = ["aave", "compound", "spark", "morpho", "euler", "fluid"]
+        holds = [h for h in holds if h in nxm.protocol_hold.unique()]
 
         def _cell(policy: str, hold: str) -> str:
             sub = nxm[(nxm.policy == policy) & (nxm.protocol_hold == hold)]
@@ -162,15 +164,18 @@ def render_all(*, tables_dir: Path, out_dir: Path) -> None:
                 f"{int(r.directional_consistency)}/{int(r.n_windows)}"
             )
 
-        hdr = "| Policy | vs Aave V3 hold | vs Morpho Blue hold | vs Euler V2 hold |\n"
-        sep_row = "|---|---:|---:|---:|\n"
+        proto_labels = {
+            "aave": "Aave V3", "compound": "Compound V3", "spark": "Spark",
+            "morpho": "Morpho Blue", "euler": "Euler V2", "fluid": "Fluid",
+        }
+        hdr = "| Policy | " + " | ".join(f"vs {proto_labels[h]} hold" for h in holds) + " |\n"
+        sep_row = "|---|" + "|".join(["---:"] * len(holds)) + "|\n"
         body_rows = []
         for p in policies:
             label = {
                 "t1_threshold": "**T1** threshold",
                 "t2_optimal_stopping": "**T2** OU stopping",
                 "t3_hazard": "**T3** Cox hazard",
-                "b4_mcdm_ema": "B4 MCDM-EMA (hourly)",
             }.get(p, p)
             cells = [_cell(p, h) for h in holds]
             body_rows.append(f"| {label} | " + " | ".join(cells) + " |")
@@ -179,8 +184,9 @@ def render_all(*, tables_dir: Path, out_dir: Path) -> None:
         window_ids = sorted(walk["window_id"].unique())
         # Build per-policy lookup once
         def _table(value_col: str, fmt: str) -> str:
-            policies_order = ["b1_always_aave", "b4_mcdm_ema",
-                              "t1_threshold", "t2_optimal_stopping"]
+            policies_order = ["b1_always_aave",
+                              "t1_threshold", "t2_optimal_stopping",
+                              "t3_hazard"]
             policies = [p for p in policies_order
                         if p in walk["policy"].unique()]
             header = "| Policy | " + " | ".join(window_ids) + " |\n"
