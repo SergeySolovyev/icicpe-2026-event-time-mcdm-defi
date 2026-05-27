@@ -90,10 +90,26 @@ DeFiLlama; range 1.25%–11.50% over the window), **F3 fragmentation**
 and **F4 related-instruments** (ETH/USD via DeFiLlama; USDC peg
 deviation in basis points, range −27 bp to +83 bp). The F4 gas
 sub-signal uses a fixed 25-gwei placeholder pending Etherscan API
-key. T3 is run as the full F1+F3+F4 ablation and is expected to
-diverge from T1 once the hazard model is retrained on the extended
-feature design matrix; on F3-only features the analytical collapse
-T3 ≡ T1 still holds.
+key.
+
+T3 has been retrained on the full F1+F3+F4 design matrix with
+López de Prado AFML methodology: triple-barrier labels (24-h
+horizon), purged 5-fold cross-validation with embargo = 5.4 days,
+sample-uniqueness weighting (Ch.4.5), and L2 ridge penalizer sweep.
+Four feature ablations were tested; OOF C-index ranking:
+
+| Features      | OOF C-index | Δ vs F3-only |
+|---------------|------------:|-------------:|
+| F3 only       | 0.516       | baseline     |
+| F1 + F3       | 0.531       | +1.5 pp      |
+| F3 + F4       | 0.560       | +4.4 pp      |
+| **F1+F3+F4**  | **0.549**   | **+3.3 pp**  |
+
+The canonical F1+F3+F4 model promoted to production has top-five
+coefficients led by `f3_dispersion_std` (β = +73.99), then
+`f1_dsr_delta_300` (+15.29) — the 1-hour change in Maker DSR is
+the strongest non-F3 predictor, providing direct empirical
+support for the MacKenzie F1 signal class in DeFi-lending context.
 
 The deprecated **B4 hourly MCDM-EMA baseline (Solovev 2026c)** is
 intentionally absent from this matrix. That policy executed

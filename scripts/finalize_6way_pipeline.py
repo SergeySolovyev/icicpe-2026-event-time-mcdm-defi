@@ -34,19 +34,25 @@ def _run(label: str, cmd: list[str], *, cwd: Path | None = None) -> None:
 def main() -> int:
     py = sys.executable
 
-    _run("[1/7] rebuild N×M matrix from 6-way equity files",
+    _run("[1/9] rebuild N×M matrix from 6-way equity files",
          [py, "-m", "scripts.dossier.rebuild_nxm_6way_active"])
 
-    _run("[2/7] derive paper macros from new matrix",
+    _run("[2/9] T3 vs T1 paired-bootstrap analysis",
+         [py, "-m", "scripts.analyze_t3_vs_t1"])
+
+    _run("[3/9] inject T3 ablation paragraph into paper §V",
+         [py, "-m", "scripts.update_paper_section5_t3"])
+
+    _run("[4/9] derive paper macros from new matrix",
          [py, "-m", "scripts.dossier.derive_paper_sections"])
 
-    _run("[3/7] re-render 8 dossier chapters",
+    _run("[5/9] re-render 8 dossier chapters",
          [py, "-m", "scripts.dossier.render_dossier"])
 
-    _run("[4/7] regenerate N×M paired-bootstrap figure",
+    _run("[6/9] regenerate N×M paired-bootstrap figure",
          [py, "-m", "scripts.dossier.figures_walk_forward"])
 
-    _run("[5/7] propagate to submission tree",
+    _run("[7/9] propagate to submission tree",
          [py, "-m", "scripts.build_vol2_submission"])
 
     sub_dir = ROOT / "papers" / "icicpe-scopus-vol2-submission"
@@ -56,12 +62,12 @@ def main() -> int:
         if f.exists():
             f.unlink()
 
-    _run("[6/7] pdflatex pass 1", ["pdflatex", "-interaction=nonstopmode", "main.tex"], cwd=sub_dir)
-    _run("[6/7] bibtex", ["bibtex", "main"], cwd=sub_dir)
-    _run("[6/7] pdflatex pass 2", ["pdflatex", "-interaction=nonstopmode", "main.tex"], cwd=sub_dir)
-    _run("[6/7] pdflatex pass 3", ["pdflatex", "-interaction=nonstopmode", "main.tex"], cwd=sub_dir)
+    _run("[8/9] pdflatex pass 1", ["pdflatex", "-interaction=nonstopmode", "main.tex"], cwd=sub_dir)
+    _run("[8/9] bibtex", ["bibtex", "main"], cwd=sub_dir)
+    _run("[8/9] pdflatex pass 2", ["pdflatex", "-interaction=nonstopmode", "main.tex"], cwd=sub_dir)
+    _run("[8/9] pdflatex pass 3", ["pdflatex", "-interaction=nonstopmode", "main.tex"], cwd=sub_dir)
 
-    _run("[7/7] build submission zip",
+    _run("[9/9] build submission zip",
          [py, "-m", "scripts.build_submission_zip", "--check"])
 
     print("\n=== DONE ===")

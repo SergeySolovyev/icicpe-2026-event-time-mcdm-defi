@@ -212,6 +212,15 @@ def build(
         shutil.copyfile(macros_src, macros_dst)
         written.append(macros_dst)
 
+    # T3 sophisticated retrain macros (paired-bootstrap T3 vs T1).
+    # Only the planD/v2 source produces this; v1 inherits a no-op via
+    # \IfFileExists in main.tex.
+    t3_macros_src = planD_dir / "sections" / "t3_macros.tex"
+    if t3_macros_src.exists():
+        t3_macros_dst = dest_dir / "sections" / "t3_macros.tex"
+        shutil.copyfile(t3_macros_src, t3_macros_dst)
+        written.append(t3_macros_dst)
+
     # Restore preserved files (e.g. D9 arch_ladder.tex).
     for rel, content in preserved_contents.items():
         p = dest_dir / rel

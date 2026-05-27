@@ -26,6 +26,8 @@
 % scripts/fill_whitepaper_results.py after the Colab retrain locks
 % final metrics).
 \input{sections/results_macros.tex}
+% T3 sophisticated retrain macros (paired-bootstrap T3 vs T1, basis points)
+\IfFileExists{sections/t3_macros.tex}{\input{sections/t3_macros.tex}}{}
 
 \title[english]{Domain-Aware Dual-Branch Recurrent Networks Across TradFi and DeFi:
        LOB Mid-Price and On-Chain Lending Rate Forecasting}
