@@ -7,29 +7,34 @@
 2026-11-20).
 **Working title**: *Event-Time MCDM Allocation across DeFi Lending
 Protocols: An HFT-Inspired Methodology.*
-**Status as of 2026-05-26 (post N×M honest disclosure)**: All six
+**Status as of 2026-05-27 (6-way unified active panel)**: All six
 plans complete; Institutional Dossier shipped with walk-forward
 N×M paired bootstrap as primary inference. Vol-2 paper rebuilt
-with walk-forward macros, 12 pages, F1+F3+F4 audit clean.
+with walk-forward macros, 12 pages, F1+F3+F4 audit clean. The
+active allocation panel now spans the full 6-protocol design
+universe (Aave V3 + Compound V3 + Spark + Morpho Blue + Euler V2 +
+Fluid) — T1/T2/T3 switch among all six on every Ethereum block.
+F1 (Maker DSR via sDAI proxy) and F4 (ETH/USD + USDC peg deviation)
+signals landed this session; F4 gas sub-signal still on a placeholder
+pending Etherscan key. Tier 5 observability (structured JSON logs +
+Prometheus /metrics + append-only audit trail) shipped on the agent
+side with 8/8 tests passing.
 
-**Scope** — **two scopes**:
-(i) *Active allocation panel* = 3 protocols (Aave V3 + Morpho Blue
-+ Euler V2), unified per-block grid; T1/T2/T3 switch among these
-three on every Ethereum block.
-(ii) *Hold-benchmark set* = 6 protocols (the active three plus
-Compound V3 + Spark + Fluid); each enters the N×M as a passive
-buy-and-hold counter-factual covering ~$36B / ~$54B Ethereum-L1
-USDC-lending TVL (~67% of design universe). Each cell asks: *"does
-this active 3-protocol allocator beat passively parking USDC in
-protocol $j$?"* — $j$ ranges over all 6. Heterogeneous data
-provenance to avoid single-vendor risk: per-block panel
-(Aave/Morpho/Euler) + verified hourly RPC (Compound) + Sky Messari
-subgraph (Spark) + DeFiLlama Yield Pools daily (Fluid). Policy ladder runs at
-3 tiers (T1/T2/T3); on F3-only features (F1/F4 queued for next
-extension), T3's Cox hazard rule analytically reduces to T1's
-threshold — empirically confirmed to ±0.01 pp on every contrast.
-The hourly MCDM-EMA cliff-edge (2 rebalances/4 months) is
-intentionally excluded; honest baselines are the six protocol-holds.
+**Scope** — unified **6-way active panel**:
+T1/T2/T3 switch among **all six** designed Ethereum L1 USDC
+lending protocols (Aave V3, Compound V3, Spark, Morpho Blue,
+Euler V2, Fluid). Coverage on the per-block grid: Aave/Morpho/Euler
+100% (per-event subgraphs), Compound 98.5% (hourly RPC + ffill),
+Spark 99.6% (Sky Messari hourly + ffill 24h), Fluid 100% (DeFiLlama
+daily + ffill 36h). Hold-benchmark set is the same six protocols
+(~$36B / ~$54B Ethereum-L1 USDC-lending TVL ≈ 67% of design universe).
+Heterogeneous data provenance is deliberate (anti-single-vendor risk).
+The deprecated hourly MCDM-EMA cliff-edge (2 rebalances/4 months) is
+intentionally excluded from the benchmark set; the six protocol-holds
+are the honest baselines. T3 ≡ T1 collapse on F3-only features is
+analytically predicted and empirically verified to ±0.01 pp;
+divergence is expected once T3 is retrained on the full F1+F3+F4
+feature design matrix in the next iteration.
 
 ## Primary inference: walk-forward N×M paired bootstrap
 

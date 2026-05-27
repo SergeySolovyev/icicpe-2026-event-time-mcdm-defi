@@ -54,35 +54,24 @@ bootstrap on the {{ n_windows }} per-window deltas, reported under
 | Paired-bootstrap p (one-sided ≤ 0) | {{ "%.3f"|format(delta_apy.nominal_p) }} |
 | Directional consistency | **{{ delta_apy.directional_consistency }} / {{ n_windows }}** windows |
 
-## Scope: active panel (3) vs hold-benchmark set (6) — read this first
+## Scope: unified 6-way active panel + hold-benchmark set
 
-The N×M matrix has **two distinct protocol scopes** that should not
-be conflated:
+The N×M matrix runs on the **6-way active allocation panel** —
+T1/T2/T3 switch among any of the six designed protocols (Aave V3,
+Compound V3, Spark, Morpho Blue, Euler V2, Fluid) on every Ethereum
+block. The panel is built by `scripts.extend_panel_to_6way`, which
+joins per-event subgraph data (Aave/Morpho/Euler) with hourly RPC
+snapshots (Compound), hourly Messari subgraph snapshots (Spark),
+and daily DeFiLlama Yield-Pools (Fluid) via `pd.merge_asof`
+forward-fill onto the per-block grid (12s blocks post-PoS). New-
+protocol coverage on the per-block grid: Compound 98.5%, Spark
+99.6%, Fluid 100%.
 
-1. **Active allocation panel = 3 protocols** (Aave V3 + Morpho Blue
-   + Euler V2). The T1, T2, T3 policies switch among *these three*
-   on every block — this is the per-block panel built in §I.
-   Compound V3, Spark, and Fluid are **not switchable destinations**
-   for the active allocator; their per-block rates and TVLs are not
-   on the unified block grid and are sourced at coarser cadences
-   (see below).
-
-2. **Hold-benchmark set = 6 protocols** (Aave V3, Compound V3, Spark,
-   Morpho Blue, Euler V2, Fluid). Each enters the N×M matrix as a
-   passive buy-and-hold counter-factual. The question each cell
-   answers is: *"does this active 3-protocol allocator outperform
-   the strategy of just passively parking USDC in protocol $j$?"* —
-   $j$ ranges over all 6 protocols; the *active* strategy still only
-   switches among the 3.
-
-This is an honest benchmark — a fund LP wants to know whether the
-active strategy beats the "do nothing and park it somewhere obvious"
-counter-factual for *every* of the top USDC lending markets, not
-just the ones we happen to switch between. Extending the *active*
-allocator to all 6 protocols requires unifying the per-block panel
-with the other three data sources (hourly RPC for Compound, hourly
-Messari for Spark, daily DeFiLlama for Fluid); this is the explicit
-next-extension scope.
+Each protocol also enters the N×M matrix as a passive buy-and-hold
+counter-factual — each cell answers: *"does this active 6-way
+allocator outperform passively parking USDC in protocol $j$?"*
+The benchmark set is the same six protocols, covering ~$36B of
+$54B Ethereum-L1 USDC-lending TVL (~67% of design universe).
 
 The 6-protocol hold-benchmark set covers ~$36B of $54B Ethereum-L1
 USDC-lending TVL (~67% of the design universe).  Per-protocol data
@@ -94,13 +83,17 @@ for Spark; DeFiLlama Yield-Pools daily APY for Fluid.
 The policy ladder is run at **three tiers**: T1 (gas-aware threshold,
 50 LOC), T2 (OU optimal stopping with Bellman-derived switching
 boundary, ~200 LOC), T3 (Cox proportional-hazards on F1/F3/F4
-features, ~500 LOC + offline training). On the present panel only
-**signal F3** (cross-protocol spread + utilization) is fully populated;
-F1 (Maker DSR lead) and F4 (gas regime / peg deviations) are queued
-for the next extension. T3 is therefore run as a F3-only ablation
-and *should* analytically collapse to T1 — the empirical confirmation
-appears at the bottom of this chapter ([T3 ≡ T1 collapse verified
-empirically: |T3 − T1| < 0.01 pp on every contrast]).
+features, ~500 LOC + offline training). The present panel includes
+all three signal classes: **F1 Maker DSR rate** (via sDAI proxy on
+DeFiLlama; range 1.25%–11.50% over the window), **F3 fragmentation**
+(per-block cross-protocol rate + utilization spreads, fully populated),
+and **F4 related-instruments** (ETH/USD via DeFiLlama; USDC peg
+deviation in basis points, range −27 bp to +83 bp). The F4 gas
+sub-signal uses a fixed 25-gwei placeholder pending Etherscan API
+key. T3 is run as the full F1+F3+F4 ablation and is expected to
+diverge from T1 once the hazard model is retrained on the extended
+feature design matrix; on F3-only features the analytical collapse
+T3 ≡ T1 still holds.
 
 The deprecated **B4 hourly MCDM-EMA baseline (Solovev 2026c)** is
 intentionally absent from this matrix. That policy executed
