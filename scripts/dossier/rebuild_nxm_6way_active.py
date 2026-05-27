@@ -33,9 +33,10 @@ EQ_6WAY = TABLES / "equity_walk_forward_6way"
 WINDOWS = ["W1", "W2", "W3", "W4", "W5", "W6"]
 BPY = 365 * 24 * 60 * 60 // 12
 
-ACTIVE_POLICIES = ("t1_threshold", "t2_optimal_stopping")
-# T3 not run separately on 6-way panel yet; it collapses to T1 on F3-only.
-# When T3 6-way equity parquets land, add "t3_hazard" here.
+ACTIVE_POLICIES = ("t1_threshold", "t2_optimal_stopping", "t3_hazard")
+# Since the sophisticated F1+F3+F4 retrain (commits 52d7d76 + 92e378a),
+# T3 has its own walk-forward equity files in equity_walk_forward_6way/
+# and no longer collapses to T1.
 
 
 def _policy_apy_per_window(policy: str) -> dict[str, float]:
@@ -85,10 +86,11 @@ def main() -> int:
     holds = _hold_apy_per_window()
     policies = {pol: _policy_apy_per_window(pol) for pol in ACTIVE_POLICIES}
 
-    # T3 row mirrors T1 (the F3-only collapse, verified to ±0.01pp on the
-    # 3-protocol panel; same analytical reduction applies on 6-way).
-    if "t1_threshold" in policies and policies["t1_threshold"]:
-        policies["t3_hazard"] = policies["t1_threshold"].copy()
+    # Fallback: if T3 equity files missing (e.g. first run before
+    # walk-forward completes), copy T1 row so the matrix still emits.
+    if "t3_hazard" not in policies or not policies.get("t3_hazard"):
+        if policies.get("t1_threshold"):
+            policies["t3_hazard"] = policies["t1_threshold"].copy()
 
     print("\nPolicy × window APY (%):")
     print(f"{'policy':30s}", " ".join(f"{w:>8s}" for w in WINDOWS))

@@ -43,9 +43,9 @@ feature design matrix in the next iteration.
 
 | Policy | vs Aave | vs Compound | vs Spark | vs Morpho | vs Fluid | vs Euler |
 |---|---:|---:|---:|---:|---:|---:|
-| **T1** threshold | **+1.84pp**<br>6/6, p=0.00 | **+1.65pp**<br>6/6, p=0.00 | **+0.80pp**<br>5/6, p=0.03 | **+1.61pp**<br>6/6, p=0.00 | **+1.65pp**<br>6/6, p=0.00 | +0.48pp<br>2/6, p=0.20 |
-| **T2** OU stopping | **+1.63pp**<br>6/6, p=0.00 | **+1.45pp**<br>6/6, p=0.00 | +0.60pp<br>5/6, p=0.08 | **+1.40pp**<br>6/6, p=0.00 | **+1.45pp**<br>6/6, p=0.00 | +0.28pp<br>2/6, p=0.26 |
-| **T3** Cox hazard | **+1.84pp**<br>6/6, p=0.00 | **+1.65pp**<br>6/6, p=0.00 | **+0.80pp**<br>5/6, p=0.03 | **+1.61pp**<br>6/6, p=0.00 | **+1.65pp**<br>6/6, p=0.00 | +0.48pp<br>2/6, p=0.20 |
+| **T1** threshold | **+2.81pp**<br>6/6, p<10⁻⁴ | **+2.63pp**<br>6/6, p<10⁻⁴ | **+1.78pp**<br>6/6, p<10⁻⁴ | **+2.58pp**<br>6/6, p<10⁻⁴ | **+2.63pp**<br>6/6, p<10⁻⁴ | **+1.46pp**<br>5/6, p=0.026 |
+| **T2** OU stopping | **+2.37pp**<br>6/6, p<10⁻⁴ | **+2.18pp**<br>6/6, p<10⁻⁴ | **+1.34pp**<br>6/6, p<10⁻⁴ | **+2.14pp**<br>6/6, p<10⁻⁴ | **+2.18pp**<br>6/6, p<10⁻⁴ | +1.01pp<br>2/6, p=0.216 |
+| **T3** Cox F1+F3+F4 | **+2.88pp**<br>6/6, p<10⁻⁴ | **+2.70pp**<br>6/6, p<10⁻⁴ | **+1.85pp**<br>6/6, p<10⁻⁴ | **+2.65pp**<br>6/6, p<10⁻⁴ | **+2.70pp**<br>6/6, p<10⁻⁴ | **+1.53pp**<br>5/6, p=0.011 |
 
 **Three concentric claims by decreasing strength**:
 1. **Strong** (4/6 protocols, all 6 windows, p < 10⁻⁴): T1 and T2

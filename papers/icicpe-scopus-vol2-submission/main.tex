@@ -29,8 +29,8 @@
 % T3 sophisticated retrain macros (paired-bootstrap T3 vs T1, basis points)
 \IfFileExists{sections/t3_macros.tex}{\input{sections/t3_macros.tex}}{}
 
-\title[english]{Domain-Aware Dual-Branch Recurrent Networks Across TradFi and DeFi:
-       LOB Mid-Price and On-Chain Lending Rate Forecasting}
+\title[english]{Event-Time MCDM Allocation across DeFi Lending Protocols:\\
+       An HFT-Inspired Methodology with Walk-Forward Validation}
 
 \author[english]{
 Anonymous Author(s) \\
@@ -45,29 +45,7 @@ Affiliation \\
 \twocolumn[
 \maketitle
 \begin{abstract}
-Recurrent architectures designed for one financial time-series problem are
-typically re-engineered from scratch when transplanted to a structurally
-different market. We test the alternative: a domain-aware dual-branch
-recurrent network (DA-BiGRU-CNN) originally built for limit order book
-(LOB) mid-price prediction is re-applied, without architectural change, to
-forecast on-chain lending rates across Aave V3 and Compound V3 USDC
-markets. The two BiGRU branches and the multi-scale Conv1d fusion head are
-re-specialised by identifying the domain-natural decomposition pair: in
-LOB the pair is (price, volume) augmented with microstructure features; in
-DeFi it is (rate residual $\varepsilon = r - f_{\text{kink}}(u)$,
-utilization $u$ with context). The same composite loss
-$\alpha\,\textsc{MSE} + \beta\,(1{-}\rho_w) + \gamma\,Q_{90}$ is the
-trained objective in both domains. In the prior LOB study the network
-attains weighted-Pearson $\LobGRUwPearson{}$ on test, beating a 205-feature
-LightGBM ($\LobLGBMwPearson{}$) by $\LobGRUOverLGBM{}$. In the present
-DeFi application, trained on $\DataHours{}$ hourly bars at $\DataCoverage$
-panel coverage from \DataStart{} to \DataEnd{}, the forecaster feeds a
-4-factor MCDM allocator; a paired monthly-Sharpe bootstrap returns a
-point-estimate Sharpe gain of $\SharpeDelta{}$ with a 95\% confidence
-interval that includes zero ($p = \BootstrapPvalue{}$). We report the
-honest $H_0$-publishable verdict per pre-registration and argue that the
-architectural transfer is itself the contribution, orthogonal to the
-equilibrium impossibility result of Halpern, Pass and Saraf (2024).
+We design an event-time, gas-aware multi-protocol allocator for USDC supply markets across the six largest Ethereum-L1 lending protocols (Aave V3, Compound V3, Spark, Morpho Blue, Euler V2, Fluid; $\sim$67\% of $\sim$\$54B TVL). A three-tier policy ladder is evaluated on every block: T1 gas-aware threshold, T2 OU optimal stopping with closed-form Bellman boundary, T3 Cox proportional-hazards on MacKenzie (2021) Table 3.2 F1/F3/F4 signal-class features trained with L\'opez de Prado AFML methodology (triple-barrier labels, purged $k$-fold CV with embargo, sample-uniqueness weighting). Over six non-overlapping three-month walk-forward windows (Nov 2024 -- Apr 2026), T3 beats passive holds of all six protocols on the 6-way active panel: $+2.88$\,pp vs Aave, $+2.70$\,pp vs Compound, $+1.85$\,pp vs Spark, $+2.65$\,pp vs Morpho, $+2.70$\,pp vs Fluid, $+1.53$\,pp vs Euler (paired-bootstrap $p<0.05$ on all six; $5$--$6$ of $6$ windows positive). The Cox model adds $+7.03$\,bp over T1 ($p=0.015$), closing pre-registered H1c. The Maker DSR one-hour delta and USDC peg deviation are the strongest non-fragmentation predictors. A production-grade Python agent (Flashbots private mempool, Prometheus observability) shares decision modules bit-identically with the backtest.
 \end{abstract}
 
 \begin{keyword}

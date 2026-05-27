@@ -78,6 +78,49 @@ _MAIN_TEX_REWRITES: tuple[tuple[str, str], ...] = (
     # Vol-2 drops the §IV LOB recap entirely (it was a bridge from the
     # hourly DA-BiGRU-CNN story which V2 no longer claims as motivation).
     (r"\\input\{sections/04_lob_recap\.tex\}\s*\n", ""),
+    # V2 replaces V1's "Domain-Aware Dual-Branch Recurrent Networks…"
+    # title with the V2 event-time MCDM allocator focus.
+    (
+        r"\\title\[english\]\{Domain-Aware Dual-Branch Recurrent Networks Across TradFi and DeFi:\s*\n?\s*LOB Mid-Price and On-Chain Lending Rate Forecasting\}",
+        (
+            "\\title[english]{Event-Time MCDM Allocation across DeFi "
+            "Lending Protocols:\\\\\n"
+            "       An HFT-Inspired Methodology with Walk-Forward "
+            "Validation}"
+        ),
+    ),
+    # V2 replaces the V1 LOB-forecasting abstract with the V2 DeFi-
+    # allocator abstract. Match starts at \begin{abstract} and ends at
+    # \end{abstract} (DOTALL via the (?s) inline flag).
+    (
+        r"(?s)\\begin\{abstract\}.*?\\end\{abstract\}",
+        (
+            "\\begin{abstract}\n"
+            "We design an event-time, gas-aware multi-protocol allocator "
+            "for USDC supply markets across the six largest Ethereum-L1 "
+            "lending protocols (Aave V3, Compound V3, Spark, Morpho Blue, "
+            "Euler V2, Fluid; $\\sim$67\\% of $\\sim$\\$54B TVL). A "
+            "three-tier policy ladder is evaluated on every block: T1 "
+            "gas-aware threshold, T2 OU optimal stopping with closed-form "
+            "Bellman boundary, T3 Cox proportional-hazards on MacKenzie "
+            "(2021) Table 3.2 F1/F3/F4 signal-class features trained with "
+            "L\\'opez de Prado AFML methodology (triple-barrier labels, "
+            "purged $k$-fold CV with embargo, sample-uniqueness weighting). "
+            "Over six non-overlapping three-month walk-forward windows "
+            "(Nov 2024 -- Apr 2026), T3 beats passive holds of all six "
+            "protocols on the 6-way active panel: $+2.88$\\,pp vs Aave, "
+            "$+2.70$\\,pp vs Compound, $+1.85$\\,pp vs Spark, $+2.65$\\,pp "
+            "vs Morpho, $+2.70$\\,pp vs Fluid, $+1.53$\\,pp vs Euler "
+            "(paired-bootstrap $p<0.05$ on all six; $5$--$6$ of $6$ "
+            "windows positive). The Cox model adds $+7.03$\\,bp over T1 "
+            "($p=0.015$), closing pre-registered H1c. The Maker DSR "
+            "one-hour delta and USDC peg deviation are the strongest non-"
+            "fragmentation predictors. A production-grade Python agent "
+            "(Flashbots private mempool, Prometheus observability) shares "
+            "decision modules bit-identically with the backtest.\n"
+            "\\end{abstract}"
+        ),
+    ),
 )
 
 # Files in dest that must be preserved across runs (operator-authored or
@@ -151,7 +194,10 @@ def build(
         if name == "main.tex":
             text = src.read_text(encoding="utf-8")
             for old, new in _MAIN_TEX_REWRITES:
-                text = re.sub(old, new, text)
+                # Use a lambda-callable to avoid regex backref expansion in
+                # LaTeX-heavy replacement strings (\\s, \\b, \\c, etc.).
+                _new = new  # bind in lambda default
+                text = re.sub(old, lambda _m, _n=_new: _n, text)
             dst.write_text(text, encoding="utf-8")
         else:
             shutil.copyfile(src, dst)
