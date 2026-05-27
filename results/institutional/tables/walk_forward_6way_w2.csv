@@ -1,0 +1,3 @@
+window_id,window_start,window_end,policy,n_blocks,net_apy_pct,sharpe,sortino,max_drawdown_pct,n_rebalances
+W1,2025-02-01,2025-05-01,b1_always_aave,640800,3.4096981595341136,76.95748866313045,inf,0.0,1
+W1,2025-02-01,2025-05-01,t1_threshold,640800,5.489666717098962,45.31894307090195,inf,0.0,33
