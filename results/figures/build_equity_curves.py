@@ -45,14 +45,41 @@ def build_equity_curves_figure(
     if not files:
         raise FileNotFoundError(f"no equity_*.parquet in {equity_dir}")
 
-    fig, axes = plt.subplots(4, 2, figsize=(12, 14), sharex=True)
+    # Pre-scan: which protocols actually have data on this equity set?
+    # Drops empty panels (e.g. Compound/Spark/Fluid panels are empty when
+    # the equity files come from a 3-protocol active panel run).
+    protocols_with_data = []
+    for proto in protocols[:6]:
+        has_data = False
+        for f in files:
+            try:
+                eq = pd.read_parquet(f, columns=["current_protocol"])
+                if (eq["current_protocol"] == proto).any():
+                    has_data = True
+                    break
+            except Exception:
+                continue
+        if has_data:
+            protocols_with_data.append(proto)
+    n_proto = len(protocols_with_data)
+
+    # Grid: per-protocol panels + 1 portfolio summary + 1 legend.
+    # Layout adapts: e.g. 3 protocols + summary + legend = 5 panels → 3×2,
+    # 6 protocols + summary + legend = 8 panels → 4×2.
+    n_panels = n_proto + 2  # +summary +legend
+    n_cols = 2
+    n_rows = (n_panels + n_cols - 1) // n_cols
+    fig, axes = plt.subplots(n_rows, n_cols,
+                             figsize=(12, max(4, 3 * n_rows)),
+                             sharex=True)
     axes_flat = axes.flatten()
-    # First 6 axes -> per-protocol panels; axes[6] -> portfolio summary;
-    # axes[7] -> legend.
-    protocol_axes = dict(zip(protocols[:6], axes_flat[:6]))
-    summary_ax = axes_flat[6]
-    legend_ax = axes_flat[7]
+    protocol_axes = dict(zip(protocols_with_data, axes_flat[:n_proto]))
+    summary_ax = axes_flat[n_proto]
+    legend_ax = axes_flat[n_proto + 1]
     legend_ax.axis("off")
+    # Hide any spare axes at the end (when n_panels is odd).
+    for ax in axes_flat[n_proto + 2:]:
+        ax.axis("off")
 
     line_handles, line_labels = [], []
     for f in files:

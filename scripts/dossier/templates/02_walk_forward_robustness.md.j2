@@ -98,18 +98,22 @@ horizon), purged 5-fold cross-validation with embargo = 5.4 days,
 sample-uniqueness weighting (Ch.4.5), and L2 ridge penalizer sweep.
 Four feature ablations were tested; OOF C-index ranking:
 
-| Features      | OOF C-index | Δ vs F3-only |
-|---------------|------------:|-------------:|
-| F3 only       | 0.516       | baseline     |
-| F1 + F3       | 0.531       | +1.5 pp      |
-| F3 + F4       | 0.560       | +4.4 pp      |
-| **F1+F3+F4**  | **0.549**   | **+3.3 pp**  |
+| Features         | OOF C-index | Δ vs F3-only | Add value? |
+|------------------|------------:|-------------:|-----------:|
+| F3 only          | 0.563       | baseline     | —          |
+| F1 + F3          | **0.582**   | **+1.9 pp**  | ✓ F1 helps |
+| F3 + F4          | 0.563       | 0.0 pp       | ✗ F4 zero  |
+| **F1 + F3 + F4** | **0.582**   | **+1.9 pp**  | F4 zero    |
 
-The canonical F1+F3+F4 model promoted to production has top-five
-coefficients led by `f3_dispersion_std` (β = +73.99), then
-`f1_dsr_delta_300` (+15.29) — the 1-hour change in Maker DSR is
-the strongest non-F3 predictor, providing direct empirical
-support for the MacKenzie F1 signal class in DeFi-lending context.
+**Honest negative finding for F4**: the F4 related-instruments class
+(USDC peg deviation, ETH/USD) adds **zero** concordance above F3-only
+after the gas placeholder (constant 25 gwei) is dropped as zero-
+variance. Only F1 (Maker DSR one-hour delta, β = +15.29) provides
+predictive lift above F3 fragmentation features. This refines the
+MacKenzie (2021) Table 3.2 mapping to DeFi-lending: **F1 is the
+operative non-F3 signal class** for cross-protocol leader timing on
+this panel; F4 contribution is queued for re-test with real historical
+gas prices (Etherscan key).
 
 The deprecated **B4 hourly MCDM-EMA baseline (Solovev 2026c)** is
 intentionally absent from this matrix. That policy executed
