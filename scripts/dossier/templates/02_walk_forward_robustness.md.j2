@@ -54,17 +54,42 @@ bootstrap on the {{ n_windows }} per-window deltas, reported under
 | Paired-bootstrap p (one-sided ≤ 0) | {{ "%.3f"|format(delta_apy.nominal_p) }} |
 | Directional consistency | **{{ delta_apy.directional_consistency }} / {{ n_windows }}** windows |
 
-## Scope: 6 protocols + 3 policy tiers
+## Scope: active panel (3) vs hold-benchmark set (6) — read this first
 
-The Vol-2 N×M matrix covers the **full 6-protocol design universe**
-on Ethereum L1 USDC supply markets: **Aave V3** (~36% TVL share),
-**Compound V3** (~5%), **Spark / SparkLend** (~13%), **Morpho
-Blue** (~9%), **Euler V2** (~2%), **Fluid Finance** (~3%). Together
-these represent ~$36B of the $54B Ethereum-L1 USDC-lending TVL, or
-~67% of the design universe. Data sources by protocol are tabulated
-in §I (the per-block panel handles Aave/Morpho/Euler; Compound is
-re-built from a verified hourly RPC parquet; Spark via the Sky/Spark
-Messari subgraph; Fluid via DeFiLlama Yield-Pools daily APY).
+The N×M matrix has **two distinct protocol scopes** that should not
+be conflated:
+
+1. **Active allocation panel = 3 protocols** (Aave V3 + Morpho Blue
+   + Euler V2). The T1, T2, T3 policies switch among *these three*
+   on every block — this is the per-block panel built in §I.
+   Compound V3, Spark, and Fluid are **not switchable destinations**
+   for the active allocator; their per-block rates and TVLs are not
+   on the unified block grid and are sourced at coarser cadences
+   (see below).
+
+2. **Hold-benchmark set = 6 protocols** (Aave V3, Compound V3, Spark,
+   Morpho Blue, Euler V2, Fluid). Each enters the N×M matrix as a
+   passive buy-and-hold counter-factual. The question each cell
+   answers is: *"does this active 3-protocol allocator outperform
+   the strategy of just passively parking USDC in protocol $j$?"* —
+   $j$ ranges over all 6 protocols; the *active* strategy still only
+   switches among the 3.
+
+This is an honest benchmark — a fund LP wants to know whether the
+active strategy beats the "do nothing and park it somewhere obvious"
+counter-factual for *every* of the top USDC lending markets, not
+just the ones we happen to switch between. Extending the *active*
+allocator to all 6 protocols requires unifying the per-block panel
+with the other three data sources (hourly RPC for Compound, hourly
+Messari for Spark, daily DeFiLlama for Fluid); this is the explicit
+next-extension scope.
+
+The 6-protocol hold-benchmark set covers ~$36B of $54B Ethereum-L1
+USDC-lending TVL (~67% of the design universe).  Per-protocol data
+provenance (heterogeneous on purpose, to avoid single-vendor
+dependence): per-block panel for Aave/Morpho/Euler; verified hourly
+RPC parquet for Compound; Sky/Spark Messari subgraph
+for Spark; DeFiLlama Yield-Pools daily APY for Fluid.
 
 The policy ladder is run at **three tiers**: T1 (gas-aware threshold,
 50 LOC), T2 (OU optimal stopping with Bellman-derived switching

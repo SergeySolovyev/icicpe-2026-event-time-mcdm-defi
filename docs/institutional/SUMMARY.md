@@ -23,13 +23,20 @@ walk-forward 6/6 windows). Trails Euler V2 hold by $817 on test window
 and 4/6 walk-forward windows — closing the Euler gap requires F1
 lead-rate signal (journal-extension scope).
 
-**Scope**: Vol-2 covers the full **6-protocol design universe**
-(Aave V3 + Compound V3 + Spark + Morpho Blue + Euler V2 + Fluid;
-~$36B / ~$54B TVL, ~67% of Ethereum L1 USDC lending). Data sources
-are heterogeneous to avoid single-vendor dependency: Aave/Morpho/Euler
-from the per-block panel; Compound from verified hourly RPC (12,904
-rows); Spark from the Sky Messari subgraph (6,189 hourly snapshots);
-Fluid from DeFiLlama Yield Pools daily APY (728 snapshots).
+**Scope** — **two scopes, not one**:
+(i) *Active allocation panel* = **3 protocols** (Aave V3 + Morpho
+Blue + Euler V2), unified per-block grid; T1/T2/T3 switch among
+these three on every block.
+(ii) *Hold-benchmark set* = **6 protocols** (the active three plus
+Compound V3, Spark, Fluid); each enters the N×M as a passive
+buy-and-hold counter-factual. Together the hold-benchmark set
+covers ~$36B / ~$54B Ethereum L1 USDC-lending TVL (~67% of
+design universe). Each matrix cell asks: "does this 3-protocol
+active allocator beat passively parking USDC in protocol $j$?"
+Data sources are heterogeneous to avoid single-vendor dependency:
+per-block panel (Aave/Morpho/Euler); verified hourly RPC (Compound,
+12,904 rows); Sky Messari subgraph (Spark, 6,189 hourly snapshots);
+DeFiLlama Yield Pools daily APY (Fluid, 728 snapshots).
 Ladder runs at **3 tiers** (T1, T2, T3); on F3-only features (F1/F4
 queued for next extension), T3's hazard rule analytically reduces to
 T1's threshold — empirically confirmed to ±0.01 pp on every contrast.

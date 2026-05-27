@@ -13,10 +13,23 @@ excluded from the benchmark set: it is the wrong-resolution failure
 mode this paper is explicitly \emph{against}: the honest baselines are the six protocol-holds
 themselves, not a straw-man hourly aggregator.
 
-\paragraph{Scope and data provenance.}
-The walk-forward matrix covers all six designed protocols on
-Ethereum L1 USDC supply markets ($\sim\$36$\,B of \$54\,B
-addressable TVL, $\sim 67\%$ of the design universe).  Per-protocol
+\paragraph{Two scopes.}
+The matrix uses two distinct protocol scopes.  The
+\emph{active allocation panel} contains three protocols (Aave V3,
+Morpho Blue, Euler V2) on a unified per-block grid; T1/T2/T3 switch
+among these three on every block.  The \emph{hold-benchmark set}
+contains all six designed protocols (the active three plus
+Compound V3, Spark, Fluid); each enters the N\,$\times$\,M as a
+passive buy-and-hold counter-factual, so each cell answers
+\emph{``does this active 3-protocol allocator beat passively
+parking USDC in protocol $j$?''} for $j$ in all six.  Extending the
+active panel to all six is the explicit next-extension scope and
+requires unifying the per-block grid with the three coarser-cadence
+sources used for the additional holds.
+
+\paragraph{Data provenance.}
+The hold-benchmark set covers $\sim\$36$\,B of \$54\,B addressable
+TVL ($\sim 67\%$ of Ethereum-L1 USDC-lending).  Per-protocol
 data sources, deliberately heterogeneous to avoid a single-vendor
 dependence:
 (i) \textbf{Aave V3, Morpho Blue, Euler V2} — per-block panel built
@@ -68,14 +81,15 @@ walk-forward contrasts uses the Deflated Sharpe Ratio of
 \subsection{Data and splits}
 \label{sec:emp-data}
 
-The per-block panel covers 2024-11-01 to 2026-04-30 at the native
-Ethereum cadence (12\,s post-PoS), $\NBlocksFull$ blocks across the
-\NProtocols\ protocols admitted at submission time
-(\ProtocolList).  Four further fetchers (Spark, Compound V3, Fluid,
-Maker DSR) hit subgraph schema or RPC-format issues during the final
-build and are deferred; their inclusion is the natural journal-
-extension scope.  Construction is documented in
-\Cref{sec:methodology}; the artifact lives at
+The per-block active-allocation panel covers 2024-11-01 to 2026-04-30
+at the native Ethereum cadence (12\,s post-PoS), $\NBlocksFull$ blocks
+across the \NProtocols\ on-grid protocols (\ProtocolList).  The
+additional three hold-benchmark protocols (Compound V3, Spark, Fluid)
+join the matrix at coarser cadences and as passive holds only --- the
+detailed provenance is in the preceding Scope paragraph.  The Maker
+DSR rate stream (Signal F1) is the one remaining gap and is the
+explicit next-extension scope.  Construction of the per-block panel
+is documented in \Cref{sec:methodology}; the artifact lives at
 \texttt{data/cached/per\_block\_panel.parquet}.
 
 The chronological split is locked.  Training: 2024-11-01 to
@@ -335,16 +349,10 @@ deferred alongside the T3 policy itself.
   \label{fig:signal-heatmap}
 \end{figure}
 
-The methodology contribution (event-time decision frame for
-multi-protocol DeFi lending), the HFT-inspired signal-taxonomy
-mapping, and the production-grade fetcher + replay infrastructure
+The methodology, signal-taxonomy mapping, and replay infrastructure
 each stand independently of any single bootstrap contrast.  The
-binding result is the walk-forward N\,$\times$\,M finding
-(\Cref{tab:wf-nxm}): T1 outperforms passive Aave V3 hold by
-$\widehat{\Delta\text{APY}} = \WFMeanDeltaAPYAave$\,pp in
-$\WFWinsAave/\WFNWindows$ non-overlapping 3-month windows
-($p = \WFPValueAave$) and passive Morpho Blue hold by
-$\WFMeanDeltaAPYMorpho$\,pp in $\WFWinsMorpho/\WFNWindows$ windows
-($p = \WFPValueMorpho$); the same allocator does not outperform
-passive Euler V2 hold from W3 onward, an honest gap whose closure
-is the journal-extension scope (\Cref{sec:limitations}).
+binding result is \Cref{tab:wf-nxm}: T1 outperforms passive
+Aave/Compound/Morpho/Fluid by $+1.6$--$1.8$\,pp in all 6 windows
+($p < 10^{-4}$ each) and Spark 5/6 windows ($p = 0.034$); only
+passive Euler V2 holds the active allocator off from W3 onward,
+the honest gap whose closure is the journal-extension scope.

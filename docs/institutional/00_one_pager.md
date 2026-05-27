@@ -1,9 +1,11 @@
 # DeFi Lending Allocator — One-Pager
 
-**Strategy**: Event-time gas-aware multi-protocol allocator across
-the six largest Ethereum L1 USDC lending markets — **Aave V3,
-Compound V3, Spark, Morpho Blue, Euler V2, Fluid Finance** (~$36B
-of $54B addressable TVL, ~67% coverage of the design universe).
+**Strategy**: Event-time gas-aware allocator switching among **3
+on-grid protocols** (Aave V3 + Morpho Blue + Euler V2) on every
+Ethereum block. Benchmarked against passive holds of **all 6 top
+USDC lending markets** — adding Compound V3, Spark, Fluid as
+hold-only counter-factuals (~$36B of $54B addressable TVL,
+~67% coverage of the design universe).
 **Test window**: January – April 2026 (4 months, 864,000 blocks).
 **Walk-forward**: 6 non-overlapping 3-month windows, Nov 2024 – Apr 2026.
 

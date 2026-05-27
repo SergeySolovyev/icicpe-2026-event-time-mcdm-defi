@@ -12,12 +12,19 @@ plans complete; Institutional Dossier shipped with walk-forward
 N×M paired bootstrap as primary inference. Vol-2 paper rebuilt
 with walk-forward macros, 12 pages, F1+F3+F4 audit clean.
 
-**Scope**: full 6-protocol design universe — Aave V3 + Compound V3 +
-Spark + Morpho Blue + Euler V2 + Fluid (~$36B / ~$54B Ethereum L1
-USDC-lending TVL, ~67% coverage). Heterogeneous data provenance to
-avoid single-vendor risk: per-block panel (Aave/Morpho/Euler) +
-verified hourly RPC parquet (Compound) + Sky Messari subgraph
-(Spark) + DeFiLlama Yield Pools daily (Fluid). Policy ladder runs at
+**Scope** — **two scopes**:
+(i) *Active allocation panel* = 3 protocols (Aave V3 + Morpho Blue
++ Euler V2), unified per-block grid; T1/T2/T3 switch among these
+three on every Ethereum block.
+(ii) *Hold-benchmark set* = 6 protocols (the active three plus
+Compound V3 + Spark + Fluid); each enters the N×M as a passive
+buy-and-hold counter-factual covering ~$36B / ~$54B Ethereum-L1
+USDC-lending TVL (~67% of design universe). Each cell asks: *"does
+this active 3-protocol allocator beat passively parking USDC in
+protocol $j$?"* — $j$ ranges over all 6. Heterogeneous data
+provenance to avoid single-vendor risk: per-block panel
+(Aave/Morpho/Euler) + verified hourly RPC (Compound) + Sky Messari
+subgraph (Spark) + DeFiLlama Yield Pools daily (Fluid). Policy ladder runs at
 3 tiers (T1/T2/T3); on F3-only features (F1/F4 queued for next
 extension), T3's Cox hazard rule analytically reduces to T1's
 threshold — empirically confirmed to ±0.01 pp on every contrast.
