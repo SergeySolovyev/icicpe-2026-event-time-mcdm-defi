@@ -41,11 +41,19 @@ signal (Maker DSR / Euler-specific leads) or F4 related-instruments
 (gas regime, peg deviations). T3 ≡ T1 on F3-only features by
 analytical collapse — empirically verified to ±0.01 pp on every cell.
 
-## Capacity
+## Capacity (numerical, Krause-2005 yield-impact, 6-way panel)
 
-Edge stable up to **\$5M**; degrades meaningfully at **\$25M**;
-analytical ceiling **\$50M** per Krause (2005) market-depth bound on
-Morpho/Euler pool depths.
+| Position | T1 net APY | T3 net APY | Δ vs B1-Aave |
+|---:|---:|---:|---:|
+| \$1M | 7.36% | **7.43%** | **+274 bp** |
+| \$5M | 7.16% | **7.21%** | **+257 bp** |
+| \$25M | 6.64% | **6.68%** | **+205 bp** |
+| \$50M | 6.36% | **6.40%** | **+178 bp** |
+
+**Capacity robust across $1M–$50M**: T3 retains 6.40% net APY at
+$50M (only −1.10 pp drag from $1M raw 7.50%). At every tier T3
+dominates T1 by +5 to +10 bp, demonstrating ML edge persists under
+capacity stress. Full curve in `figures/capacity_curve_6way.png`.
 
 ## Risk one-liner
 

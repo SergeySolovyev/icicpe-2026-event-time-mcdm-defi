@@ -72,8 +72,13 @@ paired bootstrap N=6 per-window ΔAPY, B=10,000 resamples, seed=42):
 inflation paradox*, López de Prado AFML Ch.4); see §02 for full
 dual-lens treatment.
 
-**Capacity**: Edge stable up to **$5M**; degrades at **$25M**;
-analytical ceiling **$50M** (Morpho/Euler pool-depth bound).
+**Capacity (numerical, 6-way panel, Krause-2005 yield-impact)**: edge
+**robust across $1M–$50M** position range. T1 net APY drops from
+7.36% ($1M) to 6.36% ($50M), only −1.07 pp drag. T3 sophisticated
+delivers 7.43% → 6.40% over the same range, retaining the +5–10 bp
+edge over T1 at every capacity tier. **At $50M position size, active
+strategies still beat passive Aave hold by +174 bp net** (T3 6.40%
+vs B1 4.62%). Capacity figure: `figures/capacity_curve_6way.png`.
 **Live track record**: pre-mainnet — see `07_live_trial_plan.md`
 for 5-phase ramp (Sepolia → $10K → $100K → $1M → fund LP).
 
