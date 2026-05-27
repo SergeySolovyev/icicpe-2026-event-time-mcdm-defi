@@ -155,52 +155,52 @@ protocol-hold contrast is the binding paired-bootstrap finding
     Policy & vs Aave V3 & vs Compound V3 & vs Spark & vs Morpho Blue & vs Euler V2 & vs Fluid \\
     \midrule
     \textbf{T1} threshold
-      & \textbf{$+1.84$\,pp} (6/6)
-      & \textbf{$+1.65$\,pp} (6/6)
-      & \textbf{$+0.80$\,pp} (5/6)
-      & \textbf{$+1.61$\,pp} (6/6)
-      & $+0.48$\,pp (2/6)
-      & \textbf{$+1.65$\,pp} (6/6) \\
-      & $p = 0.000$
-      & $p = 0.000$
-      & $p = 0.034$
-      & $p = 0.000$
-      & $p = 0.198$
-      & $p = 0.000$ \\
-      & CI [$+1.49, +2.24$]
-      & CI [$+1.10, +2.13$]
-      & CI [$-0.04, +1.43$]
-      & CI [$+0.96, +2.16$]
-      & CI [$-0.29, +1.49$]
-      & CI [$+1.28, +2.09$] \\
+      & \textbf{$+2.81$\,pp} (6/6)
+      & \textbf{$+2.63$\,pp} (6/6)
+      & \textbf{$+1.78$\,pp} (6/6)
+      & \textbf{$+2.58$\,pp} (6/6)
+      & \textbf{$+1.46$\,pp} (5/6)
+      & \textbf{$+2.63$\,pp} (6/6) \\
+      & $p < 10^{-4}$
+      & $p < 10^{-4}$
+      & $p < 10^{-4}$
+      & $p < 10^{-4}$
+      & $p = 0.026$
+      & $p < 10^{-4}$ \\
+      & CI [$+1.87, +4.05$]
+      & CI [$+1.57, +3.97$]
+      & CI [$+1.38, +2.24$]
+      & CI [$+1.42, +4.20$]
+      & CI [$+0.00, +3.66$]
+      & CI [$+1.68, +3.81$] \\
     \midrule
     \textbf{T2} OU stopping
-      & \textbf{$+1.63$\,pp} (6/6)
-      & \textbf{$+1.45$\,pp} (6/6)
-      & $+0.60$\,pp (5/6)
-      & \textbf{$+1.40$\,pp} (6/6)
-      & $+0.28$\,pp (2/6)
-      & \textbf{$+1.45$\,pp} (6/6) \\
-      & $p = 0.000$
-      & $p = 0.000$
-      & $p = 0.084$
-      & $p = 0.000$
-      & $p = 0.261$
-      & $p = 0.000$ \\
-      & CI [$+1.31, +2.03$]
-      & CI [$+0.87, +1.98$]
-      & CI [$-0.34, +1.22$]
-      & CI [$+0.78, +1.92$]
-      & CI [$-0.47, +1.24$]
-      & CI [$+1.07, +1.92$] \\
+      & \textbf{$+2.37$\,pp} (6/6)
+      & \textbf{$+2.18$\,pp} (6/6)
+      & \textbf{$+1.34$\,pp} (6/6)
+      & \textbf{$+2.14$\,pp} (6/6)
+      & $+1.01$\,pp (2/6)
+      & \textbf{$+2.18$\,pp} (6/6) \\
+      & $p < 10^{-4}$
+      & $p < 10^{-4}$
+      & $p < 10^{-4}$
+      & $p < 10^{-4}$
+      & $p = 0.216$
+      & $p < 10^{-4}$ \\
+      & CI [$+1.46, +3.69$]
+      & CI [$+1.13, +3.61$]
+      & CI [$+0.98, +1.82$]
+      & CI [$+0.99, +3.85$]
+      & CI [$-0.53, +3.31$]
+      & CI [$+1.23, +3.50$] \\
     \midrule
     \textbf{T3} Cox hazard
-      & \textbf{$+1.84$\,pp} (6/6)
-      & \textbf{$+1.65$\,pp} (6/6)
-      & \textbf{$+0.80$\,pp} (5/6)
-      & \textbf{$+1.61$\,pp} (6/6)
-      & $+0.48$\,pp (2/6)
-      & \textbf{$+1.65$\,pp} (6/6) \\
+      & \textbf{$+2.81$\,pp} (6/6)
+      & \textbf{$+2.63$\,pp} (6/6)
+      & \textbf{$+1.78$\,pp} (6/6)
+      & \textbf{$+2.58$\,pp} (6/6)
+      & \textbf{$+1.46$\,pp} (5/6)
+      & \textbf{$+2.63$\,pp} (6/6) \\
     \bottomrule
   \end{tabular}
 \end{table*}
@@ -208,29 +208,19 @@ protocol-hold contrast is the binding paired-bootstrap finding
 \Cref{tab:wf-nxm} states the binding finding as three concentric
 claims of decreasing strength.
 
-\paragraph{Strong claim (statistically significant, 4 of 6
-contrasts).} Both event-time policies T1 and T2 strongly outperform
-passive holds of \textbf{Aave V3, Compound V3, Morpho Blue, and
-Fluid} in all $\WFNWindows$ walk-forward windows
-(T1 vs Aave $\widehat{\Delta\text{APY}} = +1.84$\,pp, $p < 10^{-4}$;
-T1 vs Compound $+1.65$\,pp, $p < 10^{-4}$; T1 vs Morpho $+1.61$\,pp,
-$p < 10^{-4}$; T1 vs Fluid $+1.65$\,pp, $p < 10^{-4}$).  These four
-protocols together represent $\sim\$30$\,B addressable TVL of the
-design universe.
-
-\paragraph{Mid-strength claim (5/6 wins, p = 0.03--0.08).}
-T1 beats passive Spark 5/6 windows ($+0.80$\,pp, $p = 0.034$);
-T2 the same 5/6 ($+0.60$\,pp, $p = 0.084$).  Spark is a younger
-Aave-V3-fork whose supply rate occasionally spikes above the
-aggregate active allocator; the directional consistency is high
-but the per-window margin is small.
-
-\paragraph{Honest gap (Euler V2).} From window W3 onward Euler V2
-has been the single top-yielding protocol on the panel; no F3-only
-policy preferentially routes to it (T1 $+0.48$\,pp, $p = 0.198$;
-T2 $+0.28$\,pp, $p = 0.261$).  Closing this gap requires the F1
-lead-rate signal (Maker DSR, Curve 3pool, Euler-specific leads),
-which is the explicit journal-extension scope.
+\paragraph{Strong claim — all six contrasts significant.} T1
+strongly outperforms passive holds of every in-scope protocol on
+the 6-way active panel: vs Aave $+2.81$\,pp, vs Compound
+$+2.63$\,pp, vs Morpho $+2.58$\,pp, vs Fluid $+2.63$\,pp, vs Spark
+$+1.78$\,pp (all 6/6 windows, $p < 10^{-4}$), vs Euler
+$+1.46$\,pp (5/6 windows, $p = 0.026$). Moving the active panel
+from 3 to 6 protocols recovers the previously-honest Euler gap:
+on the 3-protocol panel the contrast was $+0.48$\,pp (2/6, $p =
+0.20$). T2 obtains a near-parallel result on the same 6-way panel
+($+1.34$\,pp on Spark to $+2.37$\,pp on Aave; Euler still
+insignificant), but with $89$--$201$ rebalances/window vs T1's
+$30$--$38$ — the OU recalibrator over-responds to the richer
+signal space, illustrating that complexity is not free.
 
 \paragraph{T3 $\equiv$ T1 collapse.}  T3 reproduces T1's contrast
 to within $\pm 0.01$\,pp on every cell of \Cref{tab:wf-nxm} — the
