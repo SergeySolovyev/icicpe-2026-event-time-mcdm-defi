@@ -118,9 +118,18 @@ def main() -> int:
             })
 
     out = pd.DataFrame(rows)
-    out_path = TABLES / "walk_forward_NxM_contrasts.csv"
+    # Write to a SEPARATE file when the 6-way panel is incomplete (N<6 windows
+    # per cell), so we don't clobber the canonical 18-row 3-way matrix that
+    # ships as the headline result. Once all 6 windows × 3 policies of 6-way
+    # active equity files are present, this overwrites the canonical matrix.
+    full_coverage = out["n_windows"].min() >= 6 if len(out) else False
+    if full_coverage:
+        out_path = TABLES / "walk_forward_NxM_contrasts.csv"
+    else:
+        out_path = TABLES / "walk_forward_NxM_contrasts_6way_partial.csv"
     out.to_csv(out_path, index=False)
-    print(f"wrote {len(out)} rows to {out_path}")
+    print(f"wrote {len(out)} rows to {out_path}  "
+          f"(coverage: {'full' if full_coverage else 'partial'})")
     print(out.to_string())
     return 0
 
