@@ -105,8 +105,6 @@ class T3HazardPolicy(DecisionPolicy):
                 x[i] = float(np.log10(max(state.gas_price_gwei, 1e-3)))
             elif name.startswith("f3_spread_") and "_vs_" in name:
                 # Per-pair spread feature: f3_spread_<i>_vs_<j>.
-                # Format: f3_spread_<proto_i_with_underscores>_vs_<proto_j_with_underscores>.
-                # Splitting on "_vs_" gives the two protocol names directly.
                 try:
                     raw = name.removeprefix("f3_spread_")
                     proto_i, proto_j = raw.split("_vs_", 1)
@@ -124,10 +122,18 @@ class T3HazardPolicy(DecisionPolicy):
                         return None
                 except ValueError:
                     return None
+            elif name.startswith(("f1_", "f4_")):
+                # F1 lead-rate (Maker DSR), F4 related-instruments (USDC
+                # peg, gas quantile) — read from BlockState.aux, which the
+                # replay engine populates from the per-block panel columns
+                # matching these prefixes. If missing or NaN, abort (T1
+                # fallback) — safer than silent zero-imputation.
+                v = state.aux.get(name)
+                if v is None or math.isnan(v):
+                    return None
+                x[i] = float(v)
             else:
-                # Unknown feature OR feature requiring external data
-                # (e.g. f1_dsr_apr from a DSR feed): can't materialise
-                # live, so fall back to T1.
+                # Unknown feature: can't materialise, fall back to T1.
                 return None
         return x
 

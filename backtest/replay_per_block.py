@@ -69,7 +69,24 @@ class EventReplayEngine:
         tvl = {p: _get(f"{p}_tvl_usd") for p in protos}
 
         gas_gwei = _get("gas_price_gwei", self.default_gas_price_gwei)
-        eth_usd = _get("eth_price_usd", self.default_eth_price_usd)
+        eth_usd = _get("eth_price_usd", _get("eth_usd", self.default_eth_price_usd))
+
+        # Populate aux dict with F1/F4 + signal-class columns. T3HazardPolicy
+        # reads from this when its trained artifact references features
+        # outside the F3 fragmentation family (computed from lending_apr).
+        aux: dict[str, float] = {}
+        for c in row.index:
+            if c.startswith(("f1_", "f4_")) or c in (
+                "eth_usd", "usdc_peg_dev_bp", "usdc_peg", "usdt_peg",
+            ):
+                v = row[c]
+                if isinstance(v, (int, float)) or (
+                    hasattr(v, "dtype") and "float" in str(v.dtype)
+                ):
+                    try:
+                        aux[c] = float(v)
+                    except (TypeError, ValueError):
+                        pass
 
         return BlockState(
             block_number=int(row["block_number"]),
@@ -83,6 +100,7 @@ class EventReplayEngine:
             gas_price_gwei=gas_gwei,
             eth_price_usd=eth_usd,
             gas_used_estimate=self.gas_used_estimate,
+            aux=aux,
         )
 
     def run(self, *, panel: pd.DataFrame, policy: DecisionPolicy):

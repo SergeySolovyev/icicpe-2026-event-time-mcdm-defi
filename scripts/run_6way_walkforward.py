@@ -28,6 +28,7 @@ sys.path.insert(0, str(ROOT))
 from backtest.replay_per_block import EventReplayEngine
 from decision.t1_threshold import T1ThresholdPolicy
 from decision.t2_optimal_stopping import T2OptimalStoppingPolicy, OUParams
+from decision.t3_hazard import T3HazardPolicy
 from scripts.dossier.metrics import sharpe, sortino, max_drawdown, daily_from_block_equity
 
 
@@ -58,12 +59,15 @@ def _build_policy(name: str):
             initial_params=OUParams(kappa=1e-5, theta=0.0, sigma=0.001),
             recalibrate_every=5000, window=5000,
         )
+    if name == "t3_hazard":
+        artifact_path = ROOT / "results/models/t3_cox.json"
+        return T3HazardPolicy.from_json(artifact_path)
     if name == "b1_always_aave":
         return _AlwaysAave()
     raise ValueError(name)
 
 
-def main(policies: tuple[str, ...] = ("b1_always_aave", "t1_threshold", "t2_optimal_stopping")) -> int:
+def main(policies: tuple[str, ...] = ("b1_always_aave", "t1_threshold", "t2_optimal_stopping", "t3_hazard")) -> int:
     panel_path = ROOT / "data/cached/per_block_panel.parquet"
     eq_dir = ROOT / "results/institutional/tables/equity_walk_forward_6way"
     eq_dir.mkdir(parents=True, exist_ok=True)

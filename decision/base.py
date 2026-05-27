@@ -14,7 +14,7 @@ implementations.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Literal
 
 import pandas as pd
@@ -48,6 +48,13 @@ class BlockState:
     Pure data: the policy is a pure function decide(state) -> action.
     All per-protocol fields are dict[protocol_name -> value] keyed by
     the names in the `protocols` tuple (validated by __post_init__).
+
+    `aux` is an open-ended dict for additional signal-class features
+    (F1 lead-rate, F4 related-instruments). The replay engine populates
+    it from panel columns matching `f1_*`, `f4_*`, `usdc_peg_dev_bp`,
+    `eth_usd` etc. Policies that don't need extras ignore this field;
+    T3HazardPolicy reads it for Cox features outside of the F3
+    fragmentation family.
     """
 
     block_number: int
@@ -61,6 +68,7 @@ class BlockState:
     gas_price_gwei: float
     eth_price_usd: float
     gas_used_estimate: int
+    aux: dict[str, float] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         proto_set = set(self.protocols)
