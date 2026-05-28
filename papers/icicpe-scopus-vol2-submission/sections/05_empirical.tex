@@ -114,9 +114,17 @@ end-to-end equity.
 \begin{table}[t]
   \centering
   \caption{T1--T3 active-policy results on the \DataStart--\DataEnd\
-    test window (\$1\,M initial position, $\NBlocks$ blocks).  Filled
-    from \texttt{results/tables/test\_matrix.csv} by
-    \texttt{scripts/fill\_vol2\_macros.py}.}
+    test window (\$1\,M initial position, $\NBlocks$ blocks).  T3
+    appears row-identical to T1 because the Cox hazard rule
+    analytically reduces to T1's spread-dwell threshold on this
+    panel's F3-only feature set (the F4 gas sub-signal is dropped as
+    zero-variance under the $25$\,gwei placeholder; F1 lead-rate is
+    queued for the next extension --- see \Cref{sec:limitations}~(ii)).
+    The T3-over-T1 walk-forward delta of $+7.03$\,bp on the
+    F1$+$F3 design matrix that closes H1c is documented separately
+    in the sophisticated-retrain paragraph below.  Filled from
+    \path{results/tables/test_matrix.csv} by
+    \path{scripts/fill_vol2_macros.py}.}
   \label{tab:test-matrix}
   \begin{tabular}{lrrrr}
     \toprule
@@ -124,9 +132,11 @@ end-to-end equity.
     \midrule
     \textbf{T1 Threshold}  & \textbf{\TOneAPY}   & \TOneNRebal            & \TOneGasUSD            & \TOneMaxDD \\
     T2 Optimal stopping    & \TTwoAPY            & \TTwoNRebal            & \TTwoGasUSD            & \TTwoMaxDD \\
-    T3 Cox hazard          & \TThreeAPY          & \TThreeNRebal          & \TThreeGasUSD          & \TThreeMaxDD \\
+    T3 Cox hazard$^{\ddagger}$  & \TThreeAPY     & \TThreeNRebal          & \TThreeGasUSD          & \TThreeMaxDD \\
     \bottomrule
-  \end{tabular}
+  \end{tabular}\\[2pt]
+  {\footnotesize $^{\ddagger}$ analytical collapse to T1 on F3-only;
+   F1$+$F3 retrain gives $+7.03$\,bp over T1, $p=0.015$.}
 \end{table}
 
 \textbf{T1 is the event-time winner}: \TOneAPY\ net APY at

@@ -114,9 +114,17 @@ end-to-end equity.
 \begin{table}[t]
   \centering
   \caption{T1--T3 active-policy results on the \DataStart--\DataEnd\
-    test window (\$1\,M initial position, $\NBlocks$ blocks).  Filled
-    from \texttt{results/tables/test\_matrix.csv} by
-    \texttt{scripts/fill\_vol2\_macros.py}.}
+    test window (\$1\,M initial position, $\NBlocks$ blocks).  T3
+    appears row-identical to T1 because the Cox hazard rule
+    analytically reduces to T1's spread-dwell threshold on this
+    panel's F3-only feature set (the F4 gas sub-signal is dropped as
+    zero-variance under the $25$\,gwei placeholder; F1 lead-rate is
+    queued for the next extension --- see \Cref{sec:limitations}~(ii)).
+    The T3-over-T1 walk-forward delta of $+7.03$\,bp on the
+    F1$+$F3 design matrix that closes H1c is documented separately
+    in the sophisticated-retrain paragraph below.  Filled from
+    \path{results/tables/test_matrix.csv} by
+    \path{scripts/fill_vol2_macros.py}.}
   \label{tab:test-matrix}
   \begin{tabular}{lrrrr}
     \toprule
@@ -124,9 +132,11 @@ end-to-end equity.
     \midrule
     \textbf{T1 Threshold}  & \textbf{\TOneAPY}   & \TOneNRebal            & \TOneGasUSD            & \TOneMaxDD \\
     T2 Optimal stopping    & \TTwoAPY            & \TTwoNRebal            & \TTwoGasUSD            & \TTwoMaxDD \\
-    T3 Cox hazard          & \TThreeAPY          & \TThreeNRebal          & \TThreeGasUSD          & \TThreeMaxDD \\
+    T3 Cox hazard$^{\ddagger}$  & \TThreeAPY     & \TThreeNRebal          & \TThreeGasUSD          & \TThreeMaxDD \\
     \bottomrule
-  \end{tabular}
+  \end{tabular}\\[2pt]
+  {\footnotesize $^{\ddagger}$ analytical collapse to T1 on F3-only;
+   F1$+$F3 retrain gives $+7.03$\,bp over T1, $p=0.015$.}
 \end{table}
 
 \textbf{T1 is the event-time winner}: \TOneAPY\ net APY at
@@ -259,17 +269,17 @@ the predicted F3-only ladder-collapse: T3 reduces to T1 analytically,
 and T2's OU calibrator converges to T1's empirical-EWMA threshold
 without the F1 lead-rate covariate.
 
-\begin{figure*}[t]
+\begin{figure}[!t]
   \centering
-  \includegraphics[width=0.95\textwidth]{../../results/figures/equity_curves.png}
+  \includegraphics[width=\columnwidth]{../../results/figures/equity_curves.png}
   \caption{Cumulative-equity curves over the \DataStart--\DataEnd\
     test window, one panel per active protocol plus the cross-protocol
     portfolio.  T1's switching at the Q1$\to$Q2 inflection (early
     April 2026) is visible as the divergence from the B1 Aave-only
-    curve in the summary panel.  Spanned across both columns so the
-    legend (B1--B4 + T1--T3) and panel axes are readable.}
+    curve in the summary panel.  Legend: B1--B4 baselines + T1--T3
+    policy tiers (see \Cref{sec:methodology}).}
   \label{fig:equity-curves}
-\end{figure*}
+\end{figure}
 
 % [T3 sophisticated retrain ablation+wf paragraph BEGIN]
 \paragraph{T3 sophisticated retrain (closes H1c).} We retrain T3's Cox proportional-hazards model on the full MacKenzie (2021) Table 3.2 F1+F3+F4 design matrix --- triple-barrier survival labels (24-h horizon), purged 5-fold CV with embargo $\approx 5.4$ days, sample-uniqueness weighting (López de Prado AFML Ch.4.5), L2 ridge sweep. Out-of-fold C-index lands at $0.563$ (F3 only), $0.582$ (F1+F3), $0.563$ (F3+F4), $0.582$ (F1+F3+F4); F1 Maker DSR delta is the only non-F3 signal class that meaningfully improves concordance ($+1.9$\,pp), while F4 (USDC peg + ETH/USD; gas placeholder dropped as zero-variance) contributes nothing above F3 alone --- an honest negative finding for one of the three MacKenzie signal classes in the DeFi-lending context. The top non-F3 coefficient is $f1\_dsr\_delta\_300$ (one-hour change in Maker DSR), providing direct empirical support for the F1 lead-rate signal class as the single ML lever above the gas-aware threshold rule. In walk-forward T3 yields $\Delta\textsc{APY} = \TThreeMeanDeltaBp$\,bp (95\% paired-bootstrap CI $[\TThreeCILow, \TThreeCIHigh]$, $p = \TThreePValue$, $\TThreeWins/\TThreeNWindows$ windows positive) over T1, closes pre-registered H1c ($p < 0.05$). Full ablation table + per-window head-to-head live in the institutional dossier §02.
