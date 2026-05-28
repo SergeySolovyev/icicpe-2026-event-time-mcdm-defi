@@ -129,3 +129,6 @@ papers/icicpe-scopus-vol2-submission/sections/*.aux
 # Plan D equity-curve parquets (regenerable from backtest.run_test_matrix)
 results/tables/equity/*.parquet
 
+
+# W&B local run artefacts (synced to wandb.ai, not source)
+wandb/
