@@ -35,13 +35,13 @@ dependence:
 (i) \textbf{Aave V3, Morpho Blue, Euler V2} — per-block panel built
 in \Cref{sec:methodology};
 (ii) \textbf{Compound V3} — verified hourly RPC fetcher
-(\texttt{data/cached/compound\_v3\_usdc\_eth\_2024-11\_to\_2026-04.parquet})
+(\path{compound_v3_usdc_eth_2024-11_to_2026-04.parquet})
 via Comet view-function calls;
 (iii) \textbf{Spark / SparkLend} — Sky Messari subgraph
-(\texttt{data/cached/spark\_hourly.parquet}, 6{,}189 hourly snapshots,
+(\path{spark_hourly.parquet}, 6{,}189 hourly snapshots,
 Nov 2024 -- Apr 2026);
 (iv) \textbf{Fluid Finance} — DeFiLlama Yield Pools daily APY
-(\texttt{data/cached/fluid\_daily.parquet}, 728 daily snapshots).
+(\path{fluid_daily.parquet}, 728 daily snapshots).
 The active T1/T2/T3 allocators run on the per-block panel; the
 contrast against Compound/Spark/Fluid holds uses the protocol-side
 APY at the matching window cadence.  All six protocols enter the
@@ -90,7 +90,7 @@ detailed provenance is in the preceding Scope paragraph.  The Maker
 DSR rate stream (Signal F1) is the one remaining gap and is the
 explicit next-extension scope.  Construction of the per-block panel
 is documented in \Cref{sec:methodology}; the artifact lives at
-\texttt{data/cached/per\_block\_panel.parquet}.
+\path{data/cached/per_block_panel.parquet}.
 
 The chronological split is locked.  Training: 2024-11-01 to
 2025-08-31 (rolling-window calibration only).  Validation:
@@ -259,14 +259,15 @@ the predicted F3-only ladder-collapse: T3 reduces to T1 analytically,
 and T2's OU calibrator converges to T1's empirical-EWMA threshold
 without the F1 lead-rate covariate.
 
-\begin{figure}[t]
+\begin{figure}[!t]
   \centering
-  \includegraphics[width=0.85\linewidth]{../../results/figures/equity_curves.png}
+  \includegraphics[width=\columnwidth]{../../results/figures/equity_curves.png}
   \caption{Cumulative-equity curves over the \DataStart--\DataEnd\
-    test window, one panel per protocol plus the cross-protocol
+    test window, one panel per active protocol plus the cross-protocol
     portfolio.  T1's switching at the Q1$\to$Q2 inflection (early
     April 2026) is visible as the divergence from the B1 Aave-only
-    curve in the summary panel.}
+    curve in the summary panel.  Legend: B1--B4 baselines + T1--T3
+    policy tiers (see \Cref{sec:methodology}).}
   \label{fig:equity-curves}
 \end{figure}
 

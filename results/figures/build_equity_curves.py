@@ -63,22 +63,23 @@ def build_equity_curves_figure(
             protocols_with_data.append(proto)
     n_proto = len(protocols_with_data)
 
-    # Grid: per-protocol panels + 1 portfolio summary + 1 legend.
-    # Layout adapts: e.g. 3 protocols + summary + legend = 5 panels → 3×2,
-    # 6 protocols + summary + legend = 8 panels → 4×2.
-    n_panels = n_proto + 2  # +summary +legend
+    # Grid: per-protocol panels + 1 portfolio summary.  Legend is moved
+    # OUT of the panel grid to a fig-level bottom legend so panels get
+    # full real-estate; this is the readable layout when the figure is
+    # rendered at single-column width in the paper.
+    n_panels = n_proto + 1  # +summary (legend is no longer a grid cell)
     n_cols = 2
     n_rows = (n_panels + n_cols - 1) // n_cols
+    # Aspect: 6-inch wide × ~3.5 inch per row -> vertical-leaning,
+    # which scales cleanly to ICICPE single-column (~242 pt).
     fig, axes = plt.subplots(n_rows, n_cols,
-                             figsize=(12, max(4, 3 * n_rows)),
+                             figsize=(6.5, max(3.5, 2.6 * n_rows)),
                              sharex=True)
     axes_flat = axes.flatten()
     protocol_axes = dict(zip(protocols_with_data, axes_flat[:n_proto]))
     summary_ax = axes_flat[n_proto]
-    legend_ax = axes_flat[n_proto + 1]
-    legend_ax.axis("off")
     # Hide any spare axes at the end (when n_panels is odd).
-    for ax in axes_flat[n_proto + 2:]:
+    for ax in axes_flat[n_proto + 1:]:
         ax.axis("off")
 
     line_handles, line_labels = [], []
@@ -117,12 +118,16 @@ def build_equity_curves_figure(
     summary_ax.grid(alpha=0.3)
     summary_ax.set_ylabel("equity / initial")
 
-    legend_ax.legend(line_handles, line_labels, loc="center", fontsize=9,
-                     frameon=False, title="policy")
+    # Bottom legend, horizontal across the figure (ncol=4 wraps the
+    # 7 policy labels onto two lines, which is compact in tall-aspect).
+    fig.legend(line_handles, line_labels, loc="lower center",
+               ncol=4, fontsize=8, frameon=False,
+               bbox_to_anchor=(0.5, -0.02))
 
     fig.suptitle("Per-protocol equity curves, Jan--Apr 2026 test window",
-                 fontsize=13)
-    fig.tight_layout(rect=(0, 0, 1, 0.97))
+                 fontsize=11)
+    # Reserve bottom margin for legend; top margin for suptitle.
+    fig.tight_layout(rect=(0, 0.06, 1, 0.96))
 
     out_path = Path(out_path)
     out_path.parent.mkdir(parents=True, exist_ok=True)
