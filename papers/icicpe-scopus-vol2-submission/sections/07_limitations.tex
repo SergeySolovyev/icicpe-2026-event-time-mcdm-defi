@@ -49,14 +49,16 @@ mainnet attestation extends this paper.
 
 \paragraph{Code and data availability.}  All artefacts are public.
 End-to-end reproducible pipeline (data extension, T3 training, walk-
-forward, capacity, paper rebuild) including the per-block panel and
-walk-forward equity parquets:
+forward, capacity, paper rebuild) plus walk-forward equity parquets,
+T3 Cox-hazard training artefacts (per-ablation sidecars,
+\texttt{results/models/t3\_cox\_*.json}), and Institutional Dossier
+(8 chapters + LP slide deck, \texttt{docs/institutional/}):
 \url{https://github.com/SergeySolovyev/icicpe-2026-event-time-mcdm-defi}
-(\texttt{python -m scripts.finalize\_6way\_pipeline}). T3 Cox-hazard
-training artefacts (per-ablation sidecars,
-\texttt{results/models/t3\_cox\_*.json}) and Institutional Dossier
-(8 chapters + LP slide deck, \texttt{docs/institutional/}) live in
-the same repository. Production live agent (per-block loop,
-Flashbots private mempool, Tier 5 observability with Prometheus
-\texttt{/metrics} + append-only audit trail; $128/128$ tests pass):
+(\texttt{python -m scripts.finalize\_6way\_pipeline}). The per-block
+6-way panel ($\sim$72\,MB parquet, Nov 2024--Apr 2026) is mirrored
+on HuggingFace Datasets at
+\url{https://huggingface.co/datasets/sssolovjov/icicpe-2026-defi-panel}.
+Production live agent (per-block loop, Flashbots private mempool,
+Tier 5 observability with Prometheus \texttt{/metrics} + append-only
+audit trail; $128/128$ tests pass):
 \url{https://github.com/SergeySolovyev/event-time-mcdm-agent}.

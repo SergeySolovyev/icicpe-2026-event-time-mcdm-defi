@@ -132,3 +132,13 @@ results/tables/equity/*.parquet
 
 # W&B local run artefacts (synced to wandb.ai, not source)
 wandb/
+
+# SCOPUS submission zip rebuilds — regenerable via
+# scripts/build_submission_zip.py; only the final uploaded zip is the
+# authoritative artefact (cited by sha256 in the commit log).
+submission_*.zip
+submission_*.zip.sha256
+submission_*.manifest.txt
+
+# Alternate-name PDF builds when main.pdf is locked in a reader.
+papers/icicpe-scopus-vol2-submission/main_hf.pdf
