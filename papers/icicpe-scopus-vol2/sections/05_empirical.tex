@@ -115,14 +115,16 @@ end-to-end equity.
   \centering
   \caption{T1--T3 active-policy results on the \DataStart--\DataEnd\
     test window (\$1\,M initial position, $\NBlocks$ blocks).  T3
-    appears row-identical to T1 because the Cox hazard rule
-    analytically reduces to T1's spread-dwell threshold on this
-    panel's F3-only feature set (the F4 gas sub-signal is dropped as
-    zero-variance under the $25$\,gwei placeholder; F1 lead-rate is
-    queued for the next extension --- see \Cref{sec:limitations}~(ii)).
-    The T3-over-T1 walk-forward delta of $+7.03$\,bp on the
-    F1$+$F3 design matrix that closes H1c is documented separately
-    in the sophisticated-retrain paragraph below.  Filled from
+    appears row-identical to T1: the F1$+$F3 sophisticated-retrain
+    Cox model (the H1c claim) is replayed here, but on this
+    4-month test slice its hazard-threshold inequality fires on
+    exactly the same blocks as T1's spread-dwell threshold ---
+    an empirical, not analytical, coincidence.  The
+    $+7.03$\,bp walk-forward $\Delta\textsc{APY}$ that closes H1c
+    is concentrated in earlier windows (see the
+    sophisticated-retrain paragraph below and
+    \Cref{tab:wf-nxm}); on Jan--Apr 2026 alone, T3 and T1 share
+    the same rebalance schedule.  Filled from
     \path{results/tables/test_matrix.csv} by
     \path{scripts/fill_vol2_macros.py}.}
   \label{tab:test-matrix}
@@ -132,11 +134,12 @@ end-to-end equity.
     \midrule
     \textbf{T1 Threshold}  & \textbf{\TOneAPY}   & \TOneNRebal            & \TOneGasUSD            & \TOneMaxDD \\
     T2 Optimal stopping    & \TTwoAPY            & \TTwoNRebal            & \TTwoGasUSD            & \TTwoMaxDD \\
-    T3 Cox hazard$^{\ddagger}$  & \TThreeAPY     & \TThreeNRebal          & \TThreeGasUSD          & \TThreeMaxDD \\
+    T3 Cox (F1$+$F3)$^{\ddagger}$ & \TThreeAPY  & \TThreeNRebal          & \TThreeGasUSD          & \TThreeMaxDD \\
     \bottomrule
   \end{tabular}\\[2pt]
-  {\footnotesize $^{\ddagger}$ analytical collapse to T1 on F3-only;
-   F1$+$F3 retrain gives $+7.03$\,bp over T1, $p=0.015$.}
+  {\footnotesize $^{\ddagger}$ F1$+$F3 hazard $\equiv$ T1 schedule on
+   Jan--Apr 2026; the H1c $+7.03$\,bp delta lives in the broader
+   $N\!=\!6$ walk-forward (\Cref{tab:wf-nxm}).}
 \end{table}
 
 \textbf{T1 is the event-time winner}: \TOneAPY\ net APY at
@@ -306,7 +309,9 @@ mean-reversion regime more efficiently than T1's threshold heuristic.
 \begin{table}[t]
   \centering
   \caption{Per-quarter regime-conditional net APY from
-    \texttt{results/tables/regime\_breakdown.csv}.}
+    \path{results/tables/regime_breakdown.csv}.  T3 matches T1 for
+    the same reason as in \Cref{tab:test-matrix} --- the F1$+$F3
+    Cox model fires on the same blocks T1 does over Jan--Apr 2026.}
   \label{tab:regime-breakdown}
   \begin{tabular}{lcc}
     \toprule
@@ -315,9 +320,12 @@ mean-reversion regime more efficiently than T1's threshold heuristic.
     B1 Always-Aave        & \BuyholdAPYQone        & \BuyholdAPYQtwo \\
     \textbf{T1 Threshold} & \textbf{\TOneAPYQone}  & \TOneAPYQtwo \\
     T2 OU stopping        & \TTwoAPYQone           & \textbf{\TTwoAPYQtwo} \\
-    T3 Cox hazard         & \TThreeAPYQone         & \TThreeAPYQtwo \\
+    T3 Cox (F1$+$F3)$^{\ddagger}$ & \TThreeAPYQone & \TThreeAPYQtwo \\
     \bottomrule
-  \end{tabular}
+  \end{tabular}\\[2pt]
+  {\footnotesize $^{\ddagger}$ identical to T1 on this slice; H1c
+   $+7.03$\,bp delta lives in the broader walk-forward
+   (\Cref{tab:wf-nxm}).}
 \end{table}
 
 The asymmetry is precisely what a Krause-style

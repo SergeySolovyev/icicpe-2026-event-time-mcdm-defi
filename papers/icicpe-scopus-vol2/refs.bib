@@ -22,13 +22,92 @@
 
 @misc{solovev2026vault,
   author       = {Solovev, Sergei S.},
-  title        = {{AI-managed ERC-4626 yield vault with multi-criteria
-                  decision making}},
+  title        = {{AI-Managed ERC-4626 Yield Vault with Multi-Criteria
+                  Decision Making: Design, Implementation, and Formal
+                  Verification}},
   year         = {2026},
-  howpublished = {preprint},
-  note         = {Author's prior work; the 4-factor MCDM (APY 40\%, Risk
-                  25\%, Cost 20\%, Stab 15\%) used as the B4 published
-                  baseline in this paper originated here.}
+  month        = apr,
+  howpublished = {Preprint. HSE University, Faculty of Computer Science,
+                  Moscow. Code: \mbox{https://github.com/SergeySolovyev/ai-yield-vault}},
+  note         = {Author's prior work; the 4-factor MCDM (yield 40\%,
+                  risk 25\%, cost 20\%, stability 15\%) used as the
+                  published B4 baseline in this paper originated here,
+                  with on-chain EIP-712 signed-decision verification on
+                  Sepolia testnet.}
+}
+
+% ---------- Modern DeFi microstructure / MEV / market-design (2022-2025) ----------
+
+@inproceedings{werner2022sok,
+  author    = {Werner, Sam M. and Perez, Daniel and Gudgeon, Lewis and
+               Klages-Mundt, Ariah and Harz, Dominik and Knottenbelt,
+               William J.},
+  title     = {{SoK}: Decentralized Finance ({DeFi})},
+  booktitle = {Proc.\ 4th ACM Conf.\ on Advances in Financial Tech.\ ({AFT '22})},
+  year      = {2022},
+  doi       = {10.1145/3558535.3559780}
+}
+
+@article{capponi2025mev,
+  author  = {Capponi, Agostino and Jia, Ruizhe and Wang, Shihao},
+  title   = {Maximal Extractable Value and Allocative Inefficiencies in
+             Public Blockchains},
+  journal = {Journal of Financial Economics},
+  year    = {2025}
+}
+
+@article{lehar2024fragility,
+  author  = {Lehar, Alfred and Parlour, Christine A.},
+  title   = {Systemic Fragility in Decentralized Markets},
+  journal = {Working Paper, U.\ Calgary / UC Berkeley Haas},
+  year    = {2024}
+}
+
+@inproceedings{heimbach2023pbs,
+  author    = {Heimbach, Lioba and Kiffer, Lucianna and Ferreira Torres, Christof
+               and Wattenhofer, Roger},
+  title     = {{Ethereum}'s Proposer-Builder Separation: Promises and Realities},
+  booktitle = {Proc.\ 2023 ACM Internet Measurement Conf.\ ({IMC '23})},
+  year      = {2023},
+  doi       = {10.1145/3618257.3624824}
+}
+
+@inproceedings{solmaz2025optimisticmev,
+  author    = {Solmaz, Ozan and Heimbach, Lioba and Vonlanthen, Yann and
+               Wattenhofer, Roger},
+  title     = {Optimistic {MEV} in {Ethereum} {Layer 2s}: Why Blockspace Is
+               Always in Demand},
+  booktitle = {AFT '25 (LIPIcs)},
+  year      = {2025},
+  doi       = {10.4230/LIPIcs.AFT.2025.28}
+}
+
+@article{cornelli2025aave,
+  author  = {Cornelli, Giulio and Doerr, Sebastian and Gambacorta,
+             Leonardo and Merrouche, Ouarda},
+  title   = {Why {DeFi} Lending? Evidence from {Aave V2}},
+  journal = {BIS Working Papers},
+  number  = {1183},
+  year    = {2024}
+}
+
+@inproceedings{daian2020flashboys,
+  author    = {Daian, Philip and Goldfeder, Steven and Kell, Tyler and
+               Li, Yunqi and Zhao, Xueyuan and Bentov, Iddo and Breidenbach,
+               Lorenz and Juels, Ari},
+  title     = {Flash {Boys 2.0}: Frontrunning in Decentralized Exchanges,
+               Miner Extractable Value, and Consensus Instability},
+  booktitle = {IEEE Symposium on Security and Privacy ({S\&P})},
+  year      = {2020},
+  doi       = {10.1109/SP40000.2020.00040}
+}
+
+@misc{heimbach2024sokreordering,
+  author       = {Heimbach, Lioba and Wattenhofer, Roger},
+  title        = {{SoK}: Preventing Transaction Reordering Manipulations in
+                  Decentralized Finance},
+  year         = {2024},
+  howpublished = {arXiv:2203.11520}
 }
 
 @software{krestenko2026fractaldefi,

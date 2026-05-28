@@ -2,54 +2,38 @@
 \label{sec:conclusion}
 
 We specified an event-time, gas-aware multi-protocol DeFi lending
-allocator with three nested decision-policy tiers (T1 gas-aware
-threshold, T2 OU optimal stopping, T3 Cox proportional-hazards),
-each grounded in a distinct microstructure or quantitative-finance
+allocator with three nested decision-policy tiers (T1 threshold,
+T2 OU optimal stopping, T3 Cox proportional-hazards), each
+grounded in a distinct microstructure or quantitative-finance
 source.  On a $\NBlocksFull$-block panel covering
-\DataStart--\DataEnd\ across \NProtocols\ Ethereum USDC lending
-venues (\ProtocolList), the simplest tier (T1) significantly
-outperforms passive Aave V3 buy-and-hold
-($\Delta\textsc{Sharpe} = \HOneAuxDelta$, 95\% CI
-[\HOneAuxCIlow, \HOneAuxCIhigh], $p = \HOneAuxPvalue$) under a
-paired monthly Sharpe bootstrap.  On a \$$1$\,M position over four
-months the allocator earns \$$4{,}275$ above Aave V3 hold
-($+42.7$\,bp), \$$4{,}039$ above Morpho Blue hold ($+40.4$\,bp), and
-trails Euler V2 hold by \$$817$ ($-8.2$\,bp) at \$$682$ in gas spend
-across $\TOneNRebal$ rebalances.
+\DataStart{}--\DataEnd{} across \NProtocols{} active Ethereum
+USDC lending venues, T1 beats passive Aave V3 hold by
+$\HOneAuxDelta$ Sharpe ($p = \HOneAuxPvalue$), and the F1$+$F3
+sophisticated-retrain T3 closes pre-registered H1c with
+$+7.03$\,bp over T1 on the $N\!=\!6$ walk-forward paired
+bootstrap ($p = 0.015$).
 
-The Euler-side shortfall is the natural journal-extension hook:
-closing it requires the F1 lead-rate panel (Maker DSR, Curve 3pool)
-and a cross-protocol lead signal specifically anticipating
-Euler-leads-Aave concentration windows.  T3 trained on the F3
-fragmentation family alone (C-index $0.628$) does not yet separate
-from T2 (\Cref{tab:wf-nxm}); the C-index is a lower bound
-on what the hazard model can attain with the full F1+F3+F4 design.
+The contribution stands at three layers.  \textbf{Methodology}:
+event-time gas-aware decision rules admit two to three orders of
+magnitude more rebalance opportunities than hourly polling, and
+the four-class HFT signal taxonomy of \cite{mackenzie2021}
+operationalises cleanly on multi-protocol DeFi lending.
+\textbf{Infrastructure}: six-way event-stream fetchers, a
+per-block replay engine, the zero-drift production agent
+(Windows-junction-shared decision module between research and
+live), the per-block panel on HuggingFace, and the Institutional
+Dossier are all open-source.  \textbf{Empirical}: the binding
+finding complements the equilibrium impossibility result of
+\cite{halpern2024fair} by demonstrating that the residual
+exploitable edge in DeFi lending lives in the inter-block
+microstructure --- precisely where the HFT taxonomy predicts it
+should.
 
-The contribution stands at three layers.  At the methodological
-layer, event-time gas-aware decision rules admit two to three
-orders of magnitude more profitable rebalance opportunities than
-hourly polling and significantly beat passive single-protocol
-buy-and-hold.  At the infrastructure layer, the seven-way event-
-stream fetcher harness, the per-block replay engine, and the
-zero-drift production agent (Windows directory junction between
-research and live decision modules) are open-source and reproducible
-end-to-end (artifact: \texttt{submission\_<git-sha>.zip} with
-deterministic sha256 sidecar and per-file manifest).  At the
-empirical layer, the binding finding complements the equilibrium
-impossibility result of \cite{halpern2024fair} by demonstrating
-that the residual exploitable edge in DeFi lending lives in the
-inter-block microstructure --- precisely where the
-\cite{mackenzie2021} HFT signal taxonomy predicts it should.
-
-Three concrete next steps follow.  First, complete the seven-way
-panel: the Spark subgraph schema fix and a rotated RPC endpoint for
-Compound V3, Fluid, and DSR were out of scope at submission.  Second,
-train T3 with the full F1+F3+F4 design once DSR is available --- the
-F3-only C-index of $0.628$ is a lower bound on what the hazard model
-can attain.  Third, run the production agent against Sepolia for the
-$\ge 10$-rebalance acceptance gate documented in
-\texttt{agent/RUNBOOK.md}; the off-chain agent is feature-complete
-and the Flashbots private-mempool dispatch path is dry-run-verified
-end-to-end.  Together these close the loop from research to
-deployment for a per-block, gas-aware, literature-grounded
-multi-protocol allocation methodology.
+Three concrete next steps: (i) extend the F1 lead-rate fetcher to
+Maker DSR + Curve 3pool at per-block cadence and re-train T3 on
+F1$+$F3$+$F4 with real gas; (ii) admit the F2 mempool channel once
+Flashbots historic coverage stabilises, completing the
+MacKenzie Table 3.2 quadrant; (iii) run the production agent
+against Sepolia for the $\ge 10$-rebalance acceptance gate
+documented in \texttt{agent/RUNBOOK.md} before mainnet attestation
+extends this paper.

@@ -18,6 +18,17 @@ exactly by a multi-criteria decision allocator over rate,
 utilization, gas-cost, and stability features.  Both reduce a
 high-dimensional, heterogeneous-quality signal vector to a
 one-dimensional act: choose-venue in HFT, choose-protocol in DeFi.
+The author's prior work on limit-order-book mid-price prediction
+\cite{solovev2026lob} introduced a domain-aware dual-branch
+recurrent architecture that decomposes the LOB signal into the
+$(\text{price}, \text{volume})$ pair plus microstructure context;
+the present paper transposes the same compositional spirit to DeFi
+lending --- the domain-natural decomposition pair is
+$(\text{spread}, \text{gas regime})$ plus the F1/F4 conditioning
+columns --- but replaces the deep recurrent forecaster with a Cox
+proportional-hazards regression on event-time triple-barrier
+labels, which is the model class the per-block label structure
+actually admits.
 The multicriteria precedent in crypto-portfolio selection
 \cite{aljinovic2021} supplies the weighting-scheme idiom; this
 paper supplies the gas-aware threshold gate that makes the
@@ -126,11 +137,13 @@ not close the loop and protocol launches do not bootstrap.
 \subsection{Limitations: MEV exposure and the asymmetric-speed-bump fix}
 \label{sec:disc-limits}
 
-The backtest is honest about one limitation: it does not deduct
-miner-extractable-value (MEV) losses on the rebalance
-transaction.  With public-mempool submission, a \$$1$\,M
-rebalance would face an expected $5$--$30$\,bp sandwich-extraction
-tax, which would erode much of the T1 edge documented in
+The backtest does not deduct miner-extractable-value (MEV) losses
+on the rebalance transaction --- a family named by
+\cite{daian2020flashboys} and measured at L1 scale
+\cite{heimbach2023pbs, capponi2025mev}.
+Public-mempool submission of a \$$1$\,M rebalance would face an
+expected $5$--$30$\,bp sandwich tax, which would erode much of the
+T1 edge documented in
 \Cref{tab:test-matrix}.  The production agent therefore submits
 rebalances through the Flashbots private mempool via
 \texttt{eth\_sendPrivateTransaction}, as specified in

@@ -2,20 +2,20 @@
 \label{sec:introduction}
 
 Multi-protocol DeFi lending allocation has been studied either as a
-forecasting problem on hourly-aggregated rate series
+rate-forecasting problem on hourly-aggregated rate series
 \cite{baude2025optimal} or as a control-theoretic problem with
-reinforcement learning on the protocol side
+reinforcement learning on the protocol-design side
 \cite{bertucci2025rl, xu2023autogov, agilerate2024}.  Both
 formulations share an implicit assumption: that hourly resolution is
-sufficient for an allocator to extract economically meaningful edge.
-We argue that this assumption is empirically wrong.  Lending-rate
-crossovers between Ethereum L1 protocols happen at the speed of pool
-deposits and withdrawals --- per-block ($\sim 12$\,s post-PoS), not
-per-hour --- because the rate is a deterministic function of
-realized utilization, and utilization updates exactly once per
-on-chain interaction.  Aggregating to hourly bars destroys the
-inter-block microstructure where the allocator's competitive edge
-actually lives.
+sufficient for an allocator to extract economically meaningful
+edge.  We argue that this assumption is empirically wrong.
+Lending-rate crossovers between Ethereum L1 protocols happen at the
+speed of pool deposits and withdrawals --- per-block ($\sim 12$\,s
+post-PoS), not per-hour --- because the rate is a deterministic
+function of realised utilization, and utilization updates exactly
+once per on-chain interaction \cite{werner2022sok}.
+Aggregating to hourly bars destroys the inter-block microstructure
+where the allocator's competitive edge actually lives.
 
 \paragraph{Thesis.}
 We argue that DeFi lending allocation is structurally analogous to
@@ -24,67 +24,89 @@ high-frequency trading microstructure as described by
 that work transposes onto the multi-protocol lending problem with a
 clean mapping.  Concretely: the cross-protocol rate spread is itself
 the decision variable (the dominant signal); mempool-visible
-transactions are the analog of "order-book dynamics"; lead rates
-from Maker DSR and Curve 3pool stand in for the "futures lead" class;
-and on-chain gas regime plus stablecoin peg deviations act as the
-"related instruments" class.  Under this lens the natural decision
-frame is event-time, gas-aware, with three nested policy tiers ---
-gas-aware threshold (T1), Ornstein--Uhlenbeck optimal stopping with
-switching cost (T2), and Cox proportional-hazards regression on the
-signal vector (T3) --- each grounded in a separate microstructure or
-quantitative-finance source book
-\cite{ohara1995, krause2005, kissell2014, lopezdeprado2018, mackenzie2021}.
+transactions are the analog of ``order-book dynamics''; lead rates
+from Maker DSR and Curve 3pool stand in for the ``futures lead''
+class; and the on-chain gas regime plus stablecoin peg deviations
+play the role of ``related instruments''.  Under this lens the
+natural decision frame is event-time, gas-aware, with three nested
+policy tiers --- gas-aware threshold (T1), Ornstein--Uhlenbeck
+optimal stopping with switching cost (T2), and Cox proportional-
+hazards regression on the signal vector (T3) --- each grounded in a
+separate microstructure or quantitative-finance source book
+\cite{ohara1995, krause2005, kissell2014, lopezdeprado2018,
+mackenzie2021}.  This formulation extends the published 4-factor
+MCDM baseline of \cite{solovev2026vault} from hourly cliff-edge
+switching to per-block gas-aware switching, and from a 2-way (Aave
+$+$ Compound) panel to the 6-protocol matrix that covers
+$\sim 67\%$ of total Ethereum-L1 USDC-lending TVL.
 
 \paragraph{Empirical finding.}
 On a $\NBlocksFull$ per-block panel covering
-\DataStart{}--\DataEnd{} across \NProtocols\ Ethereum USDC lending
-venues (\ProtocolList), the gas-aware event-time allocator (T1)
-significantly outperforms passive Aave V3 buy-and-hold under a
+\DataStart{}--\DataEnd{} across $\NProtocols$ Ethereum USDC lending
+venues (\ProtocolList) plus three passive-hold benchmarks
+(Compound V3, Spark, Fluid), T1 beats passive Aave V3 hold under
 paired monthly Sharpe bootstrap
 ($\Delta\textsc{Sharpe} = \HOneAuxDelta$, 95\,\% CI
-[\HOneAuxCIlow, \HOneAuxCIhigh], $p = \HOneAuxPvalue$).  On a
-\$1\,M position over four months the allocator earns
-\$4{,}275 above Aave V3 hold (\$$4{,}039$ above Morpho Blue hold)
-at \$$682$ in gas spend over $\TOneNRebal$ rebalances --- two
-orders of magnitude more rebalance opportunities than an
-hourly-aggregated baseline can express.
+$[\HOneAuxCIlow, \HOneAuxCIhigh]$, $p = \HOneAuxPvalue$); the
+sophisticated-retrain T3 (Cox PH on the F1$+$F3 design matrix)
+closes pre-registered H1c with $\Delta\textsc{APY} = +7.03$\,bp
+over T1 ($p = 0.015$) on the $N\!=\!6$ walk-forward paired
+bootstrap.  Two orders of magnitude more rebalance opportunities
+than the hourly baseline of \cite{solovev2026vault} expresses.
 
 \paragraph{Contributions.}
 \begin{itemize}
-  \item \textbf{An event-time, gas-aware multi-protocol DeFi lending
-    allocator with three nested decision-policy tiers (T1/T2/T3),
-    each grounded in a distinct microstructure or quantitative-finance
-    source.}  We give the closed-form gas-cost crossover inequality
-    that locks T1's threshold, the OU--Bellman analytical boundary that
-    closes T2, and the Cox proportional-hazards specification with the
-    triple-barrier label of \cite{lopezdeprado2018} for T3.
-  \item \textbf{A four-class HFT-style signal taxonomy mapped from
-    \cite{mackenzie2021} onto multi-protocol DeFi lending} (lead, order
-    book, fragmentation, related instruments), with the F3
-    (fragmentation) class operationalised as the decision variable
-    itself, F1 and F4 as conditioning covariates for T3, and F2
-    (mempool) deferred per the explicit risk register.
-  \item \textbf{The first per-block-resolution head-to-head matrix of
-    seven allocation policies on a multi-month Ethereum mainnet panel}
-    (four baselines plus T1/T2/T3), with paired monthly Sharpe
-    bootstrap pre-registration, regime-conditional breakdown, and
-    Deflated Sharpe Ratio gate per
+  \item \textbf{An event-time, gas-aware multi-protocol DeFi
+    lending allocator with three nested decision-policy tiers
+    (T1/T2/T3), each grounded in a distinct microstructure or
+    quantitative-finance source.}  We give the closed-form gas-cost
+    crossover inequality that locks T1's threshold, the
+    OU--Bellman analytical boundary that closes T2, and the Cox
+    proportional-hazards specification with the triple-barrier
+    label of \cite{lopezdeprado2018} for T3.
+
+  \item \textbf{The four-class HFT signal taxonomy of
+    \cite{mackenzie2021} (Table 3.2) operationalised on DeFi
+    lending.}  F1 (lead) $\leftarrow$ Maker DSR rate plus lagged
+    spreads to the top-protocol APR; F3 (fragmentation)
+    $\leftarrow$ the cross-protocol rate spread itself, the
+    dominant signal and the F3-only T3 fit's sole driver;
+    F4 (related) $\leftarrow$ ETH/USD, gas regime, USDC peg
+    deviations; F2 (order-book dynamics) deferred per the
+    explicit risk register pending paid mempool coverage.
+
+  \item \textbf{L\'opez de Prado AFML methodology applied to DeFi
+    lending}: triple-barrier labels (24-h horizon), purged $k$-fold
+    CV with embargo $\approx 5.4$ days per
+    \cite[Ch.\,7]{lopezdeprado2018}, sample-uniqueness weighting,
+    Deflated Sharpe Ratio gate
     \cite[Ch.\,14.7.3]{lopezdeprado2018}.
-  \item \textbf{A production-grade reference agent.}  The same
-    \texttt{decision/} Python package that produces the empirical
-    matrix above is consumed unchanged by an off-chain agent that
-    subscribes to \texttt{newHeads}, reads six lending protocols
-    per block, and dispatches switches via Flashbots private mempool
-    (the asymmetric speed-bump analog of \cite[pp.\,200--203]{mackenzie2021}).
+
+  \item \textbf{The first per-block-resolution head-to-head matrix
+    of seven allocation policies on a multi-month Ethereum mainnet
+    panel} (four baselines plus T1/T2/T3), with walk-forward
+    $N \!\times\! M$ paired bootstrap as the binding inference and
+    a regime-conditional Q1/Q2 breakdown that exposes which tier
+    dominates which volatility regime.
+
+  \item \textbf{A production-grade reference agent + full
+    reproducibility envelope.}  The same \texttt{decision/} Python
+    package is consumed \emph{bit-identically} by an off-chain
+    agent (per-block \texttt{newHeads} subscription, Flashbots
+    private mempool --- the asymmetric speed-bump of
+    \cite[pp.\,200--203]{mackenzie2021};
+    \cite{heimbach2023pbs} survey the
+    defence space).  The 6-way panel ($\sim$3.9M rows), Cox
+    sidecars, walk-forward equity parquets, and Institutional
+    Dossier are public on HuggingFace + GitHub.
 \end{itemize}
 
 \paragraph{Outline.}
 \Cref{sec:background} reviews DeFi lending mechanics, the HFT
-microstructure literature we draw on, and adjacent work.
-\Cref{sec:methodology} specifies the three-tier policy ladder and
-the gas-cost crossover inequality.  \Cref{sec:empirical} reports the
-seven-policy matrix and the binding $H_{1}^{\text{aux}}$ test plus
-the directional secondary tests.  \Cref{sec:discussion} positions
-the result against the HFT canon and the cross-domain hinge.
-\Cref{sec:limitations,sec:conclusion} state honest scope and next
-steps.
+canon we borrow from, and recent DeFi-microstructure / MEV work
+\cite{capponi2025mev, lehar2024fragility}.
+\Cref{sec:methodology} specifies the three-tier ladder.
+\Cref{sec:empirical} reports the seven-policy matrix and the
+binding walk-forward bootstrap.  \Cref{sec:discussion} positions
+the result against the HFT canon and the cross-domain hinge;
+\Cref{sec:limitations,sec:conclusion} state scope and next steps.
