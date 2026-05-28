@@ -289,6 +289,37 @@ without the F1 lead-rate covariate.
 
 % [T3 sophisticated retrain ablation+wf paragraph END]
 
+\begin{table}[t]
+  \centering
+  \caption{\textbf{T3 (F1$+$F3) vs T1 head-to-head, per walk-forward
+    window.}  Each window is a 3-month non-overlapping slice of the
+    panel; T1 and T3 are replayed independently with shared decision
+    interface and identical gas-cost model.  T3 wins 5 of 6 windows
+    with mean $\Delta\textsc{APY} = +7.03$\,bp, paired-bootstrap
+    95\,\% CI $[+0.48, +14.74]$\,bp, one-sided $p = 0.015$ (closes
+    pre-registered H1c).  The Jan--Apr 2026 test slice of
+    \Cref{tab:test-matrix,tab:regime-breakdown} sits inside W5+W6,
+    where the edge is smallest (the F1 DSR signal is least
+    informative in calm regimes); the bulk of T3's edge accrues in
+    W1, W2, W6 --- volatile spread regimes that aren't sampled by
+    the four-month aggregate.}
+  \label{tab:wf-t3-vs-t1}
+  \begin{tabular}{lrrrcc}
+    \toprule
+    Window & Span & T1 APY & T3 APY & $\Delta$\,bp & rebal T1$\to$T3 \\
+    \midrule
+    W1 & Nov'24--Jan'25 & 15.24\% & 15.31\% & $+6.7$  & 218 $\to$ 224 \\
+    W2 & Feb--Apr'25   & 5.50\%  & 5.63\%  & $+12.8$ & 32 $\to$ 34 \\
+    W3 & May--Jul'25   & 7.16\%  & 7.14\%  & $-2.4$  & 38 $\to$ 45 \\
+    W4 & Aug--Oct'25   & 6.57\%  & 6.57\%  & $+0.3$  & 31 $\to$ 21 \\
+    W5 & Nov'25--Jan'26 & 5.16\%  & 5.17\%  & $+0.5$  & 34 $\to$ 41 \\
+    W6 & Feb--Apr'26   & 5.14\%  & 5.38\%  & $\mathbf{+24.3}$ & 30 $\to$ 47 \\
+    \midrule
+    \textbf{mean} & & & & \textbf{$+7.03$\,bp} & 5 / 6 windows positive \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
 \paragraph{Capacity ($\$1$M--$\$50$M).} Krause-2005 yield-impact:
 T3 net APY drops from $7.43$\,\% ($\$1$M) to $6.40$\,\% ($\$50$M),
 retaining $+178$\,bp edge over passive Aave-hold even at $\$50$M.
