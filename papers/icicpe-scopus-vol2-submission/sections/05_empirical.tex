@@ -60,7 +60,7 @@ $p$ and each protocol $i$, we test
 \label{eq:wf-h1}
 H_{1}^{p,i}: ~ \mathbb{E}[\Delta\textsc{APY}(p, \text{hold}_{i})] > 0
 \end{equation}
-via paired bootstrap on the $N = \WFNWindows$ per-window deltas
+via paired bootstrap on the $N = 6$ per-window deltas
 ($B = 10{,}000$ resamples, seed $= 42$).  The fund-relevant
 binding metric is \emph{net APY} (after gas), not Sharpe: USDC
 supply rates have near-zero daily volatility, which inflates passive
@@ -125,8 +125,8 @@ end-to-end equity.
     sophisticated-retrain paragraph below and
     \Cref{tab:wf-nxm}); on Jan--Apr 2026 alone, T3 and T1 share
     the same rebalance schedule.  Filled from
-    \path{results/tables/test_matrix.csv} by
-    \path{scripts/fill_vol2_macros.py}.}
+    \texttt{results/tables/test\_matrix.csv} by
+    \texttt{scripts/fill\_vol2\_macros.py}.}
   \label{tab:test-matrix}
   \begin{tabular}{lrrrr}
     \toprule
@@ -163,7 +163,7 @@ finding (\Cref{tab:wf-nxm} below).
   \centering
   \caption{Walk-forward N\,$\times$\,M paired bootstrap of $\Delta$APY
     against each of the six in-scope protocols' passive buy-and-hold,
-    across $\WFNWindows$ non-overlapping 3-month windows
+    across $6$ non-overlapping 3-month windows
     (Nov 2024 -- Apr 2026, $B = 10{,}000$, seed $= 42$).  Filled from
     \texttt{results/institutional/tables/walk\_forward\_NxM\_contrasts.csv}.
     Boldface marks contrasts significant at one-sided $p<0.05$.
@@ -280,7 +280,7 @@ The secondary monthly bootstrap (\Cref{tab:h1-monthly}) is consistent
 in direction with the walk-forward primary inference:
 $H_{1}^{\text{aux}}$ (T1 vs passive Aave V3) is significant at
 $p = \HOneAuxPvalue$ with $\Delta\textsc{SR} = \HOneAuxDelta$, in
-agreement with the walk-forward $\WFMeanDeltaAPYAave$\,pp.  $H_{1}^{b}$
+agreement with the walk-forward $+2.81$\,pp.  $H_{1}^{b}$
 (T2 vs T1) is directionally negative on this slice but its CI crosses
 zero at $N = \HOneANMonths$ observations, exactly as the small-$T$
 power calculation expects.  $H_{1}^{c}$ (originally T3 vs T2) is
@@ -358,7 +358,7 @@ mean-reversion regime more efficiently than T1's threshold heuristic.
 \begin{table}[t]
   \centering
   \caption{Per-quarter regime-conditional net APY from
-    \path{results/tables/regime_breakdown.csv}.  T3 matches T1 for
+    \texttt{results/tables/regime\_breakdown.csv}.  T3 matches T1 for
     the same reason as in \Cref{tab:test-matrix} --- the F1$+$F3
     Cox model fires on the same blocks T1 does over Jan--Apr 2026.}
   \label{tab:regime-breakdown}

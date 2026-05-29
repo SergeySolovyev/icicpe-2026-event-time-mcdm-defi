@@ -58,16 +58,29 @@ The panel spans November 2024 to April 2026 ($\NBlocksFull$ Ethereum
 blocks, $\sim 18$ months) across $\NProtocols$ Ethereum USDC lending
 venues (\ProtocolList) plus three passive-hold benchmarks (Compound
 V3, Spark, Fluid).  The held-out test slice is January 2026 to April
-2026 ($\NBlocks$ blocks).  On the walk-forward $N\!=\!6$ paired
-bootstrap (the binding inference) T1 outperforms each in-scope
-passive hold by $+1.5$ to $+2.8$ percentage points ($p<10^{-4}$ on
-5 of 6 contrasts; \Cref{tab:wf-nxm}); the sophisticated-retrain T3
-(Cox proportional-hazards on the F1$+$F3 design matrix) closes
-pre-registered H1c with $\Delta\textsc{APY} = +7.03$\,bp over T1
-($p = 0.015$).  The secondary monthly Sharpe bootstrap on the test
+2026 ($\NBlocks$ blocks).  \emph{Active allocation is over a
+three-of-six sub-panel} (Aave V3, Morpho Blue, Euler V2 on the
+unified per-block grid); the remaining three protocols (Compound V3,
+Spark, Fluid) enter the matrix only as passive-hold benchmarks at
+hourly RPC or daily DeFiLlama cadence --- a deliberate
+heterogeneity to avoid single-vendor dependence, see
+\Cref{sec:limitations}\,(iv).  On the walk-forward $N\!=\!6$ paired
+bootstrap (the binding inference) the closed-form gas-aware T1
+threshold rule --- $\sim 50$ lines of Python with no trained
+parameters --- outperforms each in-scope passive hold by $+1.5$ to
+$+2.8$ percentage points ($p<10^{-4}$ on 5 of 6 contrasts;
+\Cref{tab:wf-nxm}): the headline empirical claim of this paper is
+that event-time resolution itself extracts the bulk of available
+edge, before any trained model.  The sophisticated-retrain T3
+(Cox proportional-hazards on the F1$+$F3 design matrix) adds an
+\emph{incremental} $\Delta\textsc{APY} = +7.03$\,bp over T1
+($p = 0.015$), closing pre-registered H1c.  This edge is
+concentrated in volatile-spread regimes (W1, W2, W6); the capacity
+sweep projects it to widen at institutional position size where
+gas amortises.  The secondary monthly Sharpe bootstrap on the test
 slice is consistent in direction but underpowered at $N=4$
-observations (\Cref{tab:secondary-monthly}).  Two orders of
-magnitude more rebalance opportunities than the hourly baseline of
+observations (\Cref{tab:h1-monthly}).  Two orders of magnitude
+more rebalance opportunities than the hourly baseline of
 \cite{solovev2026vault} permits.
 
 \paragraph{Contributions.}
