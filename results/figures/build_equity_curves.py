@@ -18,6 +18,7 @@ from typing import Sequence
 
 import matplotlib
 matplotlib.use("Agg")  # headless for CI
+import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import pandas as pd
 
@@ -117,6 +118,26 @@ def build_equity_curves_figure(
     summary_ax.set_title("portfolio summary (all blocks)")
     summary_ax.grid(alpha=0.3)
     summary_ax.set_ylabel("equity / initial")
+
+    # X-axis: compact monthly ticks + ConciseDateFormatter so labels
+    # read "Jan / Feb / Mar / Apr / May" with the year ("2026") as a
+    # shared header at the right edge of the bottom row. This is the
+    # only readable layout at ICICPE single-column width (~242 pt).
+    # sharex=True propagates the locator across panels.
+    locator = mdates.MonthLocator(interval=1)
+    formatter = mdates.ConciseDateFormatter(locator,
+                                            formats=["%Y", "%b", "%d",
+                                                     "%H:%M", "%H:%M",
+                                                     "%S.%f"],
+                                            offset_formats=["", "%Y",
+                                                            "%b %Y",
+                                                            "%d %b %Y",
+                                                            "%d %b %Y",
+                                                            "%d %b %Y"])
+    for ax in axes_flat[:n_proto + 1]:
+        ax.xaxis.set_major_locator(locator)
+        ax.xaxis.set_major_formatter(formatter)
+        ax.tick_params(axis="x", labelsize=8)
 
     # Bottom legend, horizontal across the figure (ncol=4 wraps the
     # 7 policy labels onto two lines, which is compact in tall-aspect).

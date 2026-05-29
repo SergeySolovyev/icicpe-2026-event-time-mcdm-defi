@@ -266,24 +266,27 @@ incremental information above the cross-protocol spread.
     Hypothesis & $\widehat{\Delta\textsc{SR}}$ & $95\%$ CI & $p$ \\
     \midrule
     $H_{1}^{b}$: T2 vs T1           & \HOneBDelta   & [\HOneBCIlow, \HOneBCIhigh]   & \HOneBPvalue \\
-    $H_{1}^{c}$: T3 vs T2           & \HOneCDelta   & [\HOneCCIlow, \HOneCCIhigh]   & \HOneCPvalue \\
+    $H_{1}^{c}$: T3 vs T1$^{\dagger}$ & $0.000$     & $[0.000, 0.000]$              & $1.000$ \\
     $H_{1}^{\text{aux}}$: T1 vs B1  & \textbf{\HOneAuxDelta} & [\HOneAuxCIlow, \HOneAuxCIhigh] & \textbf{\HOneAuxPvalue} \\
     \bottomrule
-  \end{tabular}
+  \end{tabular}\\[2pt]
+  {\footnotesize $^{\dagger}$ T3 (F1$+$F3) row-identical to T1 on the
+   Jan--Apr 2026 test slice (\Cref{tab:test-matrix}); the H1c
+   $+7.03$\,bp closure lives in the walk-forward
+   \Cref{tab:wf-t3-vs-t1}, $p = 0.015$.}
 \end{table}
 
-The secondary monthly bootstrap (\Cref{tab:h1-monthly}) is
-consistent in direction with the walk-forward primary inference:
+The secondary monthly bootstrap (\Cref{tab:h1-monthly}) is consistent
+in direction with the walk-forward primary inference:
 $H_{1}^{\text{aux}}$ (T1 vs passive Aave V3) is significant at
 $p = \HOneAuxPvalue$ with $\Delta\textsc{SR} = \HOneAuxDelta$, in
-agreement with the walk-forward $\WFMeanDeltaAPYAave$\,pp.  The
-ladder-progression contrasts $H_{1}^{b}$ (T2 vs T1) and $H_{1}^{c}$
-(T3 vs T2) are directionally positive but their confidence intervals
-cross zero at $N = \HOneANMonths$ monthly observations, exactly as
-expected by the small-$T$ statistical-power calculation.  This is
-the predicted F3-only ladder-collapse: T3 reduces to T1 analytically,
-and T2's OU calibrator converges to T1's empirical-EWMA threshold
-without the F1 lead-rate covariate.
+agreement with the walk-forward $\WFMeanDeltaAPYAave$\,pp.  $H_{1}^{b}$
+(T2 vs T1) is directionally negative on this slice but its CI crosses
+zero at $N = \HOneANMonths$ observations, exactly as the small-$T$
+power calculation expects.  $H_{1}^{c}$ (originally T3 vs T2) is
+reframed here as T3 vs T1 to match the canonical H1c walk-forward
+inference; the trivial zero entry reflects the row identity discussed
+above and is included for completeness rather than as evidence.
 
 \begin{figure}[!t]
   \centering
@@ -302,7 +305,7 @@ without the F1 lead-rate covariate.
 
 % [T3 sophisticated retrain ablation+wf paragraph END]
 
-\begin{table}[t]
+\begin{table*}[t]
   \centering
   \caption{\textbf{T3 (F1$+$F3) vs T1 head-to-head, per walk-forward
     window.}  Each window is a 3-month non-overlapping slice of the
@@ -317,21 +320,23 @@ without the F1 lead-rate covariate.
     W1, W2, W6 --- volatile spread regimes that aren't sampled by
     the four-month aggregate.}
   \label{tab:wf-t3-vs-t1}
-  \begin{tabular}{lrrrcc}
+  \begin{tabular}{llrrrrr}
     \toprule
-    Window & Span & T1 APY & T3 APY & $\Delta$\,bp & rebal T1$\to$T3 \\
+    Window & Span & T1 APY & T3 APY & $\Delta$\,bp & T1 reb. & T3 reb. \\
     \midrule
-    W1 & Nov'24--Jan'25 & 15.24\% & 15.31\% & $+6.7$  & 218 $\to$ 224 \\
-    W2 & Feb--Apr'25   & 5.50\%  & 5.63\%  & $+12.8$ & 32 $\to$ 34 \\
-    W3 & May--Jul'25   & 7.16\%  & 7.14\%  & $-2.4$  & 38 $\to$ 45 \\
-    W4 & Aug--Oct'25   & 6.57\%  & 6.57\%  & $+0.3$  & 31 $\to$ 21 \\
-    W5 & Nov'25--Jan'26 & 5.16\%  & 5.17\%  & $+0.5$  & 34 $\to$ 41 \\
-    W6 & Feb--Apr'26   & 5.14\%  & 5.38\%  & $\mathbf{+24.3}$ & 30 $\to$ 47 \\
+    W1 & Nov'24--Jan'25  & 15.24\% & 15.31\% & $+6.7$            & 218 & 224 \\
+    W2 & Feb--Apr'25     & 5.50\%  & 5.63\%  & $+12.8$           & 32  & 34  \\
+    W3 & May--Jul'25     & 7.16\%  & 7.14\%  & $-2.4$            & 38  & 45  \\
+    W4 & Aug--Oct'25     & 6.57\%  & 6.57\%  & $+0.3$            & 31  & 21  \\
+    W5 & Nov'25--Jan'26  & 5.16\%  & 5.17\%  & $+0.5$            & 34  & 41  \\
+    W6 & Feb--Apr'26     & 5.14\%  & 5.38\%  & $\mathbf{+24.3}$  & 30  & 47  \\
     \midrule
-    \textbf{mean} & & & & \textbf{$+7.03$\,bp} & 5 / 6 windows positive \\
+    \multicolumn{4}{r}{\textbf{mean $\Delta\textsc{APY}$}}
+        & \textbf{$+7.03$\,bp}
+        & \multicolumn{2}{l}{5 of 6 windows positive} \\
     \bottomrule
   \end{tabular}
-\end{table}
+\end{table*}
 
 \paragraph{Capacity ($\$1$M--$\$50$M).} Krause-2005 yield-impact:
 T3 net APY drops from $7.43$\,\% ($\$1$M) to $6.40$\,\% ($\$50$M),
