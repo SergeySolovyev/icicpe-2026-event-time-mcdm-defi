@@ -95,7 +95,7 @@ the five source books that anchor each methodological choice.
   \label{tab:hft-defi-mapping}
   \footnotesize
   \setlength{\tabcolsep}{4pt}
-  \begin{tabular}{p{0.13\textwidth} p{0.18\textwidth} p{0.21\textwidth} p{0.16\textwidth} p{0.13\textwidth} l}
+  \begin{tabular}{p{0.11\textwidth} p{0.17\textwidth} p{0.21\textwidth} p{0.15\textwidth} p{0.16\textwidth} p{0.06\textwidth}}
     \toprule
     HFT class \cite{mackenzie2021} & Source mechanism (TradFi) & DeFi-lending analog
         & Data source & This paper & §\\
@@ -108,7 +108,7 @@ the five source books that anchor each methodological choice.
         elasticity-of-substitution mechanics.
       & Maker subgraph; Curve registry; both free.
       & \textbf{Fitted} (+1.9\,pp OOF C-index lift)
-      & \Cref{sec:methodology-signals}, \Cref{sec:empirical}\\
+      & \ref{sec:methodology-signals}, \ref{sec:empirical}\\
     \midrule
     \textbf{F2} \emph{Order-book dynamics}
       & Pending quote revisions visible in the feed before they
@@ -120,7 +120,7 @@ the five source books that anchor each methodological choice.
       & Flashbots historic mempool; paid Blocknative; $\sim 30$\,TB
         archive cost.
       & \emph{Deferred} (risk register R1)
-      & \Cref{sec:limitations}\\
+      & \ref{sec:limitations}\\
     \midrule
     \textbf{F3} \emph{Fragmentation}
       & Multi-venue spreads, e.g. ATD--NYSE--ARCA fragmentation
@@ -131,7 +131,7 @@ the five source books that anchor each methodological choice.
       & Per-block panel (this paper); subgraphs + RPC fetchers.
       & \textbf{Fitted}, \textbf{dominant} signal (C-index $0.563$
         F3-only)
-      & \Cref{sec:methodology-signals}, \Cref{sec:empirical}\\
+      & \ref{sec:methodology-signals}, \ref{sec:empirical}\\
     \midrule
     \textbf{F4} \emph{Related instruments}
       & ETF arbitrage; correlated cross-asset signals
@@ -142,7 +142,7 @@ the five source books that anchor each methodological choice.
       & Chainlink price feeds; Curve 3pool reserves.
       & \textbf{Fitted}, contributes $\sim 0$\,pp above F3 alone
         (honest negative)
-      & \Cref{sec:methodology-signals}, \Cref{sec:empirical}\\
+      & \ref{sec:methodology-signals}, \ref{sec:empirical}\\
     \bottomrule
   \end{tabular}
 \end{table*}
