@@ -118,6 +118,24 @@ computes
 where $F$ is the survival CDF derived from
 $(\lambda_0, \beta, x_t)$.
 
+\paragraph{Why Cox rather than XGBoost or Random Survival Forest.}
+The triple-barrier construction of \cite[Ch.\,3.6]{lopezdeprado2018}
+yields \emph{right-censored} time-to-event labels: blocks whose flip
+horizon exceeds the $7{,}200$-block barrier are censored, not
+negative.  Tree-based classifiers (XGBoost, LightGBM, CatBoost)
+trained on binarised flip/no-flip labels discard this censoring
+information, which the AFML methodology explicitly forbids.  Cox PH
+yields interpretable hazard ratios $\exp(\beta_i)$ for the
+F1/F3/F4 ablation analysis below, and its baseline-hazard
+separability $\lambda_0(t)\cdot\exp(\beta^{\top} x_t)$ is required
+for the closed-form inference integrand in
+\Cref{eq:t3-decide}: a tree ensemble would emit a scalar survival
+probability per block but not the separable $(\lambda_0, \beta)$
+pair the optimal-switching gate consumes.  Random Survival Forest
+is the natural ensemble counter-baseline; benchmarking it against
+Cox is scoped as a separate ablation for the journal extension and
+documented in the design-spec risk register.
+
 \subsection{Signal taxonomy (F1/F2/F3/F4)}
 \label{sec:methodology-signals}
 
