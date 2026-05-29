@@ -142,15 +142,22 @@ end-to-end equity.
    $N\!=\!6$ walk-forward (\Cref{tab:wf-nxm}).}
 \end{table}
 
-\textbf{T1 is the event-time winner}: \TOneAPY\ net APY at
-\TOneNRebal\ rebalances and $\TOneGasUSD$ gas spend.  T2 essentially
-ties T1 (\TTwoAPY\ APY); without the F1 lead-rate covariate the
-OU-Bellman boundary converges to the empirical-EWMA threshold of
-T1.  T3 trained on F3 alone (C-index $0.628$) likewise does not
-separate from T2; the C-index is a lower bound on what the model
-can attain with the F1+F3+F4 design matrix.  The against-each-
-protocol-hold contrast is the binding paired-bootstrap finding
-(\Cref{tab:wf-nxm} below).
+\textbf{T1 is the event-time winner on this slice}: \TOneAPY\ net APY
+at \TOneNRebal\ rebalances and $\TOneGasUSD$ gas spend.  T2 trails
+slightly (\TTwoAPY\ APY) because the OU calibrator rebalances $\sim
+3\times$ more aggressively ($\TTwoNRebal$ vs $\TOneNRebal$) on a
+window whose realised spread is calmer than its training-window
+average.  The headline \textbf{T3 (F1$+$F3 sophisticated retrain,
+OOF C-index $0.582$)} is row-identical to T1 here: on the four
+test-window months, the Cox hazard-threshold inequality of
+\Cref{eq:t3-decide} fires on exactly the same blocks as T1's
+spread-dwell threshold of \Cref{eq:t1} --- an \emph{empirical
+coincidence on this slice}, not an analytical reduction.  The
+T3-over-T1 edge that closes pre-registered H1c lives in the broader
+$N\!=\!6$ walk-forward (\Cref{tab:wf-t3-vs-t1}, mean $+7.03$\,bp,
+$p=0.015$), concentrated in volatile-spread windows W1, W2, W6.
+The against-each-protocol-hold contrast is the binding paired-bootstrap
+finding (\Cref{tab:wf-nxm} below).
 
 \begin{table*}[t]
   \centering
@@ -232,13 +239,19 @@ insignificant), but with $89$--$201$ rebalances/window vs T1's
 $30$--$38$ — the OU recalibrator over-responds to the richer
 signal space, illustrating that complexity is not free.
 
-\paragraph{T3 $\equiv$ T1 collapse.}  T3 reproduces T1's contrast
-to within $\pm 0.01$\,pp on every cell of \Cref{tab:wf-nxm} — the
-analytical prediction that on F3-only features Cox proportional-
-hazards reduces to a spread-vs-dwell threshold rule mathematically
-equivalent to T1's gas-aware decision.  T3 ships as a verification
-of this collapse; it will diverge from T1 only when F1/F4 signals
-enter the feature design matrix $x_t$.
+\paragraph{T3 row identity on this slice; edge lives in
+walk-forward.}  As anticipated above, the F1$+$F3 sophisticated-retrain
+T3 row in \Cref{tab:test-matrix} is bit-identical to T1.  The
+analytical reduction (Cox $\to$ spread-dwell threshold)
+\emph{would} hold only when F1 coefficients vanish, which is not the
+case here: $\hat\beta_{\textsc{dsr-}\Delta_{300}}$ is the largest
+non-F3 covariate after L2 ridge.  The identity is an
+empirical-window coincidence: on Jan--Apr 2026 the F1 DSR
+contribution to the hazard does not shift the inequality crossing
+relative to T1's spread-dwell threshold.  The +7.03\,bp T3-over-T1
+edge that closes H1c (\Cref{tab:wf-t3-vs-t1}) concentrates in W1,
+W2 and W6 --- volatile-spread windows where the DSR lead carries
+incremental information above the cross-protocol spread.
 
 \begin{table}[t]
   \centering
@@ -368,38 +381,23 @@ fits its mean-reversion rate $\kappa$.  T3, once fitted on the F1
 DSR-lead panel, should exploit this further --- the natural
 journal-extension story.
 
-\subsection{Signal-class contribution (planned)}
+\subsection{Signal-class contribution}
 \label{sec:emp-ablation}
 
-The MacKenzie Table~3.2 signal taxonomy \cite{mackenzie2021} mapping
-to F1 (lead-rate), F3 (fragmentation), and F4 (related instruments)
-is fully implemented in the \texttt{decision/features/} package and
-unit-tested against the research-side builders; the F2 (order-book
-dynamics) class is deferred per design-spec risk R1.  Live
-ablation against the validation slice (\Cref{fig:signal-heatmap})
-confirms the F3 fragmentation block dominates by an order of
-magnitude on the synthetic Cox fixture --- consistent with the
-cross-protocol cointegration literature \cite{gudgeon2020loanable}
-and with the dominant role of cross-protocol rate spreads as the
-decision variable itself.  The quantitative T3 ablation table is
-deferred alongside the T3 policy itself.
-
-\begin{figure}[t]
-  \centering
-  \includegraphics[width=0.85\linewidth]{../../results/figures/signal_heatmap.png}
-  \caption{Cox hazard-ratio heatmap on the validation-window
-    synthetic fixture: rows are signal-class features (F1 lead, F3
-    fragmentation, F4 related; F2 mempool deferred per risk R1),
-    columns are time-to-flip horizons.  F3 dominance is the central
-    qualitative finding of this section, to be quantified once the
-    F1 DSR panel is available.}
-  \label{fig:signal-heatmap}
-\end{figure}
-
-The methodology, signal-taxonomy mapping, and replay infrastructure
-each stand independently of any single bootstrap contrast.  The
-binding result is \Cref{tab:wf-nxm}: T1 outperforms passive
-Aave/Compound/Morpho/Fluid by $+1.6$--$1.8$\,pp in all 6 windows
-($p < 10^{-4}$ each) and Spark 5/6 windows ($p = 0.034$); only
-passive Euler V2 holds the active allocator off from W3 onward,
-the honest gap whose closure is the journal-extension scope.
+The MacKenzie Table~3.2 signal taxonomy mapping to F1 (lead-rate),
+F3 (fragmentation), and F4 (related instruments) is fully implemented
+in the \texttt{decision/features/} package and unit-tested against
+the research-side builders; F2 (order-book dynamics) is deferred
+per design-spec risk R1.  The headline ablation (above) returns
+out-of-fold C-index $0.563$ (F3 only), $0.582$ (F1$+$F3), $0.563$
+(F3$+$F4), $0.582$ (F1$+$F3$+$F4): F3 dominates as predicted by
+the cross-protocol cointegration literature
+\cite{gudgeon2020loanable}, F1 DSR delta contributes the only
+non-F3 concordance lift ($+1.9$\,pp), and F4 contributes
+$\sim 0$\,pp above F3 alone --- the substantive negative finding
+for one of the three live MacKenzie signal classes in this
+DeFi-lending mapping.  The binding inferential result is
+\Cref{tab:wf-nxm}: T1 outperforms passive Aave/Compound/Morpho/Fluid
+by $+1.6$--$1.8$\,pp in all 6 windows ($p < 10^{-4}$ each) and Spark
+5/6 windows ($p = 0.034$); only passive Euler V2 holds the active
+allocator off from W3 onward.

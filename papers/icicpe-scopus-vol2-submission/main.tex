@@ -1,7 +1,7 @@
-% ICICPE 2026 — Cross-Domain DA-BiGRU-CNN paper
-% Template: ICICPE custom (icicpe.sty)
-% Blind-review submission version (anonymized).
-% The un-anonymized IEEEtran version is in ../icicpe-2026/.
+% ICICPE 2026 SCOPUS Vol-2 — Event-Time MCDM Allocation across DeFi
+% Lending Protocols.  HFT-inspired methodology with walk-forward
+% validation.  Template: ICICPE custom (icicpe.sty).  Named (final-
+% copy) submission.
 
 \documentclass[twocolumn, 10pt]{article}
 
@@ -45,11 +45,13 @@ WorldQuant University \\
 \twocolumn[
 \maketitle
 \begin{abstract}
-We design an event-time, gas-aware multi-protocol allocator for USDC supply markets across the six largest Ethereum-L1 lending protocols (Aave V3, Compound V3, Spark, Morpho Blue, Euler V2, Fluid; $\sim$67\% of $\sim$\$54B TVL). A three-tier policy ladder is evaluated on every block: T1 gas-aware threshold, T2 OU optimal stopping with closed-form Bellman boundary, T3 Cox proportional-hazards on MacKenzie (2021) Table 3.2 F1/F3/F4 signal-class features trained with L\'opez de Prado AFML methodology (triple-barrier labels, purged $k$-fold CV with embargo, sample-uniqueness weighting). Over six non-overlapping three-month walk-forward windows (Nov 2024 -- Apr 2026), T3 beats passive holds of all six protocols on the 6-way active panel: $+2.88$\,pp vs Aave, $+2.70$\,pp vs Compound, $+1.85$\,pp vs Spark, $+2.65$\,pp vs Morpho, $+2.70$\,pp vs Fluid, $+1.53$\,pp vs Euler (paired-bootstrap $p<0.05$ on all six; $5$--$6$ of $6$ windows positive). The Cox model adds $+7.03$\,bp over T1 ($p=0.015$), closing pre-registered H1c. The Maker DSR one-hour delta and USDC peg deviation are the strongest non-fragmentation predictors. A production-grade Python agent (Flashbots private mempool, Prometheus observability) shares decision modules bit-identically with the backtest.
+We design an event-time, gas-aware multi-protocol allocator for USDC supply markets across the six largest Ethereum-L1 lending protocols (Aave V3, Compound V3, Spark, Morpho Blue, Euler V2, Fluid; $\sim$67\% of $\sim$\$54B TVL).  A three-tier policy ladder is evaluated on every block: T1 gas-aware threshold, T2 Ornstein--Uhlenbeck optimal stopping with closed-form Bellman boundary, T3 Cox proportional-hazards on MacKenzie (2021) Table 3.2 F1 (lead-rate) and F3 (fragmentation) signal-class features, trained with L\'opez de Prado AFML methodology (triple-barrier labels, purged $k$-fold CV with embargo, sample-uniqueness weighting).  Over six non-overlapping three-month walk-forward windows (Nov 2024--Apr 2026), the active T1 policy outperforms each passive single-protocol hold by $+1.5$ to $+2.8$\,pp annualized ($p<10^{-4}$ on five of six contrasts; $p=0.026$ for Euler V2).  The F1$+$F3 sophisticated-retrain T3 adds $+7.03$\,bp over T1 (paired-bootstrap $p = 0.015$, $5$ of $6$ windows positive), closing pre-registered H1c.  F1's Maker DSR one-hour delta is the single non-fragmentation feature with materially positive out-of-fold C-index lift; F4 (USDC peg $+$ ETH/USD) contributes $\sim 0$\,pp and is reported as an honest negative finding.  A production-grade Python agent (Flashbots private mempool, Prometheus observability) shares decision modules bit-identically with the backtest.
 \end{abstract}
 
 \begin{keyword}
-ICICPE, DeFi, MCDM, BiGRU-CNN, cross-domain transfer
+DeFi, decentralized finance, event-time strategy, gas-aware allocation,
+Cox proportional-hazards, walk-forward bootstrap, multi-criteria decision
+making, high-frequency-trading microstructure, Ethereum mainnet
 \end{keyword}
 ]
 

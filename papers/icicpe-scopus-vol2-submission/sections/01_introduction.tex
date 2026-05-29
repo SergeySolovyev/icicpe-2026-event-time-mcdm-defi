@@ -1,19 +1,32 @@
 \section{Introduction}
 \label{sec:introduction}
 
-Multi-protocol DeFi lending allocation has been studied either as a
-rate-forecasting problem on hourly-aggregated rate series
-\cite{baude2025optimal} or as a control-theoretic problem with
-reinforcement learning on the protocol-design side
-\cite{bertucci2025rl, xu2023autogov, agilerate2024}.  Both
-formulations share an implicit assumption: that hourly resolution is
-sufficient for an allocator to extract economically meaningful
-edge.  We argue that this assumption is empirically wrong.
-Lending-rate crossovers between Ethereum L1 protocols happen at the
-speed of pool deposits and withdrawals --- per-block ($\sim 12$\,s
-post-PoS), not per-hour --- because the rate is a deterministic
-function of realised utilization, and utilization updates exactly
-once per on-chain interaction \cite{werner2022sok}.
+\paragraph{Setting (for the multi-disciplinary reader).}  A
+\emph{DeFi lending protocol} is a smart contract on a blockchain
+that lets users supply or borrow assets at rates set algorithmically
+by a deterministic curve over pool utilization $u = \text{borrowed}
+/ \text{supplied}$, rather than by a human-set policy.  The most
+supplied asset is USDC, a US-dollar-pegged stablecoin; on Ethereum
+mainnet alone, USDC supply markets across the six largest protocols
+hold roughly \$36\,B (April 2026, $\sim 67\%$ of \$54\,B addressable
+TVL).  Because each protocol sets its own rate curve, identical-asset
+rates routinely diverge across protocols by hundreds of basis points
+--- and that cross-protocol spread is the structural opportunity an
+allocator can target.
+
+\paragraph{Problem statement.}  Multi-protocol DeFi lending
+allocation has been studied either as a rate-forecasting problem on
+hourly-aggregated rate series \cite{baude2025optimal} or as a
+control-theoretic problem with reinforcement learning on the
+protocol-design side \cite{bertucci2025rl, xu2023autogov,
+agilerate2024}.  Both formulations share an implicit assumption: that
+hourly resolution is sufficient for an allocator to extract
+economically meaningful edge.  We argue that this assumption is
+empirically wrong.  Lending-rate crossovers between Ethereum L1
+protocols happen at the speed of pool deposits and withdrawals ---
+per-block ($\sim 12$\,s post-PoS), not per-hour --- because the rate
+is a deterministic function of realised utilization, and utilization
+updates exactly once per on-chain interaction \cite{werner2022sok}.
 Aggregating to hourly bars destroys the inter-block microstructure
 where the allocator's competitive edge actually lives.
 
@@ -41,18 +54,21 @@ $+$ Compound) panel to the 6-protocol matrix that covers
 $\sim 67\%$ of total Ethereum-L1 USDC-lending TVL.
 
 \paragraph{Empirical finding.}
-On a $\NBlocksFull$ per-block panel covering
-\DataStart{}--\DataEnd{} across $\NProtocols$ Ethereum USDC lending
-venues (\ProtocolList) plus three passive-hold benchmarks
-(Compound V3, Spark, Fluid), T1 beats passive Aave V3 hold under
-paired monthly Sharpe bootstrap
-($\Delta\textsc{Sharpe} = \HOneAuxDelta$, 95\,\% CI
-$[\HOneAuxCIlow, \HOneAuxCIhigh]$, $p = \HOneAuxPvalue$); the
-sophisticated-retrain T3 (Cox PH on the F1$+$F3 design matrix)
-closes pre-registered H1c with $\Delta\textsc{APY} = +7.03$\,bp
-over T1 ($p = 0.015$) on the $N\!=\!6$ walk-forward paired
-bootstrap.  Two orders of magnitude more rebalance opportunities
-than the hourly baseline of \cite{solovev2026vault} expresses.
+The panel spans November 2024 to April 2026 ($\NBlocksFull$ Ethereum
+blocks, $\sim 18$ months) across $\NProtocols$ Ethereum USDC lending
+venues (\ProtocolList) plus three passive-hold benchmarks (Compound
+V3, Spark, Fluid).  The held-out test slice is January 2026 to April
+2026 ($\NBlocks$ blocks).  On the walk-forward $N\!=\!6$ paired
+bootstrap (the binding inference) T1 outperforms each in-scope
+passive hold by $+1.5$ to $+2.8$ percentage points ($p<10^{-4}$ on
+5 of 6 contrasts; \Cref{tab:wf-nxm}); the sophisticated-retrain T3
+(Cox proportional-hazards on the F1$+$F3 design matrix) closes
+pre-registered H1c with $\Delta\textsc{APY} = +7.03$\,bp over T1
+($p = 0.015$).  The secondary monthly Sharpe bootstrap on the test
+slice is consistent in direction but underpowered at $N=4$
+observations (\Cref{tab:secondary-monthly}).  Two orders of
+magnitude more rebalance opportunities than the hourly baseline of
+\cite{solovev2026vault} permits.
 
 \paragraph{Contributions.}
 \begin{itemize}
@@ -70,10 +86,13 @@ than the hourly baseline of \cite{solovev2026vault} expresses.
     lending.}  F1 (lead) $\leftarrow$ Maker DSR rate plus lagged
     spreads to the top-protocol APR; F3 (fragmentation)
     $\leftarrow$ the cross-protocol rate spread itself, the
-    dominant signal and the F3-only T3 fit's sole driver;
-    F4 (related) $\leftarrow$ ETH/USD, gas regime, USDC peg
-    deviations; F2 (order-book dynamics) deferred per the
-    explicit risk register pending paid mempool coverage.
+    dominant signal and the only feature class with non-trivial
+    OOF C-index gain in the headline T3 fit; F4 (related)
+    $\leftarrow$ ETH/USD plus USDC peg deviations
+    (gas-regime sub-signal dropped as zero-variance under a
+    constant-gas calibration; see \Cref{sec:limitations});
+    F2 (order-book dynamics) deferred per the explicit risk
+    register pending paid mempool coverage.
 
   \item \textbf{L\'opez de Prado AFML methodology applied to DeFi
     lending}: triple-barrier labels (24-h horizon), purged $k$-fold

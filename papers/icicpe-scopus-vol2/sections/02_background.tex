@@ -149,35 +149,22 @@ aggregation effect.
 \label{sec:bg-impossibility}
 
 The most pointed theoretical counter-evidence to active DeFi
-lending strategies is \cite{halpern2024fair}.  Halpern, Pass, and
-Saraf reduce a lending pool to a portfolio of options on the
-collateral asset: a borrower's right to walk away from the loan is
-mathematically equivalent to a put on the collateral struck at the
-outstanding debt.  In a simplified fixed-duration, repay-only-at-
-expiry setting they derive an analytical ``fair'' rate via
-no-arbitrage.  They then prove that in the realistic setting ---
-dynamic, perpetual loans with early repayment of the kind Aave V3
-and Compound V3 implement --- \emph{no fair interest rate exists}:
-any rate either over-compensates lenders relative to the
-option-implied premium or under-compensates them, because the
-borrower's repayment optionality has no finite hedging cost.
-
-A naive reading of \cite{halpern2024fair} suggests there is no
-exploitable structure in DeFi rates and any allocator should
-underperform a passive benchmark.  We argue the implication does
-not follow.  Halpern et al.\ prove a \emph{static equilibrium
-fairness} impossibility under no-arbitrage --- a statement about
-whether a single rate function can correctly price the borrower-
-side optionality in equilibrium.  Our empirical claim is the
-orthogonal \emph{event-time predictability} statement: the
-realised rate stream observed off-chain at per-block resolution
-exhibits enough short-horizon structure (cointegration, regime
-persistence, kink-residual cycles) to drive a gas-aware switching
-strategy that significantly outperforms passive single-protocol
-hold under a paired monthly Sharpe bootstrap.  Equivalently, the
-absence of a single equilibrium-fair rate is consistent with ---
-and indeed implies --- the persistent disequilibrium that an
-event-time allocator can target.  The two claims constrain
-different layers of the protocol stack: \cite{halpern2024fair}
-constrains pricing theory at the contract design layer; we operate
-at the lender-side execution layer.
+lending strategies is \cite{halpern2024fair}, who reduce a lending
+pool to a portfolio of options on the collateral and prove that
+for dynamic perpetual loans with early-repayment optionality of
+the Aave/Compound type, \emph{no equilibrium-fair interest rate
+exists}: any single rate over- or under-compensates lenders
+relative to the option-implied premium.  A naive reading suggests
+that DeFi rates therefore have no exploitable structure.  We argue
+the implication does not follow: Halpern et al.'s result is
+\emph{static equilibrium} fairness under no-arbitrage, a statement
+about whether \emph{one} rate function can price borrower-side
+optionality at equilibrium; our empirical claim is the orthogonal
+\emph{event-time predictability} statement that the off-chain
+per-block rate stream exhibits enough short-horizon structure
+(cointegration, regime persistence, kink-residual cycles) to drive
+a gas-aware switching strategy that beats passive holds.  The
+absence of an equilibrium-fair rate is consistent with --- and
+arguably \emph{implies} --- the persistent disequilibrium that an
+event-time allocator can target; the two claims constrain different
+layers of the protocol stack.

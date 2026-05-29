@@ -127,24 +127,33 @@ multi-protocol DeFi:
 
 \textbf{F1 (lead rate)}: Maker DSR rate plus lagged ($300$, $1{,}800$
 block) versions and the lead-vs-top-protocol spread.  Source:
-Maker subgraph.  Deferred on the present submission's panel
-(DSR fetcher schema fix queued for the journal extension).
+Maker subgraph.  Fitted on the per-block panel; F1's
+$f1\_dsr\_delta\_300$ feature is the only non-F3 signal class that
+materially improves OOF concordance in the sophisticated retrain
+($+1.9$\,pp C-index, \Cref{sec:empirical}).
 
 \textbf{F2 (order-book dynamics)}: mempool transactions targeting
 each lending pool, observable before execution.  The direct
 analog of Goldman-leaves-its-bid signals from ATD (1995).
 Deferred for this submission per the design-spec risk register
-(insufficient historic mempool coverage Nov 2024--Apr 2026).
+(insufficient historic Flashbots mempool coverage
+Nov 2024--Apr 2026, $\sim 30$\,TB archive cost).
 
 \textbf{F3 (fragmentation)}: cross-protocol spreads themselves
 (the decision variable), pairwise dispersion, top-vs-runner-up
 gap, argmax-protocol identity.  This is the dominant signal and
-the only family fully fitted in T3 on the submission panel.
+carries essentially all OOF concordance the model attains
+($0.563$ C-index on F3-alone vs $0.582$ on F1$+$F3).
 
-\textbf{F4 (related instruments)}: ETH/USD (gas regime), USDC and
-USDT peg deviations, top-LP wallet activity.  Deferred on this
-submission's panel (gas/peg fetchers absent from the 3-way
-build).
+\textbf{F4 (related instruments)}: ETH/USD spot price and
+USDC peg deviation are fitted on the panel.  The intended gas-regime
+sub-signal ($\log_{10}$ of per-block gas price) was substituted with
+the calibration constant $25$\,gwei pending an Etherscan-key quota
+expansion; the variance-thresholded design matrix drops the constant
+column, leaving F4 with two live regressors.  F4 contributes $\sim 0$
+OOF C-index above F3 alone in the headline ablation (\Cref{sec:empirical})
+--- an honest negative finding for one MacKenzie signal class in
+the present DeFi-lending mapping.
 
 The shared \texttt{decision/} Python package is consumed unchanged
 by both the offline replay engine and the production agent --- the
