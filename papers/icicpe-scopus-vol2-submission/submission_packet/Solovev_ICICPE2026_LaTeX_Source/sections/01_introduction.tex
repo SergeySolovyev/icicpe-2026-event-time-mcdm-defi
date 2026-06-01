@@ -55,17 +55,16 @@ $\sim 67\%$ of total Ethereum-L1 USDC-lending TVL.
 
 \paragraph{Empirical finding.}
 The panel spans November 2024 to April 2026 ($\NBlocksFull$ Ethereum
-blocks, $\sim 18$ months) across all $\NProtocols$ Ethereum USDC
-lending venues (\ProtocolList) on a single unified per-block grid.
-The held-out test slice is January 2026 to April 2026 ($\NBlocks$
-blocks).  \emph{The allocator switches among all six protocols} ---
-\texttt{decide()} is evaluated on every block and the six are
-observed at heterogeneous native cadences (Aave V3 $\sim 48$\,s
-through Fluid $\sim 24$\,h), forward-filled onto the grid and used as
-a live agent would; each protocol is simultaneously an
-active-allocation candidate and a passive-hold benchmark in the
-$N\!\times\!M$ matrix (\Cref{tab:timeshare,sec:limitations}).  On the
-walk-forward $N\!=\!6$ paired
+blocks, $\sim 18$ months) across $\NProtocols$ Ethereum USDC lending
+venues (\ProtocolList) plus three passive-hold benchmarks (Compound
+V3, Spark, Fluid).  The held-out test slice is January 2026 to April
+2026 ($\NBlocks$ blocks).  \emph{Active allocation is over a
+three-of-six sub-panel} (Aave V3, Morpho Blue, Euler V2 on the
+unified per-block grid); the remaining three protocols (Compound V3,
+Spark, Fluid) enter the matrix only as passive-hold benchmarks at
+hourly RPC or daily DeFiLlama cadence --- a deliberate
+heterogeneity to avoid single-vendor dependence, see
+\Cref{sec:limitations}\,(iv).  On the walk-forward $N\!=\!6$ paired
 bootstrap (the binding inference) the closed-form gas-aware T1
 threshold rule --- $\sim 50$ lines of Python with no trained
 parameters --- outperforms each in-scope passive hold by $+1.5$ to

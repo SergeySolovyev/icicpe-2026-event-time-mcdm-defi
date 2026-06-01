@@ -7,7 +7,7 @@
 
 \usepackage{icicpe}
 \usepackage[utf8]{inputenc}
-\usepackage[pdfencoding=auto]{hyperref}
+\usepackage[pdfencoding=auto,hidelinks]{hyperref}
 \usepackage{url}
 \usepackage{amsmath}
 \usepackage{amssymb}
@@ -33,7 +33,7 @@
        An HFT-Inspired Methodology with Walk-Forward Validation}
 
 \author[english]{
-Sergei Solovev\thanks{Independent researcher; WorldQuant University, MSc Financial Engineering.} \\
+Sergei Solovev \\
 WorldQuant University \\
 \texttt{sssolovjov@gmail.com} \\
 }
@@ -45,7 +45,7 @@ WorldQuant University \\
 \twocolumn[
 \maketitle
 \begin{abstract}
-We design an event-time, gas-aware multi-protocol allocator for USDC supply markets across the six largest Ethereum-L1 lending protocols ($\sim$67\% of $\sim$\$54B TVL).  \textbf{The headline empirical claim is event-time resolution itself}: a closed-form gas-aware threshold rule (T1; $\sim$50 lines of Python, no trained parameters) outperforms each passive single-protocol hold by $+1.5$ to $+2.8$\,pp annualized across six non-overlapping three-month walk-forward windows (Nov 2024--Apr 2026; paired-bootstrap $p<10^{-4}$ on five of six contrasts; $p=0.026$ for Euler V2).  Two additional tiers extend the ladder methodologically --- T2 Ornstein--Uhlenbeck optimal stopping with closed-form Bellman boundary, and T3 Cox proportional-hazards on MacKenzie (2021) Table 3.2 F1 (lead-rate) $+$ F3 (fragmentation) signal classes with L\'opez de Prado AFML methodology (triple-barrier labels, purged $k$-fold CV with embargo, sample-uniqueness weighting).  T3 adds an incremental $+7.03$\,bp over T1 (paired-bootstrap $p = 0.015$, $5$ of $6$ windows positive), concentrated in volatile-spread regimes; the capacity sweep projects this gap to widen at institutional position size where gas amortises.  F4 (USDC peg $+$ ETH/USD) contributes $\sim 0$\,pp above F3 alone and is reported as an honest negative finding.  \textbf{Scope caveat}: the active allocation panel is three-of-six protocols (Aave V3, Morpho Blue, Euler V2 on a unified per-block grid); the other three (Compound V3, Spark, Fluid) enter the matrix only as passive-hold benchmarks at their native data cadences.  A production-grade Python agent (Flashbots private mempool, Prometheus observability) shares decision modules bit-identically with the backtest.
+We design an event-time, gas-aware multi-protocol allocator for USDC supply markets across the six largest Ethereum-L1 lending protocols ($\sim$67\% of $\sim$\$54B TVL).  \textbf{The headline empirical claim is event-time resolution itself}: a closed-form gas-aware threshold rule (T1; $\sim$50 lines of Python, no trained parameters) outperforms each passive single-protocol hold by $+1.5$ to $+2.8$\,pp annualized across six non-overlapping three-month walk-forward windows (Nov 2024--Apr 2026; paired-bootstrap $p<10^{-4}$ on five of six contrasts; $p=0.026$ for Euler V2).  Two additional tiers extend the ladder methodologically --- T2 Ornstein--Uhlenbeck optimal stopping with closed-form Bellman boundary, and T3 Cox proportional-hazards on MacKenzie (2021) Table 3.2 F1 (lead-rate) $+$ F3 (fragmentation) signal classes with L\'opez de Prado AFML methodology (triple-barrier labels, purged $k$-fold CV with embargo, sample-uniqueness weighting).  T3 adds an incremental $+7.03$\,bp over T1 (paired-bootstrap $p = 0.015$, $5$ of $6$ windows positive), concentrated in volatile-spread regimes; the capacity sweep projects this gap to widen at institutional position size where gas amortises.  F4 (USDC peg $+$ ETH/USD) contributes $\sim 0$\,pp above F3 alone and is reported as an honest negative finding.  The allocator switches among all \emph{six} protocols on a single per-block grid --- \texttt{decide()} runs on every one of the $3.9$M blocks with continuous accrual and zero blocks accrued against a missing rate --- and the six refresh their on-chain rates at heterogeneous native cadences (Aave V3 $\sim$48\,s through Fluid $\sim$24\,h), each observed at its native cadence exactly as a live per-block agent would.  A public reference implementation reuses the same decision modules as the backtest to support reproducibility.
 \end{abstract}
 
 \begin{keyword}
@@ -66,7 +66,12 @@ making, high-frequency-trading microstructure, Ethereum mainnet
 % Acknowledgements removed for blind review. [Anonymized]
 
 {\footnotesize
-\setlength{\bibsep}{1pt plus 0.5ex}
+\let\oldthebibliography\thebibliography
+\renewcommand{\thebibliography}[1]{%
+  \oldthebibliography{#1}%
+  \setlength{\itemsep}{1pt plus 0.5ex}%
+  \setlength{\parsep}{0pt}%
+}
 \bibliographystyle{ICICPEtran}
 \bibliography{refs}
 }

@@ -7,65 +7,25 @@ passive buy-and-hold of each of \textbf{Aave V3, Compound V3, Spark,
 Morpho Blue, Euler V2, Fluid Finance} --- and three decision-policy
 tiers: T1 gas-aware threshold, T2 optimal stopping on an
 Ornstein--Uhlenbeck spread, and T3 Cox proportional-hazards on the
-F1$+$F3 signal families.  An earlier hourly MCDM-EMA cliff-edge baseline (which executed only
+F3 fragmentation feature family.  An earlier hourly MCDM-EMA cliff-edge baseline (which executed only
 two rebalances over four months on the same data) is intentionally
 excluded from the benchmark set: it is the wrong-resolution failure
 mode this paper is explicitly \emph{against}: the honest baselines are the six protocol-holds
 themselves, not a straw-man hourly aggregator.
 
-\paragraph{Active universe: all six protocols.}
-The allocator switches among \emph{all six} protocols on a single
-unified per-block grid: T1/T2/T3 evaluate \texttt{decide()} on every
-one of the $\NBlocksFull$ blocks and may hold or switch into any of
-Aave V3, Morpho Blue, Euler V2, Compound V3, Spark, or Fluid.  The
-engine is genuinely per-block --- it accrues the held protocol's APR
-on every block and deducts gas only on executed switches --- and a
-block-level integrity audit finds \emph{zero} blocks on which the
-position accrues against a missing rate (every held block has a
-real, forward-filled APR; \Cref{tab:timeshare}).  Each of the six
-also enters the $N\!\times\!M$ paired bootstrap as a passive
-buy-and-hold counter-factual, so every cell answers \emph{``does the
-active allocator beat passively parking USDC in protocol $j$?''} for
-$j$ in all six.
-
-The six protocols refresh their on-chain rates at heterogeneous
-\emph{native} cadences --- Aave V3 every $\sim 48$\,s, Euler V2
-$\sim 6$\,min, Spark and Compound V3 sub-hourly, Morpho Blue
-$\sim 1$\,h, and Fluid $\sim 24$\,h --- and the allocator observes
-each at its native cadence (forward-filled between updates), exactly
-the information set a live per-block agent has.  We therefore do
-\emph{not} claim per-block rate \emph{resolution} for the three
-slower venues; we claim a per-block \emph{decision} loop that acts
-on the most-recently-observed rate of each, which is the realistic
-live-execution envelope.  \Cref{tab:timeshare} reports the
-time-share each policy spends in each protocol over the test window.
-
-\begin{table}[t]
-  \centering
-  \caption{Active-allocation time-share (\% of test-window blocks)
-    by protocol and policy, with each protocol's native on-chain
-    rate-refresh cadence.  The allocator genuinely uses all six;
-    the three genuine sub-hourly venues (Aave, Morpho, Euler) carry
-    $\sim 63$--$64\%$ of held time, the three slower venues the
-    remainder.  Zero blocks accrued against a missing rate.}
-  \label{tab:timeshare}
-  \setlength{\tabcolsep}{4pt}
-  \begin{tabular}{lrrrr}
-    \toprule
-    Protocol & Refresh & T1 & T2 & T3 \\
-    \midrule
-    Aave V3      & $\sim$48\,s  & 8.4\%  & 4.8\%  & 8.4\% \\
-    Morpho Blue  & $\sim$1\,h   & 24.8\% & 12.3\% & 24.8\% \\
-    Euler V2     & $\sim$6\,min & 30.7\% & 45.8\% & 30.7\% \\
-    Compound V3  & sub-hourly   & 10.1\% & 3.0\%  & 10.1\% \\
-    Spark        & sub-hourly   & 19.9\% & 23.3\% & 19.9\% \\
-    Fluid        & $\sim$24\,h  & 6.0\%  & 10.7\% & 6.0\% \\
-    \midrule
-    \multicolumn{2}{l}{\emph{genuine per-block (top 3)}}
-                 & 64.0\% & 62.9\% & 64.0\% \\
-    \bottomrule
-  \end{tabular}
-\end{table}
+\paragraph{Two scopes.}
+The matrix uses two distinct protocol scopes.  The
+\emph{active allocation panel} contains three protocols (Aave V3,
+Morpho Blue, Euler V2) on a unified per-block grid; T1/T2/T3 switch
+among these three on every block.  The \emph{hold-benchmark set}
+contains all six designed protocols (the active three plus
+Compound V3, Spark, Fluid); each enters the N\,$\times$\,M as a
+passive buy-and-hold counter-factual, so each cell answers
+\emph{``does this active 3-protocol allocator beat passively
+parking USDC in protocol $j$?''} for $j$ in all six.  Extending the
+active panel to all six is the explicit next-extension scope and
+requires unifying the per-block grid with the three coarser-cadence
+sources used for the additional holds.
 
 \paragraph{Data provenance.}
 The hold-benchmark set covers $\sim\$36$\,B of \$54\,B addressable
@@ -74,23 +34,22 @@ data sources, deliberately heterogeneous to avoid a single-vendor
 dependence:
 (i) \textbf{Aave V3, Morpho Blue, Euler V2} — per-block panel built
 in \Cref{sec:methodology};
-(ii) \textbf{Compound V3} — verified RPC fetcher via Comet
-view-function calls (\path{compound_v3_usdc.parquet});
+(ii) \textbf{Compound V3} — verified hourly RPC fetcher
+(\path{compound_v3_usdc_eth_2024-11_to_2026-04.parquet})
+via Comet view-function calls;
 (iii) \textbf{Spark / SparkLend} — Sky Messari subgraph
 (\path{spark_hourly.parquet}, 6{,}189 hourly snapshots,
 Nov 2024 -- Apr 2026);
 (iv) \textbf{Fluid Finance} — DeFiLlama Yield Pools daily APY
 (\path{fluid_daily.parquet}, 728 daily snapshots).
-All six rate streams are forward-filled onto the common per-block
-grid at their native cadence (\Cref{tab:timeshare}); the active
-T1/T2/T3 allocators switch among all six on that grid, and each
-protocol additionally enters the N\,$\times$\,M paired bootstrap as
-a passive-hold counter-factual with $N=6$ per-window deltas.  The
-policy ladder is run at three tiers; on the four-month test slice
-the F1$+$F3 T3 fires on the same blocks as T1's spread-dwell
-threshold (an empirical coincidence on this window, \Cref{tab:test-matrix}),
-while its $+7.03$\,bp edge over T1 materialises in the broader
-walk-forward (\Cref{tab:wf-t3-vs-t1}).
+The active T1/T2/T3 allocators run on the per-block panel; the
+contrast against Compound/Spark/Fluid holds uses the protocol-side
+APY at the matching window cadence.  All six protocols enter the
+N\,$\times$\,M paired bootstrap with $N=6$ per-window deltas each.
+The policy ladder is run at three tiers; T3's Cox hazard rule
+analytically reduces to T1's spread-dwell threshold on F3-only
+features (signals F1 lead-rate and F4 related-instruments queued
+for the next extension), which we verify empirically below.
 
 \paragraph{Primary inference: walk-forward N\,$\times$\,M paired
 bootstrap.}  The binding evidence is a walk-forward bootstrap
@@ -121,16 +80,15 @@ walk-forward contrasts uses the Deflated Sharpe Ratio of
 \subsection{Data and splits}
 \label{sec:emp-data}
 
-The per-block panel covers 2024-11-01 to 2026-04-30 at the native
-Ethereum cadence (12\,s post-PoS), $\NBlocksFull$ blocks across all
-\emph{six} protocols (Aave V3, Compound V3, Spark, Morpho Blue,
-Euler V2, Fluid), each forward-filled from its native refresh cadence
-onto the common grid (\Cref{tab:timeshare}).  Per-protocol block
-coverage is $\geq 98.5\%$ with no mid-window gaps; the small
-shortfalls for Compound V3 ($98.5\%$) and Spark ($99.6\%$) sit at the
-panel's leading edge, before each venue's first observed rate.
-Construction of the per-block panel is documented in
-\Cref{sec:methodology}; the artifact lives at
+The per-block active-allocation panel covers 2024-11-01 to 2026-04-30
+at the native Ethereum cadence (12\,s post-PoS), $\NBlocksFull$ blocks
+across the \NProtocols\ on-grid protocols (\ProtocolList).  The
+additional three hold-benchmark protocols (Compound V3, Spark, Fluid)
+join the matrix at coarser cadences and as passive holds only --- the
+detailed provenance is in the preceding Scope paragraph.  The Maker
+DSR rate stream (Signal F1) is the one remaining gap and is the
+explicit next-extension scope.  Construction of the per-block panel
+is documented in \Cref{sec:methodology}; the artifact lives at
 \path{data/cached/per_block_panel.parquet}.
 
 The chronological split is locked.  Training: 2024-11-01 to
@@ -169,7 +127,6 @@ end-to-end equity.
     \texttt{results/tables/test\_matrix.csv} by
     \texttt{scripts/fill\_vol2\_macros.py}.}
   \label{tab:test-matrix}
-  \setlength{\tabcolsep}{4pt}
   \begin{tabular}{lrrrr}
     \toprule
     Strategy & Net APY & $n_{\text{reb}}$ & Gas & Max DD \\
@@ -334,7 +291,7 @@ above and is included for completeness rather than as evidence.
 
 \begin{figure}[!t]
   \centering
-  \includegraphics[width=\columnwidth]{../../results/figures/equity_curves.png}
+  \includegraphics[width=\columnwidth]{figures/equity_curves.png}
   \caption{Cumulative-equity curves over the \DataStart--\DataEnd\
     test window, one panel per active protocol plus the cross-protocol
     portfolio.  T1's switching at the Q1$\to$Q2 inflection (early

@@ -26,18 +26,9 @@ empirical, finding. Real per-block gas re-run is queued.
 ``order-book dynamics'' class requires paid Blocknative or
 archived mempool ($\sim 30$~TB); not available in this study.
 
-\textbf{(iv) Heterogeneous rate-refresh cadence.}  T1/T2/T3 actively
-switch among all six protocols on the per-block grid, but the six
-refresh their on-chain rates at different native cadences: Aave V3
-($\sim 48$\,s) and Euler V2 ($\sim 6$\,min) are genuinely
-sub-hourly; Spark and Compound V3 are sub-hourly via subgraph and
-RPC sampling; Morpho Blue is $\sim$hourly; and Fluid updates only
-$\sim$daily.  Switch decisions into the three slower venues act on a
-forward-filled most-recent rate (the live-agent information set), so
-we claim a per-block \emph{decision loop}, not per-block rate
-\emph{resolution} for all six.  The three genuine sub-hourly venues
-carry $\sim 63$--$64\%$ of held time (\Cref{tab:timeshare});
-per-block fetchers for the slower three are the next-extension scope.
+\textbf{(iv) Active panel is 3-of-6.}  T1/T2/T3 actively switch
+among Aave V3, Morpho Blue, Euler V2 (per-block grid); the other
+three protocols enter the matrix only as passive holds.
 
 \textbf{(v) Capacity is analytic.}  The capacity sweep applies the
 linearized Krause-2005 yield-impact rather than re-running the

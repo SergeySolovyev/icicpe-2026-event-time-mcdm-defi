@@ -26,19 +26,28 @@ empirical, finding. Real per-block gas re-run is queued.
 ``order-book dynamics'' class requires paid Blocknative or
 archived mempool ($\sim 30$~TB); not available in this study.
 
-\textbf{(iv) Active panel is 3-of-6.}  T1/T2/T3 actively switch
-among Aave V3, Morpho Blue, Euler V2 (per-block grid); the other
-three protocols enter the matrix only as passive holds.
+\textbf{(iv) Heterogeneous rate-refresh cadence.}  T1/T2/T3 actively
+switch among all six protocols on the per-block grid, but the six
+refresh their on-chain rates at different native cadences: Aave V3
+($\sim 48$\,s) and Euler V2 ($\sim 6$\,min) are genuinely
+sub-hourly; Spark and Compound V3 are sub-hourly via subgraph and
+RPC sampling; Morpho Blue is $\sim$hourly; and Fluid updates only
+$\sim$daily.  Switch decisions into the three slower venues act on a
+forward-filled most-recent rate (the live-agent information set), so
+we claim a per-block \emph{decision loop}, not per-block rate
+\emph{resolution} for all six.  The three genuine sub-hourly venues
+carry $\sim 63$--$64\%$ of held time (\Cref{tab:timeshare});
+per-block fetchers for the slower three are the next-extension scope.
 
 \textbf{(v) Capacity is analytic.}  The capacity sweep applies the
 linearized Krause-2005 yield-impact rather than re-running the
 replay engine at each position size; the time-share-weighted
 average smooths the small-pool tail.
 
-\textbf{(vi) Pre-mainnet live track record.}  The agent is
-verified at Sepolia paper-trade scale; the Institutional Dossier
-specifies a five-phase ramp ($\$10$K~$\to$~LP allocation) before
-mainnet attestation extends this paper.
+\textbf{(vi) Prospective deployment validation.}  The evaluation
+reported here is retrospective and testnet/paper-trading only.
+A prospective study is required before drawing conclusions about
+execution quality or realized performance in production markets.
 
 % --------------------------------------------------------------
 % Code and data availability section (modeled on the user's
@@ -51,14 +60,14 @@ mainnet attestation extends this paper.
 End-to-end reproducible pipeline (data extension, T3 training, walk-
 forward, capacity, paper rebuild) plus walk-forward equity parquets,
 T3 Cox-hazard training artefacts (per-ablation sidecars,
-\texttt{results/models/t3\_cox\_*.json}), and Institutional Dossier
-(8 chapters + LP slide deck, \texttt{docs/institutional/}):
+\texttt{results/models/t3\_cox\_*.json}), and supplementary
+reproducibility materials:
 \url{https://github.com/SergeySolovyev/icicpe-2026-event-time-mcdm-defi}
 (\texttt{python -m scripts.finalize\_6way\_pipeline}). The per-block
 6-way panel ($\sim$72\,MB parquet, Nov 2024--Apr 2026) is mirrored
 on HuggingFace Datasets at
 \url{https://huggingface.co/datasets/sssolovjov/icicpe-2026-defi-panel}.
-Production live agent (per-block loop, Flashbots private mempool,
-Tier 5 observability with Prometheus \texttt{/metrics} + append-only
-audit trail; $128/128$ tests pass):
+Reference implementation of the deployment loop (per-block
+execution, private relay support, observability endpoints, and an
+append-only audit trail):
 \url{https://github.com/SergeySolovyev/event-time-mcdm-agent}.
