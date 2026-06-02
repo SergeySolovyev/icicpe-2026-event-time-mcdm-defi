@@ -29,6 +29,7 @@ real gas history was never fetched.
 | Tier | # | Finding | Severity | Touches headline? | Fixable locally? |
 |---|---|---|---|---|---|
 | 1 | 1 | T3 walk-forward train/test leakage | HIGH | yes (H1c +7.03 bp) | **yes** |
+| 1 | **1b** | **T3 silently falls back to T1 (feature-name mismatch) — deployed allocator never ran its Cox model** | **CRITICAL** | **yes (H1c)** | **fixed** |
 | 1 | 2 | Gas is a flat 25 gwei constant | HIGH | yes ("gas-aware") | partial (sweep yes; real gas needs key) |
 | 2 | 3 | Compound V3 TVL = constant 0 | MED | no (B4/capacity only) | needs RPC |
 | 2 | 4 | Fluid utilization = constant 0.85 | MED | no (rate-based policy unaffected) | needs source |
@@ -75,10 +76,59 @@ small — but it must be measured, not assumed.
 
 **Fix (local, no keys):** expanding-window walk-forward. For each window
 W_k, fit T3 on blocks strictly before W_k's start (purged by the 7,200-
-block horizon + embargo), then evaluate on W_k. Report the honest OOS
-ΔAPY distribution. If it survives, H1c stands on firmer ground; if it
-shrinks toward the test-slice null, reframe T3 as a conditional/at-scale
-contribution.
+block horizon + embargo), then evaluate on W_k.
+
+### 1b. T3 silently falls back to T1 in replay (feature-name mismatch) — CRITICAL, fixed
+
+**This is the deeper root cause, found while fixing #1, and it is more
+serious than the leakage itself.**
+
+**Finding:** the deployed T3 policy **never evaluates its Cox model** in
+any backtest replay — it falls back to T1 on every block.
+
+**Evidence (empirically reproduced):**
+- `decision/t3_hazard.py:125-137`: for any `f1_`/`f4_` feature,
+  `_live_feature_vector` reads `state.aux.get(name)`; if the name is
+  absent or NaN it returns `None`, and `decide()` (line 148-151) then
+  defers to `self._fallback` (a `T1ThresholdPolicy`).
+- The Cox models — both the committed `results/models/t3_cox.json` and
+  every per-window expanding model — list F1 features
+  `f1_dsr_apr, f1_dsr_lag_300, f1_dsr_lag_1800, f1_dsr_delta_300,
+  f1_lead_spread_dsr_vs_top` among their (largest-magnitude) coefficients.
+- But the per-block panel ships only `f1_dsr_apr_frac` and
+  `f1_dsr_apy_pct`; the replay engine's `aux` therefore contains
+  **none** of the five names the model needs. Direct test:
+  `_live_feature_vector(state)` returns `None` for both `t3_cox.json`
+  and `t3_cox_before_w2.json` → fallback to T1.
+
+**Consequence:** in `run_test_matrix` and `run_6way_walkforward`, the
+"T3" row is bit-identical to T1 (Table 2's T3≡T1; the first expanding
+run gave ΔAPY = +0.00 bp on all five windows) because T3 *is* T1 in those
+runs. The headline +7.03 bp in
+`results/institutional/tables/t3_vs_t1_paired_bootstrap.csv` did **not**
+come from the allocator at all — it came from a separate analytic
+hazard-ranking (`scripts/analyze_t3_vs_t1.py`) applied to the design
+matrix (where the F1 columns *do* exist, built by the training
+`F1LeadBuilder`), on the leaky full-panel fit, and never passed through
+the gas-gated switch logic / replay engine. So the H1c headline rests on
+(i) leakage **and** (ii) a code path that is not the deployed allocator.
+
+**Fix (done):** `scripts/walkforward_t3_expanding.py` now merges the real
+`F1LeadBuilder` columns (`f1_dsr_apr`, lags, delta, lead-spread; from
+`data/cached/events_dsr.parquet`, 99.8% coverage) into the panel before
+replay, under the exact names the model expects. Verified that
+`_live_feature_vector` then returns a real vector (hazard ≈ 1.8e-2,
+E[dwell] ≈ 55 blocks) — T3 genuinely evaluates its Cox model. The
+corrected expanding-window OOS (T3 actually running, trained strictly
+pre-window) is the honest test of H1c. **Result pending the re-run; this
+is the number that decides whether the ML tier survives.**
+
+**Why this strengthens, not weakens, the paper:** the binding result
+(T1 vs holds) is untouched. The honest finding — "the F3 cross-protocol
+spread is the decision variable, and the gas-gated threshold T1 captures
+it; the Cox layer, correctly wired and tested out-of-sample, does/does-not
+beat it" — is a clean, defensible scientific statement either way, and it
+pre-empts the sharpest reviewer question ("if T3≡T1, why ML?").
 
 ### 2. Gas is a flat 25 gwei constant — HIGH, partially fixable
 
