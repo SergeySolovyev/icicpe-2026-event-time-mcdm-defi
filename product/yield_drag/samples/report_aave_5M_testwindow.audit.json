@@ -1,0 +1,24 @@
+{
+  "position_usd": 5000000.0,
+  "current_protocol": "aave_v3",
+  "window_start": "2026-01-01",
+  "window_end": "2026-05-01",
+  "n_blocks": 863999,
+  "years": 0.329,
+  "passive_net_apy_pct": 3.261,
+  "active_net_apy_pct": 5.387,
+  "drag_bp_annualized": 212.6,
+  "drag_usd_over_window": 33965.0,
+  "active_rebalances": 378,
+  "active_gas_usd": 98.62,
+  "active_time_share": {
+    "Euler V2": 49.0,
+    "Spark": 29.2,
+    "Morpho Blue": 11.2,
+    "Aave V3": 5.5,
+    "Compound V3": 4.3,
+    "Fluid": 0.8
+  },
+  "panel_sha256_12": "d22df80bb554",
+  "quality_gates_passed": true
+}
