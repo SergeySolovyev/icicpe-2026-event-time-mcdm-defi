@@ -75,3 +75,25 @@ Ordered by leverage for the *paper + product*:
 `lending_apr`, leakage-free). They (a) make "gas-aware" net-honest [G1],
 (b) restore secondary-analysis fidelity [G2–G4], (c) optionally remove the
 cadence caveat [G5].
+
+---
+
+## Closure log (2026-06-03, via Alchemy archive RPC, no key committed)
+
+A user-supplied Alchemy archive `ETHEREUM_RPC_URL` (read-only) was used to
+close the highest-value RPC-gated gaps. All decodes were empirically
+validated before merge.
+
+| Gap | Status | Method + validation |
+|---|---|---|
+| **G1** real gas | ✅ closed | `eth_feeHistory` (free RPC, no key); `gas_price_gwei_real` added to panel (mean 3.7 gwei, test window ~0.3); const-25 kept as conservative headline. |
+| **G2** Compound TVL | ✅ closed | Comet `totalSupply()` archive `eth_call`; was const-0 → real (mean $473M, range $333–578M), nunique 1→545. |
+| **G3** Spark borrow | ✅ closed | SparkLend Pool `getReserveData(USDC)` (Aave-V3 fork); word[2]=lending **validated** vs subgraph (monthly corr **0.979**, identical quantiles); word[4]=borrow merged (mean 6.46%), cov 0%→100%. |
+| **G4** Fluid borrow/util | ⛔ **honestly NOT closed** | Verified `LiquidityResolver 0xca13…` `getOverallTokenData`; internal identity `supply=borrow·util·(1−fee)` holds to 0.007pp (decode correct). BUT the resolver returns the **liquidity-LAYER** base rate, a *different metric* than the panel's DeFiLlama user-facing fUSDC APY: corr **0.036**, and resolver borrow 4.88% < DeFiLlama lending 7.59% (would violate borrow≥lending). Plus the resolver was deployed mid-2025 (~30% panel coverage). Mixing layers would be wrong, so the Fluid borrow/util placeholders are deliberately retained and documented. |
+
+**Net effect:** of the four RPC-gated gaps, three (G1/G2/G3) are closed with
+real, validated data; G4 is honestly left open as a data-semantics
+mismatch (not a fetch failure). None changes the binding T1-vs-holds
+result (which runs on `lending_apr`, real for all six). Fetchers:
+`data/fetch_real_gas.py`, `fetch_compound_tvl.py`, `fetch_spark_borrow.py`,
+`fetch_fluid_borrow_util.py`; merge `scripts/merge_real_data_into_panel.py`.
