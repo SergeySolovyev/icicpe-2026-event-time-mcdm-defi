@@ -8,10 +8,13 @@ grounded in a distinct microstructure or quantitative-finance
 source.  On a $\NBlocksFull$-block panel covering
 \DataStart{}--\DataEnd{} across \NProtocols{} active Ethereum
 USDC lending venues, T1 beats passive Aave V3 hold by
-$\HOneAuxDelta$ Sharpe ($p = \HOneAuxPvalue$), and the F1$+$F3
-sophisticated-retrain T3 closes pre-registered H1c with
-$+7.03$\,bp over T1 on the $N\!=\!6$ walk-forward paired
-bootstrap ($p = 0.015$).
+$\HOneAuxDelta$ Sharpe ($p = \HOneAuxPvalue$).  We then report a
+\emph{pre-registered negative result}: the F1$+$F3 Cox T3 tier,
+trained strictly out-of-sample and actually executed, does
+\emph{not} beat T1 --- it loses by $\TThreeMeanDeltaBp$\,bp on the
+honest expanding-window walk-forward.  Real \texttt{eth\_feeHistory}
+gas confirms the net-of-gas T1 edge ($+2.25$\,pp over passive Aave)
+exceeds the conservative placeholder backtest.
 
 The contribution stands at three layers.  \textbf{Methodology}:
 event-time gas-aware decision rules admit two to three orders of
@@ -19,21 +22,18 @@ magnitude more rebalance opportunities than hourly polling, and
 the four-class HFT signal taxonomy of \cite{mackenzie2021}
 operationalises cleanly on multi-protocol DeFi lending.
 \textbf{Infrastructure}: six-way event-stream fetchers, a
-per-block replay engine, the zero-drift production agent
-(Windows-junction-shared decision module between research and
-live), the per-block panel on HuggingFace, and the Institutional
-Dossier are all open-source.  \textbf{Empirical}: the binding
+per-block replay engine, and public data and code artefacts support
+independent replication.  \textbf{Empirical}: the binding
 finding complements the equilibrium impossibility result of
 \cite{halpern2024fair} by demonstrating that the residual
-exploitable edge in DeFi lending lives in the inter-block
+exploitable edge in DeFi lending arises in the inter-block
 microstructure --- precisely where the HFT taxonomy predicts it
 should.
 
-Three concrete next steps: (i) extend the F1 lead-rate fetcher to
-Maker DSR + Curve 3pool at per-block cadence and re-train T3 on
-F1$+$F3$+$F4 with real gas; (ii) admit the F2 mempool channel once
-Flashbots historic coverage stabilises, completing the
-MacKenzie Table 3.2 quadrant; (iii) run the production agent
-against Sepolia for the $\ge 10$-rebalance acceptance gate
-documented in \texttt{agent/RUNBOOK.md} before mainnet attestation
-extends this paper.
+Future work should extend the F1 lead-rate features to Maker DSR
+and Curve 3pool at per-block cadence, re-estimate T3 with observed
+gas costs, and incorporate F2 mempool features once sufficiently
+complete historical coverage is available.  A separate prospective
+validation study should then evaluate execution quality in a
+controlled testnet or paper-trading setting before any claims are
+made about mainnet deployment.

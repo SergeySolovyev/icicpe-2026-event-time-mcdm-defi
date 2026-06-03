@@ -86,11 +86,10 @@ grid at their native cadence (\Cref{tab:timeshare}); the active
 T1/T2/T3 allocators switch among all six on that grid, and each
 protocol additionally enters the N\,$\times$\,M paired bootstrap as
 a passive-hold counter-factual with $N=6$ per-window deltas.  The
-policy ladder is run at three tiers; on the four-month test slice
-the F1$+$F3 T3 fires on the same blocks as T1's spread-dwell
-threshold (an empirical coincidence on this window, \Cref{tab:test-matrix}),
-while its $+7.03$\,bp edge over T1 materialises in the broader
-walk-forward (\Cref{tab:wf-t3-vs-t1}).
+policy ladder is run at three tiers; the deployed T3 falls back to
+T1 in replay (\Cref{sec:emp-t3neg}), and when wired and tested
+out-of-sample it loses to T1 --- a pre-registered negative result
+(\Cref{tab:wf-t3-vs-t1}).
 
 \paragraph{Primary inference: walk-forward N\,$\times$\,M paired
 bootstrap.}  The binding evidence is a walk-forward bootstrap
@@ -155,19 +154,13 @@ end-to-end equity.
 \begin{table}[t]
   \centering
   \caption{T1--T3 active-policy results on the \DataStart--\DataEnd\
-    test window (\$1\,M initial position, $\NBlocks$ blocks).  T3
-    appears row-identical to T1: the F1$+$F3 sophisticated-retrain
-    Cox model (the H1c claim) is replayed here, but on this
-    4-month test slice its hazard-threshold inequality fires on
-    exactly the same blocks as T1's spread-dwell threshold ---
-    an empirical, not analytical, coincidence.  The
-    $+7.03$\,bp walk-forward $\Delta\textsc{APY}$ that satisfies H1c
-    is concentrated in earlier windows (see the
-    sophisticated-retrain paragraph below and
-    \Cref{tab:wf-nxm}); on Jan--Apr 2026 alone, T3 and T1 share
-    the same rebalance schedule.  Filled from
-    \texttt{results/tables/test\_matrix.csv} by
-    \texttt{scripts/fill\_vol2\_macros.py}.}
+    test window (\$1\,M initial position, $\NBlocks$ blocks).  The
+    T3 row is bit-identical to T1 for a concrete reason we disclose
+    in \Cref{sec:emp-t3neg}: the deployed Cox policy falls back to
+    T1 in replay (its F1 features are absent from the live state),
+    so ``T3'' here \emph{is} T1.  When T3 is correctly wired and
+    trained out-of-sample it \emph{loses} to T1 (\Cref{tab:wf-t3-vs-t1}).
+    Filled from \texttt{results/tables/test\_matrix.csv}.}
   \label{tab:test-matrix}
   \setlength{\tabcolsep}{4pt}
   \begin{tabular}{lrrrr}
@@ -176,31 +169,22 @@ end-to-end equity.
     \midrule
     \textbf{T1 Threshold}  & \textbf{\TOneAPY}   & \TOneNRebal            & \TOneGasUSD            & \TOneMaxDD \\
     T2 Optimal stopping    & \TTwoAPY            & \TTwoNRebal            & \TTwoGasUSD            & \TTwoMaxDD \\
-    T3 Cox (F1$+$F3)$^{\ddagger}$ & \TThreeAPY  & \TThreeNRebal          & \TThreeGasUSD          & \TThreeMaxDD \\
+    T3 Cox (fallback $=$ T1)$^{\ddagger}$ & \TThreeAPY  & \TThreeNRebal          & \TThreeGasUSD          & \TThreeMaxDD \\
     \bottomrule
   \end{tabular}\\[2pt]
-  {\footnotesize $^{\ddagger}$ F1$+$F3 hazard $\equiv$ T1 schedule on
-   Jan--Apr 2026; the H1c $+7.03$\,bp delta is estimated over the
-   broader
-   $N\!=\!6$ walk-forward (\Cref{tab:wf-nxm}).}
+  {\footnotesize $^{\ddagger}$ deployed T3 falls back to T1 (feature
+   wiring); honest out-of-sample T3 in \Cref{tab:wf-t3-vs-t1}.}
 \end{table}
 
-\textbf{T1 is the event-time winner on this slice}: \TOneAPY\ net APY
-at \TOneNRebal\ rebalances and $\TOneGasUSD$ gas spend.  T2 trails
+\textbf{T1 is the event-time winner}: \TOneAPY\ net APY at
+\TOneNRebal\ rebalances and $\TOneGasUSD$ gas spend.  T2 trails
 slightly (\TTwoAPY\ APY) because the OU calibrator rebalances $\sim
-3\times$ more aggressively ($\TTwoNRebal$ vs $\TOneNRebal$) on a
-window whose realised spread is calmer than its training-window
-average.  The headline \textbf{T3 (F1$+$F3 sophisticated retrain,
-OOF C-index $0.582$)} is row-identical to T1 here: on the four
-test-window months, the Cox hazard-threshold inequality of
-\Cref{eq:t3-decide} fires on exactly the same blocks as T1's
-spread-dwell threshold of \Cref{eq:t1} --- an \emph{empirical
-coincidence on this slice}, not an analytical reduction.  The
-T3-over-T1 edge that satisfies the pre-registered H1c criterion is
-estimated over the broader
-$N\!=\!6$ walk-forward (\Cref{tab:wf-t3-vs-t1}, mean $+7.03$\,bp,
-$p=0.015$), concentrated in volatile-spread windows W1, W2, W6.
-The against-each-protocol-hold contrast is the binding paired-bootstrap
+3\times$ more aggressively ($\TTwoNRebal$ vs $\TOneNRebal$) and, as
+\Cref{sec:emp-gas} shows, never throttles with gas.  The T3 row
+equals T1 because the deployed hazard policy falls back to T1 in
+replay; the honest out-of-sample evaluation of a correctly-wired T3
+(\Cref{sec:emp-t3neg}) is a \emph{negative} result.  The
+against-each-protocol-hold contrast is the binding paired-bootstrap
 finding (\Cref{tab:wf-nxm} below).
 
 \begin{table*}[t]
@@ -283,19 +267,13 @@ insignificant), but with $89$--$201$ rebalances/window vs T1's
 $30$--$38$ — the OU recalibrator over-responds to the richer
 signal space, illustrating that complexity is not free.
 
-\paragraph{T3 row identity on this slice; walk-forward edge.}
-As anticipated above, the F1$+$F3 sophisticated-retrain
-T3 row in \Cref{tab:test-matrix} is row-identical to T1.  The
-analytical reduction (Cox $\to$ spread-dwell threshold)
-\emph{would} hold only when F1 coefficients vanish, which is not the
-case here: $\hat\beta_{\textsc{dsr-}\Delta_{300}}$ is the largest
-non-F3 covariate after L2 ridge.  The identity is an
-empirical-window coincidence: on Jan--Apr 2026 the F1 DSR
-contribution to the hazard does not shift the inequality crossing
-relative to T1's spread-dwell threshold.  The +7.03\,bp T3-over-T1
-edge that satisfies H1c (\Cref{tab:wf-t3-vs-t1}) concentrates in W1,
-W2 and W6 --- volatile-spread windows where the DSR lead carries
-incremental information above the cross-protocol spread.
+\paragraph{T3 row identity is a fallback, not a result.}
+The T3 row in \Cref{tab:test-matrix} equals T1 not because the Cox
+model agrees with the threshold but because the deployed policy
+never evaluates the model and falls back to T1
+(\Cref{sec:emp-t3neg}).  The honest out-of-sample evaluation, with
+the model actually running, is the negative result of
+\Cref{tab:wf-t3-vs-t1}.
 
 \begin{table}[t]
   \centering
@@ -314,10 +292,9 @@ incremental information above the cross-protocol spread.
     $H_{1}^{\text{aux}}$: T1 vs B1  & \textbf{\HOneAuxDelta} & [\HOneAuxCIlow, \HOneAuxCIhigh] & \textbf{\HOneAuxPvalue} \\
     \bottomrule
   \end{tabular}\\[2pt]
-  {\footnotesize $^{\dagger}$ T3 (F1$+$F3) row-identical to T1 on the
-   Jan--Apr 2026 test slice (\Cref{tab:test-matrix}); the H1c
-   $+7.03$\,bp result is estimated in the walk-forward
-   \Cref{tab:wf-t3-vs-t1}, $p = 0.015$.}
+  {\footnotesize $^{\dagger}$ deployed T3 falls back to T1
+   (\Cref{sec:emp-t3neg}); the honest out-of-sample T3 \emph{loses}
+   to T1 (\Cref{tab:wf-t3-vs-t1}).}
 \end{table}
 
 The secondary monthly bootstrap (\Cref{tab:h1-monthly}) is consistent
@@ -327,10 +304,9 @@ $p = \HOneAuxPvalue$ with $\Delta\textsc{SR} = \HOneAuxDelta$, in
 agreement with the walk-forward $+2.81$\,pp.  $H_{1}^{b}$
 (T2 vs T1) is directionally negative on this slice but its CI crosses
 zero at $N = \HOneANMonths$ observations, exactly as the small-$T$
-power calculation expects.  $H_{1}^{c}$ (originally T3 vs T2) is
-reframed here as T3 vs T1 to match the canonical H1c walk-forward
-inference; the trivial zero entry reflects the row identity discussed
-above and is included for completeness rather than as evidence.
+power calculation expects.  $H_{1}^{c}$ (T3 vs T1) is a trivial zero
+because the deployed T3 falls back to T1; the honest out-of-sample
+T3 evaluation is the negative result of \Cref{sec:emp-t3neg}.
 
 \begin{figure}[!t]
   \centering
@@ -344,74 +320,101 @@ above and is included for completeness rather than as evidence.
   \label{fig:equity-curves}
 \end{figure}
 
-% [T3 sophisticated retrain ablation+wf paragraph BEGIN]
-\paragraph{T3 sophisticated retrain.} We retrain T3's Cox
-proportional-hazards model on the full MacKenzie (2021)
-Table 3.2 F1+F3+F4 design matrix: triple-barrier survival labels
-(24-h horizon), purged 5-fold CV with embargo $\approx 5.4$ days,
-sample-uniqueness weighting (L\'opez de Prado AFML Ch.4.5), and
-an L2 ridge sweep. Out-of-fold C-index is $0.563$ (F3 only),
-$0.582$ (F1+F3), $0.563$ (F3+F4), and $0.582$ (F1+F3+F4).
-F1 Maker DSR delta is the only non-F3 signal class that meaningfully
-improves concordance ($+1.9$\,pp), while F4 (USDC peg + ETH/USD;
-gas placeholder dropped as zero-variance) contributes nothing above
-F3 alone. The top non-F3 coefficient is $f1\_dsr\_delta\_300$
-(one-hour change in Maker DSR), providing direct empirical support
-for the F1 lead-rate signal class as the single ML lever above the
-gas-aware threshold rule. In walk-forward evaluation T3 yields
+% [T3 honest negative result — supersedes the retracted +7.03/H1c]
+\subsection{T3 ML tier: a pre-registered negative result}
+\label{sec:emp-t3neg}
+
+We trained T3's Cox proportional-hazards model with full L\'opez de
+Prado AFML rigour (triple-barrier labels, purged 5-fold CV with
+embargo $\approx 5.4$ days, sample-uniqueness weighting, L2 ridge
+sweep), reaching out-of-fold C-index $0.563$ (F3 only) and $0.582$
+(F1$+$F3); the Maker-DSR delta is the only non-F3 covariate with a
+positive concordance lift.  Concordance, however, did not translate
+into allocation skill.  Two integrity findings, both reproduced from
+the code, forced a full re-evaluation:
+
+\textbf{(i) The deployed T3 never executed its model.}  In replay,
+\texttt{T3HazardPolicy} reads its F1 features from the live block
+state; the panel ships those columns under different names, so the
+feature vector is unavailable and the policy \emph{falls back to T1}
+on every block (\texttt{decision/t3\_hazard.py}).  Every ``T3'' row
+in a backtest was therefore T1.  A previously-reported $+7.03$\,bp
+``H1c'' figure came not from the allocator but from an out-of-band
+hazard-ranking on a leaky full-panel fit; \textbf{we retract it}.
+
+\textbf{(ii) Wired and tested honestly, T3 loses.}  We (a) merged the
+real F1 lead features into the state so the Cox model genuinely
+evaluates, and (b) replaced the leaky full-panel fit with an
+\emph{expanding-window} walk-forward --- for each window, train
+strictly on prior blocks (purged by horizon$+$embargo), then
+evaluate out-of-sample.  The honest result (\Cref{tab:wf-t3-vs-t1})
+is a \emph{loss}: T3 underperforms T1 by mean
 $\Delta\textsc{APY} = \TThreeMeanDeltaBp$\,bp
-(95\% paired-bootstrap CI $[\TThreeCILow, \TThreeCIHigh]$,
-$p = \TThreePValue$, $\TThreeWins/\TThreeNWindows$ windows positive)
-over T1, satisfying the pre-registered H1c criterion ($p < 0.05$).
-\emph{Economic significance.} At the calibrated \$1\,M position the
-gas leg of \Cref{eq:cost} costs $\sim 1.75$\,bp per rebalance
-($17.5/V \cdot 10^4$); T3's $+7.03$\,bp walk-forward mean is
-therefore $\sim 4\times$ a single rebalance's gas budget. The
-capacity sweep below projects the T3-over-T1 gap to widen with
-position size where gas amortises: at \$50\,M the gas leg drops to
-$\sim 0.04$\,bp per rebalance, raising the signal-to-cost ratio by
-two orders of magnitude.
+(95\,\% CI $[\TThreeCILow, \TThreeCIHigh]$,
+$\TThreeWins/\TThreeNWindows$ windows).  The model-driven dwell
+estimate mis-times switches relative to T1's EWMA dwell.  The
+scientific reading is clean: the F3 cross-protocol spread \emph{is}
+the decision variable, the gas-aware threshold T1 captures it, and
+the hazard layer adds nothing out-of-sample --- a pre-registered
+negative result that pre-empts the ``if T3$\equiv$T1, why ML?''
+question.
 
-% [T3 sophisticated retrain ablation+wf paragraph END]
-
-\begin{table*}[t]
+\begin{table}[t]
   \centering
-  \caption{\textbf{T3 (F1$+$F3) vs T1 head-to-head, per walk-forward
-    window.}  Each window is a 3-month non-overlapping slice of the
-    panel; T1 and T3 are replayed independently with shared decision
-    interface and identical gas-cost model.  T3 wins 5 of 6 windows
-    with mean $\Delta\textsc{APY} = +7.03$\,bp, paired-bootstrap
-    95\,\% CI $[+0.48, +14.74]$\,bp, one-sided $p = 0.015$ (closes
-    pre-registered H1c).  The Jan--Apr 2026 test slice of
-    \Cref{tab:test-matrix,tab:regime-breakdown} sits inside W5+W6,
-    where the edge is smallest (the F1 DSR signal is least
-    informative in calm regimes); the bulk of T3's edge accrues in
-    W1, W2, W6 --- volatile spread regimes that aren't sampled by
-    the four-month aggregate.}
+  \caption{\textbf{Honest out-of-sample T3 vs T1}, expanding-window
+    walk-forward (train strictly pre-window; T3's Cox model actually
+    executed).  T3 loses on every window; mean
+    $\Delta\textsc{APY} = \TThreeMeanDeltaBp$\,bp.  W1 is dropped
+    (no pre-window data). Source
+    \texttt{scripts/walkforward\_t3\_expanding.py}.}
   \label{tab:wf-t3-vs-t1}
-  \begin{tabular}{llrrrrr}
+  \setlength{\tabcolsep}{4pt}
+  \begin{tabular}{llrrr}
     \toprule
-    Window & Span & T1 APY & T3 APY & $\Delta$\,bp & T1 reb. & T3 reb. \\
+    Window & Span & T1 APY & T3 APY & $\Delta$\,bp \\
     \midrule
-    W1 & Nov'24--Jan'25  & 15.24\% & 15.31\% & $+6.7$            & 218 & 224 \\
-    W2 & Feb--Apr'25     & 5.50\%  & 5.63\%  & $+12.8$           & 32  & 34  \\
-    W3 & May--Jul'25     & 7.16\%  & 7.14\%  & $-2.4$            & 38  & 45  \\
-    W4 & Aug--Oct'25     & 6.57\%  & 6.57\%  & $+0.3$            & 31  & 21  \\
-    W5 & Nov'25--Jan'26  & 5.16\%  & 5.17\%  & $+0.5$            & 34  & 41  \\
-    W6 & Feb--Apr'26     & 5.14\%  & 5.38\%  & $\mathbf{+24.3}$  & 30  & 47  \\
+    W2 & Feb--Apr'25    & 5.63\% & 4.60\% & $-102.4$ \\
+    W3 & May--Jul'25    & 7.14\% & 6.83\% & $-30.2$ \\
+    W4 & Aug--Oct'25    & 6.57\% & 4.86\% & $-171.1$ \\
+    W5 & Nov'25--Jan'26 & 5.17\% & 4.06\% & $-110.6$ \\
+    W6 & Feb--Apr'26    & 5.38\% & 5.11\% & $-27.1$ \\
     \midrule
-    \multicolumn{4}{r}{\textbf{mean $\Delta\textsc{APY}$}}
-        & \textbf{$+7.03$\,bp}
-        & \multicolumn{2}{l}{5 of 6 windows positive} \\
+    \multicolumn{4}{r}{\textbf{mean}} & $\mathbf{-88.3}$ \\
     \bottomrule
   \end{tabular}
-\end{table*}
+\end{table}
 
 \paragraph{Capacity ($\$1$M--$\$50$M).} Krause-2005 yield-impact:
-T3 net APY drops from $7.43$\,\% ($\$1$M) to $6.40$\,\% ($\$50$M),
-retaining $+178$\,bp edge over passive Aave-hold even at $\$50$M.
-T3 dominates T1 by $+5$--$10$\,bp at every tier in the
-supplementary capacity analysis.
+T1 net APY drops from $7.43$\,\% ($\$1$M) to $6.40$\,\% ($\$50$M),
+retaining a $+178$\,bp edge over passive Aave-hold even at $\$50$M.
+(The capacity sweep was run on the deployed allocator, which is T1;
+the earlier ``T3'' capacity figures were the same fallback policy.)
+
+\subsection{Gas-sensitivity and real gas}
+\label{sec:emp-gas}
+
+The backtest uses a flat $25$\,gwei placeholder (real gas history was
+unavailable at submission time).  We bound the resulting uncertainty
+two ways.  First, a \emph{sensitivity sweep} re-runs the policies at
+$10$--$200$\,gwei: T1's net APY degrades gracefully from $5.24$\,\%
+($134$ rebalances) to $4.17$\,\% ($6$ rebalances) and \emph{still
+beats passive Aave ($3.26$\,\%) at $200$\,gwei} --- the gas-aware
+gate throttles switching correctly.  T2, by contrast, rebalances
+$\sim 159$ times at \emph{every} gas level and collapses to
+$0.31$\,\% at $200$\,gwei: only T1 is meaningfully gas-aware.
+Second, we fetched \emph{real} historical gas over the panel via
+\texttt{eth\_feeHistory} on a free archive RPC (no key): mean
+$3.7$\,gwei, and only $\sim 0.3$\,gwei across the Jan--Apr 2026 test
+window --- $50$--$100\times$ below the placeholder, reflecting the
+post-Dencun collapse in L1 base fees.  Re-running T1 with real
+forward-filled gas raises its edge over passive Aave to
+$+2.25$\,pp (from $+1.77$\,pp under the placeholder), with $311$
+rebalances costing only \$61.  So the placeholder is a
+\emph{pessimistic} bound; the honest net-of-gas edge is larger.  In
+the current ultra-low-gas regime the gas gate is near-moot and the
+binding execution cost at size shifts to slippage/MEV
+(\Cref{sec:limitations}); gas-awareness binds in high-gas spikes
+(2024-Q4 mean $18.5$\,gwei) where T1's throttling beats T2's naivety.
 
 \subsection{Regime-conditional breakdown}
 \label{sec:emp-regime}
@@ -442,9 +445,9 @@ mean-reversion regime more efficiently than T1's threshold heuristic.
     T3 Cox (F1$+$F3)$^{\ddagger}$ & \TThreeAPYQone & \TThreeAPYQtwo \\
     \bottomrule
   \end{tabular}\\[2pt]
-  {\footnotesize $^{\ddagger}$ identical to T1 on this slice; H1c
-   $+7.03$\,bp delta is estimated over the broader walk-forward
-   (\Cref{tab:wf-nxm}).}
+  {\footnotesize $^{\ddagger}$ deployed T3 falls back to T1
+   (\Cref{sec:emp-t3neg}); honest out-of-sample T3 loses to T1
+   (\Cref{tab:wf-t3-vs-t1}).}
 \end{table}
 
 The asymmetry is precisely what a Krause-style

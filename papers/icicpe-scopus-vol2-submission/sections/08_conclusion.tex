@@ -8,10 +8,13 @@ grounded in a distinct microstructure or quantitative-finance
 source.  On a $\NBlocksFull$-block panel covering
 \DataStart{}--\DataEnd{} across \NProtocols{} active Ethereum
 USDC lending venues, T1 beats passive Aave V3 hold by
-$\HOneAuxDelta$ Sharpe ($p = \HOneAuxPvalue$), and the F1$+$F3
-sophisticated-retrain T3 satisfies the pre-registered H1c criterion with
-$+7.03$\,bp over T1 on the $N\!=\!6$ walk-forward paired
-bootstrap ($p = 0.015$).
+$\HOneAuxDelta$ Sharpe ($p = \HOneAuxPvalue$).  We then report a
+\emph{pre-registered negative result}: the F1$+$F3 Cox T3 tier,
+trained strictly out-of-sample and actually executed, does
+\emph{not} beat T1 --- it loses by $\TThreeMeanDeltaBp$\,bp on the
+honest expanding-window walk-forward.  Real \texttt{eth\_feeHistory}
+gas confirms the net-of-gas T1 edge ($+2.25$\,pp over passive Aave)
+exceeds the conservative placeholder backtest.
 
 The contribution stands at three layers.  \textbf{Methodology}:
 event-time gas-aware decision rules admit two to three orders of

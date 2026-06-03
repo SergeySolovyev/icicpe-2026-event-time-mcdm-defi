@@ -9,15 +9,23 @@ We disclose every methodological constraint affecting the headline
 results so readers can scope conclusions appropriately and so that
 reproductions can target the same envelope.
 
-\textbf{(i) Walk-forward $N = 6$ windows.}  Per-window
-$\Delta$APY standard errors are $\sim 5$--$10$\,bp; T3-over-T1 mean
-$+7.03$\,bp clears one-sided $p<0.05$ with CI floor $+0.48$\,bp.
-Overlapping 12-week windows with overlap-corrected bootstrap would
-tighten the CI; deferred to the journal extension.
+\textbf{(i) Walk-forward $N$ is small (5--6 windows).}  The binding
+T1-vs-holds contrasts are significant ($p<10^{-4}$ on 5/6), but
+per-window $\Delta$APY standard errors are $\sim 5$--$10$\,bp and
+CIs are wide at this $N$; overlapping windows with an
+overlap-corrected bootstrap would tighten them (journal extension).
+The honest out-of-sample T3-vs-T1 result ($\TThreeMeanDeltaBp$\,bp,
+\Cref{tab:wf-t3-vs-t1}) is a clear negative at this $N$.
 
-\textbf{(ii) F4 gas placeholder.}  The F4 \texttt{gas\_log10}
-sub-signal uses a constant $25$\,gwei pending an Etherscan key
-with sufficient quota; the zero-variance filter drops the column,
+\textbf{(ii) Gas placeholder (now bounded).}  The headline backtest
+uses a constant $25$\,gwei; \Cref{sec:emp-gas} bounds this with a
+$10$--$200$\,gwei sensitivity sweep and with real
+\texttt{eth\_feeHistory} gas (test window $\sim 0.3$\,gwei,
+$50$--$100\times$ lower), confirming the placeholder is pessimistic
+and the gas-aware gate is the binding mechanism only in high-gas
+regimes. The F4 \texttt{gas\_log10} sub-signal is still dropped as
+zero-variance under the constant; the zero-variance filter drops
+the column,
 leaving F4 with only ETH/USD and USDC peg. F4 thus contributes
 \emph{zero} OOF C-index above F3-only --- a methodological, not
 empirical, finding. Real per-block gas re-run is queued.

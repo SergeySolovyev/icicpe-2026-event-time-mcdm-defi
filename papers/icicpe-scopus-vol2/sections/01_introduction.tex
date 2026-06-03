@@ -72,17 +72,22 @@ parameters --- outperforms each in-scope passive hold by $+1.5$ to
 $+2.8$ percentage points ($p<10^{-4}$ on 5 of 6 contrasts;
 \Cref{tab:wf-nxm}): the headline empirical claim of this paper is
 that event-time resolution itself extracts the bulk of available
-edge, before any trained model.  The sophisticated-retrain T3
-(Cox proportional-hazards on the F1$+$F3 design matrix) adds an
-\emph{incremental} $\Delta\textsc{APY} = +7.03$\,bp over T1
-($p = 0.015$), closing pre-registered H1c.  This edge is
-concentrated in volatile-spread regimes (W1, W2, W6); the capacity
-sweep projects it to widen at institutional position size where
-gas amortises.  The secondary monthly Sharpe bootstrap on the test
-slice is consistent in direction but underpowered at $N=4$
-observations (\Cref{tab:h1-monthly}).  Two orders of magnitude
-more rebalance opportunities than the hourly baseline of
-\cite{solovev2026vault} permits.
+edge, before any trained model.  We then test whether ML adds to
+this and report a \emph{pre-registered negative result}: the T3
+Cox proportional-hazards tier, trained strictly out-of-sample
+(expanding-window) and actually executed, does \emph{not} beat the
+simple T1 threshold --- it loses by $\Delta\textsc{APY} =
+\TThreeMeanDeltaBp$\,bp over the $N\!=\!\TThreeNWindows$ honest
+walk-forward (95\,\% CI $[\TThreeCILow, \TThreeCIHigh]$,
+$\TThreeWins/\TThreeNWindows$ windows).  The F3 cross-protocol
+spread \emph{is} the decision variable and the gas-aware threshold
+captures it; the hazard layer's model-driven dwell estimate
+mis-times switches.  Robustness: T1's edge survives the full
+$10$--$200$\,gwei gas range, and real Ethereum gas
+(via \texttt{eth\_feeHistory}) ran $\sim 0.3$\,gwei in the test
+window --- $50$--$100\times$ below our backtest placeholder --- so
+the net-of-real-gas T1 edge ($+2.25$\,pp over passive Aave) is
+\emph{larger} than the conservative figure, not smaller.
 
 \paragraph{Contributions.}
 \begin{itemize}
