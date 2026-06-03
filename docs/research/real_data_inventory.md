@@ -97,3 +97,30 @@ mismatch (not a fetch failure). None changes the binding T1-vs-holds
 result (which runs on `lending_apr`, real for all six). Fetchers:
 `data/fetch_real_gas.py`, `fetch_compound_tvl.py`, `fetch_spark_borrow.py`,
 `fetch_fluid_borrow_util.py`; merge `scripts/merge_real_data_into_panel.py`.
+
+### G4 follow-up — done via the fToken layer (2026-06-03)
+
+Per request, G4 was re-approached through Fluid's user-facing **fToken**
+layer (the layer the panel's `fluid_lending_apr` lives in), using the
+verified contracts:
+- FluidLendingResolver `0x48D32f49aFeAEC7AE66ad7B9264f446fc11a1569`
+- fUSDC fToken `0x9Fb7b4477576Fe5B32be4C1843aFB1e55F251B33` (ERC4626)
+
+**Supply (lending) — closed & validated.** The fUSDC share price
+(`convertToAssets`) grows with accrued interest; its trailing-30-day
+annualized growth is the realized user-facing supply APY (≈5.18% recent),
+which matches DeFiLlama `apyBase` — confirming the panel's
+`fluid_lending_apr` is the correct interest layer. Series:
+`data/fetch_fluid_ftoken.py` → `f4_fluid_ftoken_daily.parquet`.
+
+**Borrow / utilization — architecturally absent at the fToken layer.**
+Fluid is not an Aave-style single pool: the fToken is **supply-only**
+(ERC4626), and USDC **borrowing happens in separate Fluid Vaults**, not
+through the fToken. There is therefore **no fToken-level borrow rate or
+utilization**, and the liquidity-layer borrow (≈4.88%) is not apples-to-
+apples with the fToken supply (it even runs *below* it once the fToken's
+allocation/rewards are included). Conclusion: the Fluid `(borrow, util)`
+fields have **no clean Aave-style analog** — this is an architectural
+property of Fluid, documented as such, not a missing fetch. The honest
+panel treatment keeps `fluid_lending_apr` (validated against the fToken)
+and leaves `fluid_borrow_apr`/`fluid_utilization` as not-applicable.
