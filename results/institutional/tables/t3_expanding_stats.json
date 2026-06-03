@@ -1,0 +1,16 @@
+{
+  "method": "expanding-window walk-forward (train strictly pre-window, purge 46512 blocks)",
+  "n_windows": 5,
+  "windows": [
+    "W2",
+    "W3",
+    "W4",
+    "W5",
+    "W6"
+  ],
+  "mean_delta_bp": -88.2642426650686,
+  "ci_low_95_bp": -133.13512248308524,
+  "ci_high_95_bp": -43.39336284705198,
+  "p_one_sided_le0": 1.0,
+  "wins": 0
+}
