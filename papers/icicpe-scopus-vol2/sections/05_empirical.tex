@@ -408,13 +408,23 @@ effectively deep-venue-only, with a smaller but still positive edge.
 
 The backtest uses a flat $25$\,gwei placeholder (real gas history was
 unavailable at submission time).  We bound the resulting uncertainty
-two ways.  First, a \emph{sensitivity sweep} re-runs the policies at
-$10$--$200$\,gwei: T1's net APY degrades gracefully from $5.24$\,\%
-($134$ rebalances) to $4.17$\,\% ($6$ rebalances) and \emph{still
-beats passive Aave ($3.26$\,\%) at $200$\,gwei} --- the gas-aware
-gate throttles switching correctly.  T2, by contrast, rebalances
-$\sim 159$ times at \emph{every} gas level and collapses to
-$0.31$\,\% at $200$\,gwei: only T1 is meaningfully gas-aware.
+two ways.  First, a \emph{sensitivity sweep}
+(\texttt{scripts/greedy\_gas\_sensitivity.py}) re-runs the policies at
+$10$--$200$\,gwei.  T1's gas gate cuts its switch count as gas rises
+($125\!\to\!52\!\to\!26\!\to\!9$ at $10/25/50/100$\,gwei), so its net
+APY degrades only gracefully ($5.10\!\to\!4.94\!\to\!4.53\!\to\!4.46$\,\%)
+and stays far above passive Aave ($3.26$\,\%).  A naive greedy
+spot-APY baseline (switch to the best rate every block, \emph{no} gas
+gate) instead holds $424$ rebalances at \emph{every} level and collapses
+from $4.72$\,\% ($10$\,gwei) to $2.03$\,\% ($50$\,gwei) to \emph{negative}
+$-1.26$\,\% ($100$\,gwei): the T1-minus-greedy gap widens from $+39$\,bp
+to $+572$\,bp.  Event-time switching alone is therefore \emph{not} the
+contribution --- the gas-aware \emph{throttle} is, and its value (only
+$\sim 1.5$\,bp in the near-zero-gas test window) grows to hundreds of bp
+in the high-gas regimes where naive rate-chasing turns ruinous.  T2,
+which does not gas-throttle, rebalances $\sim 159$ times at \emph{every}
+level and collapses to $0.31$\,\% at $200$\,gwei: only T1's explicit gate
+is meaningfully gas-aware.
 Second, we fetched \emph{real} historical gas over the panel via
 \texttt{eth\_feeHistory} on a free archive RPC (no key): mean
 $3.7$\,gwei, and only $\sim 0.3$\,gwei across the Jan--Apr 2026 test
