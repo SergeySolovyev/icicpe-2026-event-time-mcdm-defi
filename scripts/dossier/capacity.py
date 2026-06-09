@@ -1,9 +1,22 @@
-"""Capacity sweep: for each position size, apply closed-form slippage
-deduction to existing equity parquets and compute net APY.
+"""Capacity sweep (DEPRECATED MODEL -- see capacity_sweep_6way.py).
 
-Approximation: rather than re-running the full per-block replay engine
-inside the slippage loop (expensive), apply slippage to each policy's
-existing equity_*.parquet: net_apy_adjusted = net_apy - mean_slippage_bp
+WARNING: this model is PHYSICALLY WRONG for lending and is superseded.
+It charges `slippage_bp * 2 * n_rebalances / years`, i.e. it multiplies a
+*rate* (bp of supply-APR depression) by a *transaction count*, treating
+the rate-impact as an AMM per-swap round-trip toll. Cross-protocol USDC
+rebalancing is aToken/cToken mint+burn AT PAR -- there is no DEX swap and
+no round-trip toll. The real cost is the CONTINUOUS rate depression your
+own deposit creates (modelled correctly, with no n_rebalances multiplier,
+in scripts/capacity_sweep_6way.py). This file's `capacity_curve.csv`
+(T1 net -12.2% @ $5M) is an artifact of that category error; the honest
+number is +3.7..+3.9 pp net edge at the $1-5M wedge. Kept only for
+provenance. See docs/research/capacity_reconciliation_2026-06.md.
+
+Original docstring: for each position size, apply closed-form slippage
+deduction to existing equity parquets and compute net APY. Approximation:
+rather than re-running the full per-block replay engine inside the
+slippage loop (expensive), apply slippage to each policy's existing
+equity_*.parquet: net_apy_adjusted = net_apy - mean_slippage_bp
 * 2 * n_rebalances / 10000 (factor 2 because each rebalance involves
 a withdraw and a deposit, each with slippage)."""
 from __future__ import annotations

@@ -390,11 +390,18 @@ question.
   \end{tabular}
 \end{table}
 
-\paragraph{Capacity ($\$1$M--$\$50$M).} Krause-2005 yield-impact:
-T1 net APY drops from $7.43$\,\% ($\$1$M) to $6.40$\,\% ($\$50$M),
-retaining a $+178$\,bp edge over passive Aave-hold even at $\$50$M.
-(The capacity sweep was run on the deployed allocator, which is T1;
-the earlier ``T3'' capacity figures were the same fallback policy.)
+\paragraph{Capacity ($\$1$M--$\$50$M).} Krause-2005 yield-impact on the
+real-gas panel, under the \emph{continuous} rate-depression model (the
+correct cost for at-par mint/burn lending --- a per-rebalance round-trip
+slippage model double-counts and is superseded): T1 net APY eases from
+$8.57$\,\% ($\$1$M) to $7.60$\,\% ($\$50$M), retaining a
+$+2.98$--$3.93$\,pp edge over passive Aave across the range. The binding
+constraint, however, is venue \emph{depth}, not per-trade slippage: the
+edge-carrying venues Euler (TVL $\sim\$16$M) and Spark ($\sim\$29$M)
+cannot absorb a $\$25$M$+$ deposit, so the realistic full-strategy
+capacity ceiling is $\sim\$5$--$10$M; above it the allocator is
+effectively deep-venue-only, with a smaller but still positive edge.
+(The sweep runs on the deployed allocator, which is T1.)
 
 \subsection{Gas-sensitivity and real gas}
 \label{sec:emp-gas}
