@@ -104,10 +104,12 @@ def _run(panel: pd.DataFrame, policy, position_usd: float) -> tuple[pd.DataFrame
 
 
 def analyze(position_usd: float, current_protocol: str,
-            start: str = "2026-01-01", end: str = "2026-05-01") -> YieldDragResult:
+            start: str = "2026-01-01", end: str = "2026-05-01",
+            panel: pd.DataFrame | None = None) -> YieldDragResult:
     if current_protocol not in PROTOCOLS:
         raise ValueError(f"current_protocol must be one of {PROTOCOLS}")
-    panel = pd.read_parquet(PANEL)
+    # panel is injectable for testing; defaults to the real on-disk panel.
+    panel = pd.read_parquet(PANEL) if panel is None else panel.copy()
     panel["block_timestamp"] = pd.to_datetime(panel["block_timestamp"], utc=True)
     s, e = pd.Timestamp(start, tz="UTC"), pd.Timestamp(end, tz="UTC")
     sl = panel[(panel.block_timestamp >= s) & (panel.block_timestamp < e)].reset_index(drop=True)
