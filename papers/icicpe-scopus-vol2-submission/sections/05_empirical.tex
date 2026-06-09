@@ -145,39 +145,62 @@ keeping with the AFML purged-CV philosophy of
 \subsection{Headline results matrix}
 \label{sec:emp-results}
 
-\Cref{tab:test-matrix} reports the active policies on the \$1\,M
-test window with identical gas-cost assumptions ($\$17.5$ per
-rebalance: $200{,}000$ gas $\times$ $25$\,gwei $\times$
-$\$3{,}500$/ETH).  Net APY is annualized from the geometric
+\Cref{tab:test-matrix} reports the three active policy tiers against
+the passive buy-and-hold of \emph{each} of the six venues and a naive
+greedy baseline, all on the \$1\,M test window under identical
+\emph{real} per-block gas (\texttt{eth\_feeHistory};
+\Cref{sec:emp-gas}).  Net APY is annualized from the geometric
 end-to-end equity.
 
 \begin{table}[t]
   \centering
-  \caption{T1--T3 active-policy results on the \DataStart--\DataEnd\
-    test window (\$1\,M initial position, $\NBlocks$ blocks).  The
-    T3 row is bit-identical to T1 for a concrete reason we disclose
-    in \Cref{sec:emp-t3neg}: the deployed Cox policy falls back to
-    T1 in replay (its F1 features are absent from the live state),
-    so ``T3'' here \emph{is} T1.  When T3 is correctly wired and
-    trained out-of-sample it \emph{loses} to T1 (\Cref{tab:wf-t3-vs-t1}).
-    Filled from \texttt{results/tables/test\_matrix.csv}.}
+  \caption{All strategies on the \DataStart--\DataEnd\ test window
+    (\$1\,M initial position, $\NBlocks$ blocks, real
+    \texttt{eth\_feeHistory} gas): passive buy-and-hold of each of the
+    six venues, the naive greedy spot-APY baseline, and the T1--T3
+    policy tiers.  Hold APYs use the engine's exact accrual semantics,
+    computed vectorized (validated to 4 decimals against the engine's
+    Aave/Compound rows); sources
+    \texttt{results/tables/test\_matrix.csv} and
+    \texttt{results/tables/test\_window\_holds.csv}.  The T3 row is
+    bit-identical to T1: the deployed Cox policy falls back to T1 in
+    replay (\Cref{sec:emp-t3neg}); honestly wired out-of-sample T3
+    \emph{loses} to T1 (\Cref{tab:wf-t3-vs-t1}).}
   \label{tab:test-matrix}
   \setlength{\tabcolsep}{4pt}
   \begin{tabular}{lrrrr}
     \toprule
     Strategy & Net APY & $n_{\text{reb}}$ & Gas & Max DD \\
     \midrule
+    Hold Compound V3$^{\S}$ & 2.69\% & 1 & \$0.02 & 0.00 \\
+    Hold Aave V3            & 3.26\% & 1 & \$0.02 & 0.00 \\
+    Hold Morpho Blue        & 3.33\% & 1 & \$0.02 & 0.00 \\
+    Hold Fluid              & 3.40\% & 1 & \$0.02 & 0.00 \\
+    Hold Spark              & 3.86\% & 1 & \$0.02 & 0.00 \\
+    Hold Euler V2 (best hold) & 4.85\% & 1 & \$0.02 & 0.00 \\
+    \midrule
+    Greedy spot (no gas gate) & 5.35\% & 424 & \$126 & 0.00 \\
+    \midrule
     \textbf{T1 Threshold}  & \textbf{\TOneAPY}   & \TOneNRebal            & \TOneGasUSD            & \TOneMaxDD \\
     T2 Optimal stopping    & \TTwoAPY            & \TTwoNRebal            & \TTwoGasUSD            & \TTwoMaxDD \\
     T3 Cox (fallback $=$ T1)$^{\ddagger}$ & \TThreeAPY  & \TThreeNRebal          & \TThreeGasUSD          & \TThreeMaxDD \\
     \bottomrule
   \end{tabular}\\[2pt]
-  {\footnotesize $^{\ddagger}$ deployed T3 falls back to T1 (feature
-   wiring); honest out-of-sample T3 in \Cref{tab:wf-t3-vs-t1}.}
+  {\footnotesize $^{\S}$ Compound has one contiguous data gap inside
+   the window (2026-02-27 to 2026-03-07, $59{,}700$ blocks $\approx
+   8.3$ days) treated as zero accrual --- a $\sim 6$\,bp conservative
+   bias on its hold.  $^{\ddagger}$ deployed T3 falls back to T1
+   (feature wiring); honest out-of-sample T3 in \Cref{tab:wf-t3-vs-t1}.}
 \end{table}
 
 \textbf{T1 is the event-time winner}: \TOneAPY\ net APY at
-\TOneNRebal\ rebalances and $\TOneGasUSD$ gas spend.  T2 trails
+\TOneNRebal\ rebalances and $\TOneGasUSD$ gas spend.  It clears not
+only the default Aave hold ($3.26$\,\%) but the best
+\emph{in-hindsight} single venue (Euler V2, $4.85$\,\%) by $+52$\,bp
+on this window --- and the in-hindsight winner is unknowable ex ante:
+across the 18-month walk-forward no single venue stays best and the
+mean T1-vs-Euler contrast widens to $+2.69$\,pp
+(\Cref{tab:wf-nxm}).  T2 trails
 slightly (\TTwoAPY\ APY) because the OU calibrator rebalances $\sim
 3\times$ more aggressively ($\TTwoNRebal$ vs $\TOneNRebal$) and, as
 \Cref{sec:emp-gas} shows, never throttles with gas.  The T3 row
@@ -406,9 +429,17 @@ effectively deep-venue-only, with a smaller but still positive edge.
 \subsection{Gas-sensitivity and real gas}
 \label{sec:emp-gas}
 
-The backtest uses a flat $25$\,gwei placeholder (real gas history was
-unavailable at submission time).  We bound the resulting uncertainty
-two ways.  First, a \emph{sensitivity sweep}
+The headline matrix (\Cref{tab:test-matrix}) prices every rebalance at
+\emph{real} per-block historical gas, fetched over the full panel via
+\texttt{eth\_feeHistory} on a free archive RPC (no key): mean
+$3.7$\,gwei panel-wide and only $\sim 0.3$\,gwei across the Jan--Apr
+2026 test window, reflecting the post-Dencun collapse in L1 base fees
+--- T1's \TOneNRebal\ rebalances cost \TOneGasUSD\ in total.  An
+earlier conservative variant priced every rebalance at a flat
+$25$\,gwei ($\$17.5$ each); under that placeholder T1's edge over
+passive Aave falls from $+2.11$\,pp to $+1.77$\,pp, so flat-gas is a
+\emph{pessimistic} bound, not an optimistic one.  We probe the
+gas-regime dependence directly with a \emph{sensitivity sweep}
 (\texttt{scripts/greedy\_gas\_sensitivity.py}) re-runs the policies at
 $10$--$200$\,gwei.  T1's gas gate cuts its switch count as gas rises
 ($125\!\to\!52\!\to\!26\!\to\!9$ at $10/25/50/100$\,gwei), so its net
@@ -426,19 +457,11 @@ in the high-gas regimes where naive rate-chasing turns ruinous.  T2,
 which does not gas-throttle, rebalances $\sim 159$ times at \emph{every}
 level and collapses to $0.31$\,\% at $200$\,gwei: only T1's explicit gate
 is meaningfully gas-aware.
-Second, we fetched \emph{real} historical gas over the panel via
-\texttt{eth\_feeHistory} on a free archive RPC (no key): mean
-$3.7$\,gwei, and only $\sim 0.3$\,gwei across the Jan--Apr 2026 test
-window --- $50$--$100\times$ below the placeholder, reflecting the
-post-Dencun collapse in L1 base fees.  Re-running T1 with real
-forward-filled gas raises its edge over passive Aave to
-$+2.25$\,pp (from $+1.77$\,pp under the placeholder), with $311$
-rebalances costing only \$61.  So the placeholder is a
-\emph{pessimistic} bound; the honest net-of-gas edge is larger.  In
-the current ultra-low-gas regime the gas gate is near-moot and the
+In the current ultra-low-gas regime the gas gate is near-moot and the
 binding execution cost at size shifts to slippage/MEV
 (\Cref{sec:limitations}); gas-awareness binds in high-gas spikes
-(2024-Q4 mean $18.5$\,gwei) where T1's throttling beats T2's naivety.
+(2024-Q4 mean $18.5$\,gwei) where T1's throttling beats greedy's and
+T2's naivety.
 
 \subsection{Regime-conditional breakdown}
 \label{sec:emp-regime}

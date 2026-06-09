@@ -12,9 +12,11 @@ $\HOneAuxDelta$ Sharpe ($p = \HOneAuxPvalue$).  We then report a
 \emph{pre-registered negative result}: the F1$+$F3 Cox T3 tier,
 trained strictly out-of-sample and actually executed, does
 \emph{not} beat T1 --- it loses by $\TThreeMeanDeltaBp$\,bp on the
-honest expanding-window walk-forward.  Real \texttt{eth\_feeHistory}
-gas confirms the net-of-gas T1 edge ($+2.25$\,pp over passive Aave)
-exceeds the conservative placeholder backtest.
+honest expanding-window walk-forward.  The headline is priced at real
+\texttt{eth\_feeHistory} gas; the net-of-gas T1 edge ($+2.11$\,pp over
+passive Aave) exceeds the conservative flat-$25$\,gwei variant
+($+1.77$\,pp), and a naive no-gas-gate greedy baseline turns negative
+above $\sim 100$\,gwei while T1 throttles and stays positive.
 
 The contribution stands at three layers.  \textbf{Methodology}:
 event-time gas-aware decision rules admit two to three orders of

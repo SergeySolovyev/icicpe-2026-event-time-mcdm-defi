@@ -18,18 +18,21 @@ overlap-corrected bootstrap would tighten them (journal extension).
 The honest out-of-sample T3-vs-T1 result ($\TThreeMeanDeltaBp$\,bp,
 \Cref{tab:wf-t3-vs-t1}) is a clear negative at this $N$.
 
-\textbf{(ii) Gas placeholder (now bounded).}  The headline backtest
-uses a constant $25$\,gwei; \Cref{sec:emp-gas} bounds this with a
-$10$--$200$\,gwei sensitivity sweep and with real
-\texttt{eth\_feeHistory} gas (test window $\sim 0.3$\,gwei,
-$50$--$100\times$ lower), confirming the placeholder is pessimistic
-and the gas-aware gate is the binding mechanism only in high-gas
-regimes. The F4 \texttt{gas\_log10} sub-signal is still dropped as
-zero-variance under the constant; the zero-variance filter drops
-the column,
-leaving F4 with only ETH/USD and USDC peg. F4 thus contributes
-\emph{zero} OOF C-index above F3-only --- a methodological, not
-empirical, finding. Real per-block gas re-run is queued.
+\textbf{(ii) Gas regime (real, but currently ultra-low).}  The
+headline backtest prices rebalances at real \texttt{eth\_feeHistory}
+gas, which over the Jan--Apr 2026 test window ran $\sim 0.3$\,gwei
+--- so the gas gate is near-moot \emph{in this regime}, and its value
+is demonstrated instead by the $10$--$200$\,gwei sweep
+(\Cref{sec:emp-gas}): naive greedy turns negative by $100$\,gwei
+while T1 throttles and stays $>4\%$. The gas-aware gate is the
+binding mechanism only in high-gas regimes (e.g.\ 2024-Q4, mean
+$18.5$\,gwei). One residue of the earlier constant-gas panel
+remains: the F4 \texttt{gas\_log10} sub-signal was dropped as
+zero-variance during the T3 ablation (run before the real-gas
+merge), leaving F4 with only ETH/USD and USDC peg, so F4's
+\emph{zero} OOF C-index above F3-only is a methodological, not
+empirical, finding; re-running the F4 ablation on real per-block gas
+is a queued extension.
 
 \textbf{(iii) F2 mempool deferred.}  The MacKenzie F2
 ``order-book dynamics'' class requires paid Blocknative or
