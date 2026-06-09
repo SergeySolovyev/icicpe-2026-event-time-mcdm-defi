@@ -195,9 +195,15 @@ finding (\Cref{tab:wf-nxm} below).
     (Nov 2024 -- Apr 2026, $B = 10{,}000$, seed $= 42$).  Filled from
     \texttt{results/institutional/tables/walk\_forward\_NxM\_contrasts.csv}.
     Boldface marks contrasts significant at one-sided $p<0.05$.
-    T3 is the sophisticated F1+F3+F4 Cox-hazard policy after López de
-    Prado AFML retrain; it dominates T1 on every contrast by 5--10\,bp
-    (mean $+7$\,bp annualized over T1, $p=0.015$).}
+    T3 here is the \emph{deployed} Cox-hazard policy, which falls back
+    to T1 in replay (its F1 features are absent from the live state), so
+    the T3 row equals T1; the honest out-of-sample T3, with the model
+    actually executing, \emph{loses} to T1 (\Cref{tab:wf-t3-vs-t1}).
+    Bootstrap $p$ is floored at $10^{-4}$ (6-point resample) and not
+    corrected for multiplicity across the 18 contrasts; under Holm
+    correction the five $p<10^{-4}$ contrasts per policy remain
+    significant, while the smallest-margin Euler contrast is the least
+    robust --- it is non-significant on a 3-protocol active panel.}
   \label{tab:wf-nxm}
   \footnotesize
   \setlength{\tabcolsep}{4pt}
@@ -206,45 +212,45 @@ finding (\Cref{tab:wf-nxm} below).
     Policy & vs Aave V3 & vs Compound V3 & vs Spark & vs Morpho Blue & vs Euler V2 & vs Fluid \\
     \midrule
     \textbf{T1} threshold
-      & \textbf{$+2.81$\,pp} (6/6)
-      & \textbf{$+2.63$\,pp} (6/6)
-      & \textbf{$+1.78$\,pp} (6/6)
-      & \textbf{$+2.58$\,pp} (6/6)
-      & \textbf{$+1.46$\,pp} (5/6)
-      & \textbf{$+2.63$\,pp} (6/6) \\
+      & \textbf{$+4.05$\,pp} (6/6)
+      & \textbf{$+3.86$\,pp} (6/6)
+      & \textbf{$+3.02$\,pp} (6/6)
+      & \textbf{$+3.82$\,pp} (6/6)
+      & \textbf{$+2.69$\,pp} (6/6)
+      & \textbf{$+3.86$\,pp} (6/6) \\
       & $p < 10^{-4}$
       & $p < 10^{-4}$
       & $p < 10^{-4}$
       & $p < 10^{-4}$
-      & $p = 0.026$
+      & $p < 10^{-4}$
       & $p < 10^{-4}$ \\
     \midrule
     \textbf{T2} OU stopping
-      & \textbf{$+2.37$\,pp} (6/6)
-      & \textbf{$+2.18$\,pp} (6/6)
-      & \textbf{$+1.34$\,pp} (6/6)
-      & \textbf{$+2.14$\,pp} (6/6)
-      & $+1.01$\,pp (2/6)
-      & \textbf{$+2.18$\,pp} (6/6) \\
+      & \textbf{$+3.95$\,pp} (6/6)
+      & \textbf{$+3.76$\,pp} (6/6)
+      & \textbf{$+2.91$\,pp} (6/6)
+      & \textbf{$+3.72$\,pp} (6/6)
+      & \textbf{$+2.59$\,pp} (6/6)
+      & \textbf{$+3.76$\,pp} (6/6) \\
       & $p < 10^{-4}$
       & $p < 10^{-4}$
       & $p < 10^{-4}$
       & $p < 10^{-4}$
-      & $p = 0.216$
+      & $p < 10^{-4}$
       & $p < 10^{-4}$ \\
     \midrule
-    \textbf{T3} Cox F1+F3+F4
-      & \textbf{$+2.88$\,pp} (6/6)
-      & \textbf{$+2.70$\,pp} (6/6)
-      & \textbf{$+1.85$\,pp} (6/6)
-      & \textbf{$+2.65$\,pp} (6/6)
-      & \textbf{$+1.53$\,pp} (5/6)
-      & \textbf{$+2.70$\,pp} (6/6) \\
+    \textbf{T3} Cox (fallback $=$ T1)
+      & \textbf{$+4.05$\,pp} (6/6)
+      & \textbf{$+3.86$\,pp} (6/6)
+      & \textbf{$+3.02$\,pp} (6/6)
+      & \textbf{$+3.82$\,pp} (6/6)
+      & \textbf{$+2.69$\,pp} (6/6)
+      & \textbf{$+3.86$\,pp} (6/6) \\
       & $p < 10^{-4}$
       & $p < 10^{-4}$
       & $p < 10^{-4}$
       & $p < 10^{-4}$
-      & $p = 0.011$
+      & $p < 10^{-4}$
       & $p < 10^{-4}$ \\
     \bottomrule
   \end{tabular}
@@ -255,17 +261,17 @@ claims of decreasing strength.
 
 \paragraph{Strong claim — all six contrasts significant.} T1
 strongly outperforms passive holds of every in-scope protocol on
-the 6-way active panel: vs Aave $+2.81$\,pp, vs Compound
-$+2.63$\,pp, vs Morpho $+2.58$\,pp, vs Fluid $+2.63$\,pp, vs Spark
-$+1.78$\,pp (all 6/6 windows, $p < 10^{-4}$), vs Euler
-$+1.46$\,pp (5/6 windows, $p = 0.026$). Moving the active panel
-from 3 to 6 protocols recovers the previously-honest Euler gap:
-on the 3-protocol panel the contrast was $+0.48$\,pp (2/6, $p =
-0.20$). T2 obtains a near-parallel result on the same 6-way panel
-($+1.34$\,pp on Spark to $+2.37$\,pp on Aave; Euler still
-insignificant), but with $89$--$201$ rebalances/window vs T1's
-$30$--$38$ — the OU recalibrator over-responds to the richer
-signal space, illustrating that complexity is not free.
+the 6-way active panel: vs Aave $+4.05$\,pp, vs Compound
+$+3.86$\,pp, vs Fluid $+3.86$\,pp, vs Morpho $+3.82$\,pp, vs Spark
+$+3.02$\,pp, vs Euler $+2.69$\,pp (all 6/6 windows, $p < 10^{-4}$,
+Holm-corrected). The Euler contrast is the smallest-margin and the
+least robust: on the narrower 3-protocol active panel it falls to
+$+0.48$\,pp (2/6, $p = 0.20$), so we report it as directionally
+consistent but panel-dependent rather than as strong evidence. T2
+obtains a near-parallel result on the same 6-way panel ($+2.59$\,pp
+on Euler to $+3.95$\,pp on Aave, all 6/6), but rebalances far more
+aggressively than T1 --- the OU recalibrator over-responds to the
+richer signal space, illustrating that complexity is not free.
 
 \paragraph{T3 row identity is a fallback, not a result.}
 The T3 row in \Cref{tab:test-matrix} equals T1 not because the Cox
@@ -301,7 +307,7 @@ The secondary monthly bootstrap (\Cref{tab:h1-monthly}) is consistent
 in direction with the walk-forward primary inference:
 $H_{1}^{\text{aux}}$ (T1 vs passive Aave V3) is significant at
 $p = \HOneAuxPvalue$ with $\Delta\textsc{SR} = \HOneAuxDelta$, in
-agreement with the walk-forward $+2.81$\,pp.  $H_{1}^{b}$
+agreement with the walk-forward $+4.05$\,pp.  $H_{1}^{b}$
 (T2 vs T1) is directionally negative on this slice but its CI crosses
 zero at $N = \HOneANMonths$ observations, exactly as the small-$T$
 power calculation expects.  $H_{1}^{c}$ (T3 vs T1) is a trivial zero
@@ -373,13 +379,13 @@ question.
     \toprule
     Window & Span & T1 APY & T3 APY & $\Delta$\,bp \\
     \midrule
-    W2 & Feb--Apr'25    & 5.63\% & 4.60\% & $-102.4$ \\
-    W3 & May--Jul'25    & 7.14\% & 6.83\% & $-30.2$ \\
-    W4 & Aug--Oct'25    & 6.57\% & 4.86\% & $-171.1$ \\
-    W5 & Nov'25--Jan'26 & 5.17\% & 4.06\% & $-110.6$ \\
-    W6 & Feb--Apr'26    & 5.38\% & 5.11\% & $-27.1$ \\
+    W2 & Feb--Apr'25    & 6.92\% & 6.79\% & $-13.5$ \\
+    W3 & May--Jul'25    & 7.80\% & 7.77\% & $-3.1$ \\
+    W4 & Aug--Oct'25    & 7.17\% & 7.10\% & $-7.2$ \\
+    W5 & Nov'25--Jan'26 & 5.87\% & 5.83\% & $-4.5$ \\
+    W6 & Feb--Apr'26    & 5.61\% & 5.59\% & $-1.6$ \\
     \midrule
-    \multicolumn{4}{r}{\textbf{mean}} & $\mathbf{-88.3}$ \\
+    \multicolumn{4}{r}{\textbf{mean}} & $\mathbf{-5.97}$ \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -475,7 +481,7 @@ non-F3 concordance lift ($+1.9$\,pp), and F4 contributes
 $\sim 0$\,pp above F3 alone --- the substantive negative finding
 for one of the three live MacKenzie signal classes in this
 DeFi-lending mapping.  The binding inferential result is
-\Cref{tab:wf-nxm}: T1 outperforms passive Aave/Compound/Morpho/Fluid
-by $+1.6$--$1.8$\,pp in all 6 windows ($p < 10^{-4}$ each) and Spark
-5/6 windows ($p = 0.034$); only passive Euler V2 holds the active
-allocator off from W3 onward.
+\Cref{tab:wf-nxm}: T1 outperforms passive holds of all six in-scope
+protocols by $+2.7$--$4.1$\,pp in all 6 windows ($p < 10^{-4}$ each,
+Holm-corrected); the smallest-margin Euler V2 contrast ($+2.69$\,pp)
+is the least robust and panel-dependent.

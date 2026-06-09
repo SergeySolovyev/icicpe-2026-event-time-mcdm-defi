@@ -1,11 +1,13 @@
-% Honest leakage-free OOS result (scripts/walkforward_t3_expanding.py).
-% Supersedes the retracted +7.03 bp: that figure was a double artifact
-% (full-panel leakage + the deployed T3 never executing its Cox model,
-% falling back to T1 on a feature-name mismatch). With the model trained
-% strictly pre-window AND actually evaluated, T3 LOSES to T1.
-\newcommand{\TThreeMeanDeltaBp}{-88.3}
-\newcommand{\TThreeCILow}{-133.1}
-\newcommand{\TThreeCIHigh}{-43.4}
+% Honest leakage-free OOS result (scripts/walkforward_t3_expanding.py),
+% on the real-gas + fToken-Fluid headline panel. T3 (Cox, trained strictly
+% pre-window AND actually executed) LOSES to T1 out-of-sample. The result
+% is robust to the gas regime: -88.3 bp under the const-25 placeholder,
+% -5.97 bp under real gas (cheaper gas makes mis-timing cheaper, but T3
+% still loses on 0/5 windows). The retracted +7.03 bp was a double artifact
+% (full-panel leakage + the deployed T3 never executing its Cox model).
+\newcommand{\TThreeMeanDeltaBp}{-5.97}
+\newcommand{\TThreeCILow}{-9.89}
+\newcommand{\TThreeCIHigh}{-2.76}
 \newcommand{\TThreePValue}{1.0}
 \newcommand{\TThreeWins}{0}
 \newcommand{\TThreeNWindows}{5}
