@@ -83,5 +83,22 @@ def test_render_report_has_headline_and_caveats():
     assert "Yield-Drag Report" in md
     assert "Aave V3" in md
     assert f"${r.drag_usd_over_window:,.0f}" in md
-    assert "NOT SENT" in md          # human-approval gate notice
-    assert "gross of MEV/slippage" in md  # honest caveat preserved
+    assert "NOT SENT" in md                 # human-approval gate notice
+    assert "GROSS of MEV/slippage" in md    # honest caveat preserved
+    assert "Size haircut" in md             # critic fix: size-haircut table
+    assert "auto-router" in md              # critic fix: auto-router benchmark
+    assert "published NEGATIVE" in md       # critic fix: ML separated from rule's 6/6
+
+
+def test_size_haircut_and_gas_curve_present():
+    r = analyze(1_000_000, "aave_v3", start="2026-01-01", end="2026-02-01",
+                panel=_synthetic_panel())
+    # size haircut: 3 sizes, monotonically larger slippage with size
+    assert [row["size_usd"] for row in r.size_haircut] == [500_000.0, 2_000_000.0, 5_000_000.0]
+    slips = [row["slippage_bp"] for row in r.size_haircut]
+    assert slips[0] <= slips[1] <= slips[2]          # bigger size -> more slippage
+    # gas curve comes from the committed sweep CSV (T1 vs greedy auto-router)
+    assert len(r.gas_curve) >= 3
+    assert all("t1_net_apy_pct" in row and "autorouter_net_apy_pct" in row
+               for row in r.gas_curve)
+    assert r.realized_gas_gwei > 0

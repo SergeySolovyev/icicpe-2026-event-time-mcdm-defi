@@ -11,6 +11,7 @@
   "drag_usd_over_window": 33965.0,
   "active_rebalances": 378,
   "active_gas_usd": 98.62,
+  "realized_gas_gwei": 0.311,
   "active_time_share": {
     "Euler V2": 49.0,
     "Spark": 29.2,
@@ -19,6 +20,58 @@
     "Compound V3": 4.3,
     "Fluid": 0.8
   },
+  "size_haircut": [
+    {
+      "size_usd": 500000.0,
+      "slippage_bp": 16.6,
+      "net_active_apy_pct": 5.22,
+      "net_edge_pp": 1.959
+    },
+    {
+      "size_usd": 2000000.0,
+      "slippage_bp": 45.9,
+      "net_active_apy_pct": 4.928,
+      "net_edge_pp": 1.667
+    },
+    {
+      "size_usd": 5000000.0,
+      "slippage_bp": 72.4,
+      "net_active_apy_pct": 4.663,
+      "net_edge_pp": 1.402
+    }
+  ],
+  "gas_curve": [
+    {
+      "gas_gwei": 10.0,
+      "t1_net_apy_pct": 5.1,
+      "autorouter_net_apy_pct": 4.71,
+      "t1_switches": 125
+    },
+    {
+      "gas_gwei": 25.0,
+      "t1_net_apy_pct": 4.94,
+      "autorouter_net_apy_pct": 3.7,
+      "t1_switches": 52
+    },
+    {
+      "gas_gwei": 50.0,
+      "t1_net_apy_pct": 4.53,
+      "autorouter_net_apy_pct": 2.03,
+      "t1_switches": 26
+    },
+    {
+      "gas_gwei": 100.0,
+      "t1_net_apy_pct": 4.46,
+      "autorouter_net_apy_pct": -1.26,
+      "t1_switches": 9
+    },
+    {
+      "gas_gwei": 200.0,
+      "t1_net_apy_pct": 4.13,
+      "autorouter_net_apy_pct": -7.63,
+      "t1_switches": 6
+    }
+  ],
   "panel_sha256_12": "d22df80bb554",
   "quality_gates_passed": true
 }

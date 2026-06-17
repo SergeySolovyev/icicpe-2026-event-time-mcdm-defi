@@ -3,14 +3,15 @@
 **Position analysed:** $5,000,000 in **Aave V3**
 **Window:** 2026-01-01 to 2026-05-01 (863,999 Ethereum blocks, ~0.33 yr)
 
-## Headline
+## Headline (this 0.33-yr window, gross of slippage)
 Held passively in Aave V3, this position earned a net
 **3.26% APY**. Event-time routing across the six largest
-Ethereum USDC lending venues — net of **real** gas — would have earned
-**5.39% APY**.
+Ethereum USDC lending venues — net of **real** gas, **gross of slippage/MEV** —
+would have earned **5.39% APY**.
 
-> **You left ~$33,965 on the table over this window
-> (+213 bp annualized).**
+> **Gross-of-slippage gap: ~$33,965 over this window
+> (+213 bp annualized). The size-adjusted, net-of-slippage
+> number is in the haircut table below — read THAT, not this.**
 
 Captured with **378 rebalances** costing **$99**
 total gas (real `eth_feeHistory` gas; a 50-line gas-aware threshold rule, no ML).
@@ -23,17 +24,47 @@ total gas (real `eth_feeHistory` gas; a 50-line gas-aware threshold rule, no ML)
   - Compound V3: 4.3%
   - Fluid: 0.8%
 
+## Size haircut — how much of the edge survives YOUR size
+The headline above is **gross of slippage** (a price-taker number). But the edge-carrying venues are thin (Euler ~$16M, Spark ~$29M USDC TVL), so your own deposit depresses the very rate you chase. Continuous Krause-2005 yield-impact, net of gas, **still gross of MEV**:
+
+  | Position | Slippage | Net active APY | Net edge vs passive |
+  |---|---|---|---|
+  | $ 0.5M |  16.6 bp |  5.22% | +1.96 pp |
+  | $ 2.0M |  45.9 bp |  4.93% | +1.67 pp |
+  | $ 5.0M |  72.4 bp |  4.66% | +1.40 pp |
+
+_Read the row matching your size, not the gross headline. Above ~$5–10M the thin venues cannot absorb the position and the full-strategy edge compresses to deep-venue-only._
+
+## Gas sensitivity & the naive-auto-router benchmark
+This window's realized gas was **~0.31 gwei** (post-Dencun), so total gas was only **$99** — honest, but unusually cheap. The full curve below ($1M reference; gas is a *smaller* drag at larger sizes) shows what happens as gas rises, and benchmarks us against a **naive greedy auto-router** (switch-to-best every block, no gas gate — the idealized version of a Morpho/Eco-style router):
+
+  | Gas (gwei) | T1 (us) net APY | Auto-router net APY | T1 switches |
+  |---|---|---|---|
+  |    10 |  5.10% |   4.71% |  125 |
+  |    25 |  4.94% |   3.70% |   52 |
+  |    50 |  4.53% |   2.03% |   26 |
+  |   100 |  4.46% |  -1.26% |    9 |
+  |   200 |  4.13% |  -7.63% |    6 |
+
+_At today's near-zero gas we are roughly level with a naive auto-router; our value is the **throttle** — as gas rises the auto-router keeps switching and goes negative, while T1 cuts switches and stays positive._
+
 ## What this is — and isn't (honest by design)
-- **Real, leakage-free:** net of real historical gas; the binding edge holds
-  6/6 walk-forward windows (p<0.001) on a public, reproducible dataset.
-- **Net of gas, gross of MEV/slippage:** at institutional size, slippage/MEV
-  become the binding cost; production execution uses a Flashbots private
-  mempool. We do not hide this.
-- **No ML magic:** we tested a Cox-hazard ML tier and it does **not** beat the
-  simple rule out-of-sample — we report that openly. The edge is event-time
-  resolution + gas-aware execution, not a black box.
+- **The rule's edge (the binding claim):** across an 18-month, 6-window
+  walk-forward, the gas-aware threshold rule beats the passive buy-and-hold of
+  **every** one of the six venues, all 6/6 windows (p<0.001) — on a public,
+  reproducible dataset. This is the RULE vs passive, NOT an ML result.
+- **The ML tier is a published NEGATIVE (separate result):** we trained a
+  Cox-hazard ML tier and, out-of-sample, it **loses** to the 50-line rule
+  (−5.97 bp, 0/5 windows). We report that openly — the edge is event-time
+  resolution + a gas throttle, not a black box.
+- **Net of real gas, GROSS of MEV/slippage:** at institutional size, slippage
+  (the haircut table) and MEV are the binding costs; production execution uses
+  a Flashbots private mempool. We do not hide this.
 - **Non-custodial:** the production agent can *propose/execute with your keys*
-  but can **never move your funds**.
+  but can **never move your funds**. No token.
+- **Honest maturity:** the edge is backtested + reproducible; the live agent is
+  testnet-stage (2 of 6 adapters, unaudited). This report is analysis of the
+  past, not forward advice.
 
 ## Provenance
 Panel slice SHA-256 (12): `d22df80bb554` · sources: Aave/Morpho/Euler
