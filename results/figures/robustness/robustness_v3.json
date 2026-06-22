@@ -1,0 +1,73 @@
+{
+  "window": "2026-01-01..2026-05-01",
+  "G1_block_bootstrap": {
+    "Aave V3 hold": {
+      "n_days": 119,
+      "mean_daily_excess_bp": 0.555,
+      "annualised_excess_pp": 2.025,
+      "block_boot_ci_daily_bp": [
+        0.395,
+        0.763
+      ],
+      "block_boot_p_le0": 0.0,
+      "effective_n": 23.7,
+      "autocorr_trunc_lag": 6,
+      "frac_days_positive": 0.983
+    },
+    "best single hold": {
+      "n_days": 119,
+      "mean_daily_excess_bp": 0.134,
+      "annualised_excess_pp": 0.49,
+      "block_boot_ci_daily_bp": [
+        0.077,
+        0.217
+      ],
+      "block_boot_p_le0": 0.0,
+      "effective_n": 30.1,
+      "autocorr_trunc_lag": 4,
+      "frac_days_positive": 0.815
+    }
+  },
+  "G2_holm": {
+    "n_tests": 6,
+    "n_survive_0.05": 6,
+    "rows": [
+      {
+        "name": "Aave",
+        "p_raw": 0.0,
+        "p_holm": 0.0,
+        "survives_0.05": true
+      },
+      {
+        "name": "Morpho",
+        "p_raw": 0.0,
+        "p_holm": 0.0,
+        "survives_0.05": true
+      },
+      {
+        "name": "Euler",
+        "p_raw": 0.0264,
+        "p_holm": 0.0264,
+        "survives_0.05": true
+      },
+      {
+        "name": "Compound",
+        "p_raw": 0.0,
+        "p_holm": 0.0,
+        "survives_0.05": true
+      },
+      {
+        "name": "Spark",
+        "p_raw": 0.0,
+        "p_holm": 0.0,
+        "survives_0.05": true
+      },
+      {
+        "name": "Fluid",
+        "p_raw": 0.0,
+        "p_holm": 0.0,
+        "survives_0.05": true
+      }
+    ]
+  }
+}

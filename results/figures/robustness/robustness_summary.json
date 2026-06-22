@@ -1,0 +1,164 @@
+{
+  "A_walkforward": [
+    {
+      "window": "W1",
+      "span": "2024-11..2025-02",
+      "n_blocks": 662400,
+      "t1_apy": 18.636,
+      "best_hold": "Fluid",
+      "best_hold_apy": 16.79,
+      "edge_vs_best_pp": 1.845,
+      "aave_apy": 9.471,
+      "edge_vs_aave_pp": 9.164,
+      "switches": 261
+    },
+    {
+      "window": "W2",
+      "span": "2025-02..2025-05",
+      "n_blocks": 640800,
+      "t1_apy": 6.921,
+      "best_hold": "Fluid",
+      "best_hold_apy": 5.854,
+      "edge_vs_best_pp": 1.066,
+      "aave_apy": 3.417,
+      "edge_vs_aave_pp": 3.503,
+      "switches": 173
+    },
+    {
+      "window": "W3",
+      "span": "2025-05..2025-08",
+      "n_blocks": 662400,
+      "t1_apy": 7.794,
+      "best_hold": "Euler V2",
+      "best_hold_apy": 6.834,
+      "edge_vs_best_pp": 0.959,
+      "aave_apy": 3.858,
+      "edge_vs_aave_pp": 3.935,
+      "switches": 437
+    },
+    {
+      "window": "W4",
+      "span": "2025-08..2025-11",
+      "n_blocks": 662400,
+      "t1_apy": 7.175,
+      "best_hold": "Euler V2",
+      "best_hold_apy": 6.45,
+      "edge_vs_best_pp": 0.725,
+      "aave_apy": 4.263,
+      "edge_vs_aave_pp": 2.912,
+      "switches": 420
+    },
+    {
+      "window": "W5",
+      "span": "2025-11..2026-02",
+      "n_blocks": 662400,
+      "t1_apy": 5.87,
+      "best_hold": "Euler V2",
+      "best_hold_apy": 5.423,
+      "edge_vs_best_pp": 0.447,
+      "aave_apy": 3.776,
+      "edge_vs_aave_pp": 2.095,
+      "switches": 275
+    },
+    {
+      "window": "W6",
+      "span": "2026-02..2026-05",
+      "n_blocks": 640799,
+      "t1_apy": 5.608,
+      "best_hold": "Euler V2",
+      "best_hold_apy": 5.133,
+      "edge_vs_best_pp": 0.475,
+      "aave_apy": 3.104,
+      "edge_vs_aave_pp": 2.504,
+      "switches": 175
+    }
+  ],
+  "A_windows_t1_beats_best_hold": "6/6",
+  "A_windows_t1_beats_aave": "6/6",
+  "B_permutation_null": {
+    "real_edge_vs_best_usd": 1644,
+    "real_edge_vs_aave_usd": 6735,
+    "null_mean_vs_best_usd": 2399,
+    "null_std_vs_best_usd": 267,
+    "null_mean_vs_aave_usd": 7491,
+    "p_value_vs_best": 0.9733333333333334,
+    "p_value_vs_aave": 0.9733333333333334,
+    "n_shuffles": 300
+  },
+  "C_param_heatmap": {
+    "dwells": [
+      250,
+      500,
+      1000,
+      2000,
+      4000,
+      8000
+    ],
+    "alphas": [
+      0.02,
+      0.05,
+      0.1,
+      0.2,
+      0.4
+    ],
+    "net_apy_grid": [
+      [
+        5.355,
+        5.355,
+        5.356,
+        5.356,
+        5.356,
+        5.356
+      ],
+      [
+        5.366,
+        5.366,
+        5.366,
+        5.366,
+        5.366,
+        5.365
+      ],
+      [
+        5.368,
+        5.368,
+        5.368,
+        5.368,
+        5.368,
+        5.368
+      ],
+      [
+        5.37,
+        5.37,
+        5.37,
+        5.37,
+        5.37,
+        5.37
+      ],
+      [
+        5.371,
+        5.371,
+        5.371,
+        5.371,
+        5.371,
+        5.371
+      ]
+    ],
+    "min": 5.355,
+    "max": 5.371,
+    "passive_aave_apy": 3.261,
+    "spread_pp": 0.016
+  },
+  "D_pbo": {
+    "S_chunks": 8,
+    "n_combos": 70,
+    "param_grid_dwells": [
+      400,
+      700,
+      1000,
+      1500,
+      2500
+    ],
+    "PBO": 1.0,
+    "interpretation": "P(in-sample-best config is below-median out-of-sample); ~0 = not overfit"
+  }
+}

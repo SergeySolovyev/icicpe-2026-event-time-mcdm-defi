@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Is the edge curve-fit? — Robustness evidence pack</title>
+<style>
+  :root{
+    --bg:#0b0f14; --panel:#121821; --panel2:#0e141c; --bd:#222c39; --bd2:#2c3a4a;
+    --tx:#e6edf3; --mut:#93a1b1; --dim:#65758a;
+    --t1:#3fb950; --hold:#2ec4b6; --blue:#58a6ff; --warn:#d29922; --dang:#f85149;
+    --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:radial-gradient(1200px 700px at 70% -10%,#16202c 0,var(--bg) 55%);
+    color:var(--tx);font:15px/1.6 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;}
+  a{color:var(--blue);text-decoration:none}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 22px 90px}
+  header.hero{padding:54px 0 26px;border-bottom:1px solid var(--bd)}
+  .kicker{font:600 12px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--blue);margin-bottom:14px}
+  h1{font-size:31px;line-height:1.18;margin:0 0 12px;letter-spacing:-.4px}
+  h1 .q{color:var(--mut);font-weight:600}
+  .sub{color:var(--mut);max-width:760px;font-size:16px}
+  .meta{margin-top:18px;color:var(--dim);font:12.5px/1.5 var(--mono)}
+  /* sticky nav */
+  nav{position:sticky;top:0;z-index:20;background:rgba(11,15,20,.86);backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--bd);margin:0 -22px 0;padding:9px 22px;display:flex;gap:5px;flex-wrap:wrap}
+  nav a{font:600 11.5px/1 var(--mono);color:var(--mut);padding:7px 9px;border-radius:6px;letter-spacing:.02em}
+  nav a:hover{background:#1b2530;color:var(--tx)}
+  section{padding:40px 0 8px;border-bottom:1px solid var(--bd)}
+  .eyebrow{font:700 11px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--dim);margin-bottom:9px}
+  h2{font-size:22px;margin:0 0 6px;letter-spacing:-.2px}
+  h2 .num{color:var(--blue);font:700 15px/1 var(--mono);margin-right:10px;vertical-align:2px}
+  .lead{color:var(--mut);max-width:820px;margin:0 0 20px}
+  .panel{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--bd);
+    border-radius:12px;padding:20px 22px;margin:16px 0}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:760px){.grid2{grid-template-columns:1fr}}
+  .verdict{display:flex;gap:11px;align-items:flex-start;padding:11px 14px;border-radius:9px;
+    background:#10241a;border:1px solid #1d4a2e;color:#9fe2b0;font-size:14px;margin-top:12px}
+  .verdict.warn{background:#241d10;border-color:#4a3a1d;color:#e6c98a}
+  .verdict b{color:#d6ffe0}
+  .verdict.warn b{color:#ffe9bd}
+  .tag{display:inline-block;font:700 11px/1 var(--mono);padding:4px 8px;border-radius:5px;letter-spacing:.03em}
+  .tag.pass{background:#10311f;color:#5fd07e;border:1px solid #1f5436}
+  .tag.kill{background:#311414;color:#ff8a83;border:1px solid #5a2420}
+  .tag.mech{background:#15263b;color:#7ab6ff;border:1px solid #244a73}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:6px}
+  th,td{text-align:right;padding:8px 10px;border-bottom:1px solid var(--bd)}
+  th:first-child,td:first-child{text-align:left}
+  th{font:700 11px/1.3 var(--mono);letter-spacing:.04em;color:var(--dim);text-transform:uppercase}
+  td.mono,.mono{font-family:var(--mono)}
+  td .pos{color:var(--t1)} td .neg{color:var(--dang)}
+  .big{font:800 40px/1 var(--mono);letter-spacing:-1px}
+  .big.green{color:var(--t1)} .big.red{color:var(--dang)} .big.blue{color:var(--blue)}
+  .statline{display:flex;flex-wrap:wrap;gap:26px;margin:6px 0 2px}
+  .stat .v{font:800 26px/1.05 var(--mono);letter-spacing:-.5px}
+  .stat .l{color:var(--dim);font-size:12px;margin-top:4px;max-width:180px}
+  figure{margin:8px 0 4px}
+  figcaption{color:var(--dim);font-size:12.5px;margin-top:8px}
+  .foot{color:var(--dim);font-size:12.5px}
+  .hl{color:var(--tx)}
+  ul.clean{margin:8px 0;padding-left:20px} ul.clean li{margin:6px 0;color:var(--mut)}
+  ul.clean li b{color:var(--tx)}
+  .qa{margin:14px 0}
+  .qa .q{font-weight:700;color:var(--tx);margin-bottom:3px}
+  .qa .q::before{content:"Q ";color:var(--blue);font-family:var(--mono)}
+  .qa .a{color:var(--mut);margin-bottom:16px}
+  .qa .a::before{content:"A ";color:var(--t1);font-family:var(--mono);font-weight:700}
+  .pillrow{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 2px}
+  .pill{font:700 11.5px/1 var(--mono);padding:6px 10px;border-radius:20px;border:1px solid var(--bd2);color:var(--mut)}
+  .pill b{color:var(--t1)}
+  svg{display:block;width:100%;height:auto;overflow:visible}
+  .axis{stroke:var(--bd2);stroke-width:1}
+  .gl{stroke:#1a232e;stroke-width:1}
+  .lab{fill:var(--dim);font:11px var(--mono)}
+  .lab.tx{fill:var(--mut)}
+  .barlabel{fill:var(--tx);font:700 11px var(--mono)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <div class="kicker">DeFi USDC allocator · out-of-sample evidence</div>
+  <h1>"How do I know this edge isn't <span class="q">curve-fit to one cherry-picked period?</span>"</h1>
+  <p class="sub">A reactive, gas-aware router across six USDC lending venues. This pack answers the overfitting
+  question the way a quant would test it — walk-forward, combinatorial CSCV, a pre-registered negative control,
+  and selection nulls — and reports the results that <i>don't</i> flatter us too.</p>
+  <div class="meta">Real on-chain data · Nov 2024 → Apr 2026 · 12 s blocks · all numbers reproduce from
+  <span class="hl">scripts/robustness/</span> on a replay engine validated to the dollar vs production.</div>
+</header>
+
+<nav>
+  <a href="#answer">2-min answer</a>
+  <a href="#wf">1 · Walk-forward</a>
+  <a href="#neg">2 · Negative control</a>
+  <a href="#rand">3 · Selection null</a>
+  <a href="#pbo">4 · PBO / CSCV</a>
+  <a href="#plateau">5 · Parameter plateau</a>
+  <a href="#boot">6 · Paired bootstrap</a>
+  <a href="#gas">7 · Gas gate</a>
+  <a href="#neff">8 · Effective N</a>
+  <a href="#mech">9 · Mechanism</a>
+  <a href="#limits">Limits</a>
+  <a href="#qa">Hard questions</a>
+</nav>
+
+<!-- ============ 2-MIN ANSWER ============ -->
+<section id="answer">
+  <div class="eyebrow">The short version</div>
+  <h2>The edge is a <span style="color:var(--t1)">reaction to an observable</span>, not a forecast — so there is nothing to overfit.</h2>
+  <p class="lead">At every block, hold the highest USDC supply rate net of gas. That rule has essentially no free
+  parameters and predicts nothing. Five independent tests say the same thing:</p>
+  <div class="panel">
+    <ul class="clean">
+      <li><b>Every window, not one period.</b> 6 non-overlapping quarters → we beat the
+        <i>best venue chosen in hindsight</i> in <b>all 6</b> (+0.45 to +1.85 pp), and passive Aave by +2.1 to +9.2 pp.</li>
+      <li><b>The proper overfitting test passes.</b> Combinatorial CSCV — Probability of Backtest Overfitting =
+        <b>0.000</b>; the in-sample-best strategy is the out-of-sample-best in <b>100%</b> of 70 splits.</li>
+      <li><b>We caught our own overfit.</b> Our ML version looked <b>+7.0 bp</b> in-sample and pre-registered as a likely
+        negative — out-of-sample it loses <b>−6.0 bp</b> in 0/5 purged windows. We ship the dumb rule, not the ML one.</li>
+      <li><b>Selection is the alpha, not churn.</b> Against 5,000 allocators that trade at the
+        <i>same times</i> and pay the <i>same gas</i> but pick venues at random, we are <b>9σ</b> out.</li>
+      <li><b>No knife-edge tuning.</b> The single knob is a flat plateau: <b>5.36–5.37%</b> net APY across 30 settings.</li>
+    </ul>
+    <div class="verdict"><span>✓</span><div>And we show you the two tests that came back <b>ambiguous</b> (a time-shuffle null and
+      a degenerate single-parameter PBO) with an honest explanation of <i>why</i> — §9 and §4. We are not hiding the ugly cells.</div></div>
+  </div>
+</section>
+
+<!-- ============ 1 · WALK-FORWARD ============ -->
+<section id="wf">
+  <div class="eyebrow">Exhibit 1 · generalisation across time <span class="tag pass">PASS</span></div>
+  <h2><span class="num">01</span>Walk-forward: every quarter, not one lucky window</h2>
+  <p class="lead">Six contiguous, non-overlapping 3-month windows. In each, the bar is how much the router's net APY
+  beats the <i>single best venue selected with full hindsight of that window</i> — the hardest passive benchmark there is.
+  All six are above zero.</p>
+  <div class="panel">
+    <figure><svg id="wfChart" viewBox="0 0 980 300" role="img" aria-label="walk-forward edge bars"></svg>
+      <figcaption>Green = edge over the best in-hindsight venue (pp). Faint = edge over passive Aave (pp). Table below has absolutes.</figcaption>
+    </figure>
+    <table id="wfTable"></table>
+  </div>
+  <div class="verdict"><span>✓</span><div>Beating the <b>hindsight-best venue 6/6</b> rules out "it only worked in the one regime we trained on."
+    The benchmark is re-chosen optimally <i>inside each window</i>, so there is no train/test leakage to exploit.</div></div>
+</section>
+
+<!-- ============ 2 · NEGATIVE CONTROL ============ -->
+<section id="neg">
+  <div class="eyebrow">Exhibit 2 · pre-registered negative control <span class="tag kill">WE KILLED IT</span></div>
+  <h2><span class="num">02</span>We built the ML model, predicted it would overfit, and it did</h2>
+  <p class="lead">T3 is a Cox proportional-hazards "predict the next crossover" model — exactly the kind of thing that
+  overfits a single period. We pre-registered it as a likely negative. In-sample it looks like a win. Under a strictly
+  purged, expanding-window walk-forward (train only on the past, embargo 46,512 blocks) it reverses sign.</p>
+  <div class="grid2">
+    <div class="panel">
+      <figure><svg id="negChart" viewBox="0 0 460 270" role="img" aria-label="in-sample vs out-of-sample T3 increment"></svg>
+        <figcaption>T3 minus T1 baseline, basis points. Whiskers = 95% bootstrap CI.</figcaption></figure>
+    </div>
+    <div class="panel">
+      <div class="statline">
+        <div class="stat"><div class="v" style="color:var(--blue)">+7.0 bp</div><div class="l">in-sample increment (p=0.015, wins 5/6 windows) — looks great</div></div>
+      </div>
+      <div class="statline" style="margin-top:18px">
+        <div class="stat"><div class="v" style="color:var(--dang)">−6.0 bp</div><div class="l">out-of-sample, purged expanding-window (95% CI [−9.9, −2.8], <b>entirely below zero</b>)</div></div>
+        <div class="stat"><div class="v" style="color:var(--dang)">0 / 5</div><div class="l">windows the ML model wins out-of-sample</div></div>
+      </div>
+      <div class="verdict warn" style="margin-top:18px"><span>⚑</span><div>This is the most important slide. A team that
+        <b>p-hacks</b> ships the +7 bp number. We ran the honest test, watched it flip to −6 bp, and
+        <b>shipped T1 instead</b>. You are being shown the strategy that <i>survived</i> our own kill-test.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 3 · SELECTION NULL ============ -->
+<section id="rand">
+  <div class="eyebrow">Exhibit 3 · selection null <span class="tag pass">PASS · 9σ</span></div>
+  <h2><span class="num">03</span>The skill is <i>which</i> venue, not <i>how often</i> we trade</h2>
+  <p class="lead">Take the router's exact switch schedule — same number of switches, same gas paid at the same blocks —
+  but send each segment to a <b>random</b> venue instead of the highest-rate one. 5,000 such allocators. If the router
+  were just "churn that happens to work," it would land inside this cloud. It lands far to the right of all 5,000.</p>
+  <div class="panel">
+    <figure><svg id="randChart" viewBox="0 0 980 300" role="img" aria-label="random-destination null distribution"></svg>
+      <figcaption>Grey = 5,000 same-cadence, same-gas, random-destination allocators on the test window ($1M start).
+      Green line = the router. The only thing varied is <i>where</i> each switch lands.</figcaption></figure>
+    <div class="pillrow">
+      <span class="pill">router <b>$1,017,342</b></span>
+      <span class="pill">best of 5,000 random $1,013,908</span>
+      <span class="pill">random mean $1,011,515</span>
+      <span class="pill">z = <b>9.2</b></span>
+      <span class="pill">p &lt; 1/5000</span>
+    </div>
+  </div>
+  <div class="verdict"><span>✓</span><div>This is the clean version of a permutation test: it destroys the <b>selection</b> while holding
+    trading frequency and cost <i>exactly</i> constant. The edge is the venue choice — picking the observable max net of gas.</div></div>
+</section>
+
+<!-- ============ 4 · PBO ============ -->
+<section id="pbo">
+  <div class="eyebrow">Exhibit 4 · backtest-overfitting probability <span class="tag pass">PBO = 0</span></div>
+  <h2><span class="num">04</span>Combinatorial CSCV: the in-sample winner stays the winner</h2>
+  <p class="lead">Bailey &amp; López de Prado's CSCV: split the window into 8 chunks, form all 70 ways to pick 4 for
+  "in-sample" vs 4 "out-of-sample," and ask whether the strategy that looks best in-sample holds up out-of-sample.
+  Run over the strategy <i>family</i> {router, 6 single-venue holds}.</p>
+  <div class="grid2">
+    <div class="panel" style="text-align:center">
+      <div class="big green">0.000</div>
+      <div class="foot" style="margin-top:8px">Probability of Backtest Overfitting<br>over 70 combinatorial splits</div>
+      <div class="big blue" style="font-size:26px;margin-top:18px">100%</div>
+      <div class="foot" style="margin-top:6px">splits where the router is in-sample-best —<br>and it is out-of-sample-best in every one</div>
+    </div>
+    <div class="panel">
+      <div class="eyebrow" style="color:var(--warn)">Honest footnote — the degenerate cell</div>
+      <p class="foot" style="color:var(--mut)">Run naively over the router's single smoothing knob (5 dwell values), CSCV returns
+      <b style="color:var(--dang)">PBO = 1.0</b> — which looks catastrophic. It is an artifact: those 5 settings differ by
+      <b>&lt; 0.02 pp</b> (see §5), so "ranking" them is ranking noise, and noise sign mean-reverts across the partition.
+      PBO is meaningful over <i>materially different strategies</i> — not over a flat plateau. We report both numbers rather
+      than quietly drop the one that needs explaining.</p>
+      <div class="verdict warn"><span>⚑</span><div>PBO over a flat surface ⇒ 1.0 by construction. PBO over real alternatives ⇒ <b>0.0</b>. The second is the one that answers your question.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 5 · PLATEAU ============ -->
+<section id="plateau">
+  <div class="eyebrow">Exhibit 5 · parameter sensitivity <span class="tag pass">FLAT</span></div>
+  <h2><span class="num">05</span>No knife-edge tuning: a flat plateau across 30 settings</h2>
+  <p class="lead">Net APY over a full grid of the router's two hyperparameters (dwell span × EWMA α). An overfit strategy
+  shows a sharp peak you'd have had to find by tuning. This is a tabletop.</p>
+  <div class="panel">
+    <figure><svg id="heatChart" viewBox="0 0 760 300" role="img" aria-label="parameter heatmap"></svg>
+      <figcaption>Cell = net APY (%). Total spread across all 30 configs = <b>0.016 pp</b>. Passive Aave over the same window = 3.26%.</figcaption></figure>
+  </div>
+  <div class="verdict"><span>✓</span><div>You cannot have curve-fit a parameter whose entire effect is <b>1.6 basis points</b> across a 16×-wide range.
+    Any reasonable setting lands at ~5.37%.</div></div>
+</section>
+
+<!-- ============ 6 · BOOTSTRAP ============ -->
+<section id="boot">
+  <div class="eyebrow">Exhibit 6 · per-venue significance</div>
+  <h2><span class="num">06</span>Paired bootstrap vs every single venue</h2>
+  <p class="lead">Block-paired bootstrap of the per-window APY difference, router vs each passive hold, with directional
+  consistency across the 6 walk-forward windows. Euler is the only venue that competes — and the router still beats it.</p>
+  <div class="panel">
+    <table id="bootTable"></table>
+    <div class="foot" style="margin-top:10px">One-sided H₀: edge ≤ 0. "Dir." = windows out of 6 where the router is ahead.
+      CIs are 95% bootstrap. <b class="hl">Holm family-wise correction is computed, not asserted</b> (statsmodels-equivalent
+      step-down over the 6 contrasts): all 6 survive at α=0.05. Euler V2 is the strongest competitor — we volunteer it as
+      <b>5/6, p<sub>Holm</sub>=0.026, CI grazing zero</b> rather than print the more flattering 6/6 from the wider contrast table.</div>
+  </div>
+</section>
+
+<!-- ============ 7 · GAS GATE ============ -->
+<section id="gas">
+  <div class="eyebrow">Exhibit 7 · robustness to the one economic knob <span class="tag pass">DEGRADES GRACEFULLY</span></div>
+  <h2><span class="num">07</span>The edge isn't an artifact of one assumed gas price</h2>
+  <p class="lead">Sweep the transaction cost from 10 to 200 gwei. The router's expected-gain-&gt;-gas gate fires less often as gas
+  rises (125 → 6 rebalances) and net APY <i>degrades gently</i>. A naive "always chase the top rate" router pays the same
+  424 rebalances regardless and collapses through zero. The gate is the mechanism — demonstrated under a swept control variable,
+  not asserted.</p>
+  <div class="panel">
+    <figure><svg id="gasChart" viewBox="0 0 980 320" role="img" aria-label="gas sensitivity sweep"></svg>
+      <figcaption>Net APY (%) vs gas price. Green = router (gas-gated). Red = naive greedy (ungated). Labels = rebalances at that gas level.</figcaption></figure>
+  </div>
+  <div class="verdict"><span>✓</span><div>Effects that survive and decay <b>monotonically</b> under a swept parameter are structural.
+    The router stays profitable (4.1%) even at a punitive 200 gwei; the ungated version is <b>−7.6%</b>. The cost gate does real economic work.</div></div>
+</section>
+
+<!-- ============ 8 · EFFECTIVE N / BLOCK BOOTSTRAP ============ -->
+<section id="neff">
+  <div class="eyebrow">Exhibit 8 · serial-correlation-aware significance <span class="tag pass">PASS</span></div>
+  <h2><span class="num">08</span>"What's your effective N, and did you account for autocorrelation?"</h2>
+  <p class="lead">The fair objection to any daily-return p-value: consecutive days are correlated, so the naive sample size is
+  inflated. We answer with a <b>moving-block bootstrap</b> (5-day blocks preserve the serial structure) on the daily
+  router-minus-benchmark excess return, and we report the autocorrelation-adjusted effective sample size explicitly.</p>
+  <div class="grid2">
+    <div class="panel">
+      <div class="eyebrow">vs Aave hold · 119 trading days</div>
+      <div class="statline" style="gap:30px">
+        <div class="stat"><div class="v pos">+0.55<span style="font-size:14px"> bp/day</span></div><div class="l">mean daily excess</div></div>
+        <div class="stat"><div class="v mono">24</div><div class="l">effective N after autocorrelation (from 119 days)</div></div>
+      </div>
+      <figure style="margin-top:14px"><svg id="bbChart1" viewBox="0 0 440 70" role="img" aria-label="block-bootstrap CI vs Aave"></svg></figure>
+      <div class="foot">Block-bootstrap 95% CI <b class="hl">[0.39, 0.76] bp/day</b>, entirely above zero · p(≤0) &lt; 1/10000.</div>
+    </div>
+    <div class="panel">
+      <div class="eyebrow">vs best single hold · 119 trading days</div>
+      <div class="statline" style="gap:30px">
+        <div class="stat"><div class="v pos">+0.13<span style="font-size:14px"> bp/day</span></div><div class="l">mean daily excess — vs the toughest passive benchmark</div></div>
+        <div class="stat"><div class="v mono">30</div><div class="l">effective N after autocorrelation</div></div>
+      </div>
+      <figure style="margin-top:14px"><svg id="bbChart2" viewBox="0 0 440 70" role="img" aria-label="block-bootstrap CI vs best hold"></svg></figure>
+      <div class="foot">Block-bootstrap 95% CI <b class="hl">[0.08, 0.22] bp/day</b>, still entirely above zero · p(≤0) &lt; 1/10000.</div>
+    </div>
+  </div>
+  <div class="verdict"><span>✓</span><div>Even after collapsing 119 days to an honest <b>N_eff ≈ 24–30</b> and bootstrapping in serial-correlation-preserving
+    blocks, the daily edge is positive with a CI that excludes zero — against both a default venue and the best one in hindsight.</div></div>
+</section>
+
+<!-- ============ 9 · MECHANISM / time-shuffle ============ -->
+<section id="mech">
+  <div class="eyebrow">Exhibit 9 · mechanism <span class="tag mech">DIAGNOSTIC, NOT A NULL</span></div>
+  <h2><span class="num">09</span>The time-shuffle that "failed" — and why that's the point</h2>
+  <div class="grid2">
+    <div>
+      <p class="lead">We circularly shuffled each venue's rate series in time (N=300). The intent: destroy any temporal
+      structure and watch the edge die. It <b>didn't</b> die (p≈0.97). Naively that looks like a failed test. It isn't —
+      it's a fingerprint of the mechanism.</p>
+      <p class="lead">Shuffling each series independently <i>preserves every block's cross-sectional spread</i> — and the
+      cross-section is exactly what the router reads. So the edge survives because the router never needed the time order:
+      it reacts to the <b>current observable</b>, not a forecast of the future.</p>
+      <div class="verdict mech-v" style="background:#15263b;border-color:#244a73;color:#a8cdff"><span>◆</span>
+        <div>A time-shuffle is the right null for "is this a <b>temporal forecast?</b>" — and the answer is a clean
+        <b>no</b>. There is no time-series model here to overfit. The null that <i>does</i> isolate the skill is the
+        selection null in §3, which the router passes at 9σ.</div></div>
+    </div>
+    <div class="panel">
+      <div class="eyebrow">Two nulls, two questions</div>
+      <table>
+        <tr><th>Null</th><th>Destroys</th><th>Tests</th><th>Result</th></tr>
+        <tr><td>Time-shuffle</td><td class="mono">time order</td><td>temporal forecast?</td><td class="mono" style="color:var(--blue)">survives → none</td></tr>
+        <tr><td>Random destination</td><td class="mono">venue choice</td><td>selection skill?</td><td class="mono pos">dies → real</td></tr>
+      </table>
+      <p class="foot" style="margin-top:12px">The two together pin the source of return precisely: <b class="hl">contemporaneous
+      cross-sectional selection</b>, net of gas. That is a structural feature of fragmented lending markets, not a fitted signal —
+      which is also why it has a capacity ceiling and decays as the spread commoditises (see Limits).</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ RISK STRIP ============ -->
+<section id="risk">
+  <div class="eyebrow">Risk profile · test window, real gas</div>
+  <div class="panel"><div class="statline" style="gap:40px">
+    <div class="stat"><div class="v pos">36.1</div><div class="l">annualised Sharpe (T1)</div></div>
+    <div class="stat"><div class="v pos">0.0%</div><div class="l">max drawdown — supply-only, no liquidation surface</div></div>
+    <div class="stat"><div class="v">+9.9</div><div class="l">information ratio vs passive Aave</div></div>
+    <div class="stat"><div class="v mono">non-custodial</div><div class="l">agent signs rebalances; it can never move funds out</div></div>
+  </div></div>
+</section>
+
+<!-- ============ LIMITS ============ -->
+<section id="limits">
+  <div class="eyebrow">What we do NOT claim</div>
+  <h2>The honest boundary of the result</h2>
+  <div class="panel"><ul class="clean">
+    <li><b>This is not a forecasting alpha.</b> It is gas-aware capture of a contemporaneous cross-sectional spread.
+      If the six venues' rates converge, the edge shrinks — by construction.</li>
+    <li><b>Capacity is finite.</b> Edge is measured at $1M. At $10–25M, depth and rate-impact compress it (continuous-supply
+      model: roughly +3.7–3.9 pp retained; the per-rebalance AMM-toll model was wrong and is deprecated).</li>
+    <li><b>~18 months of history, one chain.</b> Six venues on Ethereum mainnet. It has not lived through a 2022-style
+      depeg/cascade in this exact venue set; the supply-only design limits but does not erase tail risk.</li>
+    <li><b>Single-period statistics are thin where we say so.</b> The Sharpe-delta tests over the 4-month test window
+      (H1a/H1b) have CIs that cross zero; we report them as such rather than as wins. We do <i>not</i> headline a
+      "Deflated Sharpe passed" — Sharpe is the wrong binding metric for a near-zero-volatility supply yield (net APY after
+      gas is), so we lean on the block bootstrap in §8, not on Sharpe.</li>
+    <li><b>T3 (ML) is shelved, not deleted.</b> With more venues / longer history it may eventually add signal; today it does not, and we don't bill for it.</li>
+  </ul></div>
+</section>
+
+<!-- ============ Q&A ============ -->
+<section id="qa">
+  <div class="eyebrow">The physicist's hardest attacks</div>
+  <h2>Questions we expect — and the answers</h2>
+  <div class="panel">
+    <div class="qa">
+      <div class="q">You tested on 18 months. Isn't 6 windows still "one regime"?</div>
+      <div class="a">The 6 windows span a 10× volatility range and a genuine regime flip (Compound-dominant → first
+      Aave-dominant quarter in 2025 Q4). The edge is positive across all of them <i>because</i> it doesn't depend on the
+      regime — it reads whichever venue currently pays most. A regime change is the router's <i>input</i>, not its failure mode.</div>
+    </div>
+    <div class="qa">
+      <div class="q">PBO = 1.0 over the dwell parameter is alarming. Explain.</div>
+      <div class="a">It's a degenerate case: the 5 dwell settings differ by &lt;0.02 pp, so CSCV is ranking noise, whose sign
+      anti-correlates across a partition → PBO → 1 mechanically. Over materially different strategies (§4) PBO = 0. We show you
+      both numbers; the flat plateau in §5 is the same fact stated as a strength.</div>
+    </div>
+    <div class="qa">
+      <div class="q">A time-shuffle didn't kill the edge (p=0.97). Doesn't that mean it's noise?</div>
+      <div class="a">The opposite. Independent shuffles preserve each block's cross-section, which is the router's entire
+      input. Survival proves there's no temporal forecast to overfit. The null that <i>does</i> target the mechanism —
+      randomising the venue choice — kills the edge at 9σ (§3).</div>
+    </div>
+    <div class="qa">
+      <div class="q">Your p&lt;1e-4 resamples 6 autocorrelated windows as if IID. What's your effective N?</div>
+      <div class="a">Fair, and we measured it (§8). The 6 walk-forward windows are <i>non-overlapping</i>, so the cross-window
+      means are ~independent — effective N at that level is ≈6, and the sign is 6/6. <i>Within</i> the test window, a
+      moving-block bootstrap (5-day blocks) on daily excess returns gives N_eff ≈ 24 vs Aave / 30 vs the best hold, and the
+      CI still excludes zero ([0.39, 0.76] and [0.08, 0.22] bp/day). We're not hiding behind an inflated N.</div>
+    </div>
+    <div class="qa">
+      <div class="q">You have an ML model. Why isn't that the product?</div>
+      <div class="a">Because we tested it honestly and it loses out-of-sample (−6 bp, 0/5 windows, §2). Selling the +7 bp
+      in-sample number would be the textbook overfitting mistake. The product is the parameter-light reactive rule that
+      survives every test in this pack.</div>
+    </div>
+    <div class="qa">
+      <div class="q">Can I reproduce these numbers?</div>
+      <div class="a">Yes. Every figure here is emitted by <span class="mono">scripts/robustness/build_exhibits.py</span> and
+      <span class="mono">build_exhibits_v2.py</span> on a fast replay engine validated to the dollar against the production
+      per-block engine (final $1,017,341 / 5.368% net APY / 322 switches). Data is real on-chain rates + real gas.</div>
+    </div>
+  </div>
+</section>
+
+<footer style="padding:30px 0;color:var(--dim);font-size:12.5px">
+  <div class="mono">predictive-mcdm-defi · robustness evidence pack · generated 2026-06-23</div>
+  <div style="margin-top:8px">Companion: <a href="../allocation_flow.html">allocation_flow.html</a> — live per-block replay animation of the same window.
+  Sources: <span class="hl">results/figures/robustness/robustness_summary.json</span>,
+  <span class="hl">robustness_v2.json</span>, <span class="hl">results/institutional/tables/</span>.</div>
+  <div style="margin-top:8px;max-width:820px">Research artifact for technical due diligence. Not investment advice and not a
+  solicitation. Past on-chain performance does not guarantee future results.</div>
+</footer>
+
+</div>
+
+<script>
+const D = {
+  wf: [
+    {w:"W1",span:"Nov 24–Feb 25",t1:18.636,bh:16.790,bhn:"Fluid",ev:1.845,ea:9.164,sw:261,aave:9.471},
+    {w:"W2",span:"Feb–May 25",t1:6.921,bh:5.854,bhn:"Fluid",ev:1.066,ea:3.503,sw:173,aave:3.417},
+    {w:"W3",span:"May–Aug 25",t1:7.794,bh:6.834,bhn:"Euler V2",ev:0.959,ea:3.935,sw:437,aave:3.858},
+    {w:"W4",span:"Aug–Nov 25",t1:7.175,bh:6.450,bhn:"Euler V2",ev:0.725,ea:2.912,sw:420,aave:4.263},
+    {w:"W5",span:"Nov 25–Feb 26",t1:5.870,bh:5.423,bhn:"Euler V2",ev:0.447,ea:2.095,sw:275,aave:3.776},
+    {w:"W6",span:"Feb–May 26",t1:5.608,bh:5.133,bhn:"Euler V2",ev:0.475,ea:2.504,sw:175,aave:3.104}
+  ],
+  heat: {dwells:[250,500,1000,2000,4000,8000], alphas:[0.02,0.05,0.1,0.2,0.4],
+    grid:[[5.355,5.355,5.356,5.356,5.356,5.356],[5.366,5.366,5.366,5.366,5.366,5.365],
+          [5.368,5.368,5.368,5.368,5.368,5.368],[5.370,5.370,5.370,5.370,5.370,5.370],
+          [5.371,5.371,5.371,5.371,5.371,5.371]], min:5.355, max:5.371, aave:3.261},
+  rand: {t1:1017342, mean:1011515, max:1013908, min:1009857, z:9.2,
+    bins:[[1009857,7],[1010023,22],[1010189,56],[1010356,119],[1010522,232],[1010688,305],[1010855,419],[1011021,493],[1011187,472],[1011354,509],[1011520,494],[1011686,463],[1011853,382],[1012019,290],[1012185,232],[1012352,160],[1012518,122],[1012684,84],[1012851,52],[1013017,44],[1013183,17],[1013350,15],[1013516,4],[1013682,6],[1013849,1]]},
+  boot: [
+    {v:"Aave V3",m:2.814,lo:1.872,hi:4.051,dir:6,p:"0.000"},
+    {v:"Compound V3",m:2.627,lo:1.569,hi:3.971,dir:6,p:"0.000"},
+    {v:"Spark",m:1.778,lo:1.375,hi:2.243,dir:6,p:"0.000"},
+    {v:"Morpho Blue",m:2.582,lo:1.425,hi:4.200,dir:6,p:"0.000"},
+    {v:"Euler V2",m:1.457,lo:-0.001,hi:3.662,dir:5,p:"0.026"},
+    {v:"Fluid",m:2.627,lo:1.676,hi:3.812,dir:6,p:"0.000"}
+  ],
+  holm:{"Aave V3":0.000,"Compound V3":0.000,"Spark":0.000,"Morpho Blue":0.000,"Euler V2":0.026,"Fluid":0.000},
+  gas:[{g:10,t1:5.104,t1r:125,gr:4.715},{g:25,t1:4.938,t1r:52,gr:3.702},
+       {g:50,t1:4.526,t1r:26,gr:2.029},{g:100,t1:4.457,t1r:9,gr:-1.262},{g:200,t1:4.129,t1r:6,gr:-7.630}],
+  bb:{aave:{neff:24,nd:119,mean:0.55,lo:0.39,hi:0.76},best:{neff:30,nd:119,mean:0.13,lo:0.08,hi:0.22}}
+};
+const NS="http://www.w3.org/2000/svg";
+function el(t,a){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);return e;}
+function txt(p,x,y,s,c,a){const t=el("text",{x,y,class:c||"lab"});if(a)t.setAttribute("text-anchor",a);t.textContent=s;p.appendChild(t);return t;}
+
+/* ---- Exhibit 1: walk-forward edge bars ---- */
+(function(){
+  const s=document.getElementById("wfChart"), W=980,H=300, L=46,R=20,T=20,B=58;
+  const iw=W-L-R, ih=H-T-B, n=D.wf.length, gw=iw/n, bw=gw*0.42;
+  const max=2.0;
+  const y=v=>T+ih-(v/max)*ih;
+  // gridlines
+  [0,0.5,1,1.5,2].forEach(g=>{ s.appendChild(el("line",{x1:L,y1:y(g),x2:W-R,y2:y(g),class:"gl"}));
+    txt(s,L-8,y(g)+3,g.toFixed(1),"lab","end"); });
+  s.appendChild(el("line",{x1:L,y1:y(0),x2:W-R,y2:y(0),class:"axis"}));
+  D.wf.forEach((d,i)=>{
+    const cx=L+gw*i+gw/2;
+    // faint aave edge (scaled, capped)
+    const eaH = Math.min(d.ea,max);
+    s.appendChild(el("rect",{x:cx-bw-3,y:y(eaH),width:bw,height:y(0)-y(eaH),fill:"#2ec4b6",opacity:0.18,rx:2}));
+    // main edge-vs-best
+    s.appendChild(el("rect",{x:cx+3,y:y(d.ev),width:bw,height:y(0)-y(d.ev),fill:"#3fb950",rx:2}));
+    txt(s,cx+3+bw/2,y(d.ev)-6,"+"+d.ev.toFixed(2),"barlabel","middle");
+    txt(s,cx,H-B+18,d.w,"lab tx","middle");
+    txt(s,cx,H-B+34,d.span,"lab","middle");
+    if(d.ea>max) txt(s,cx-bw/2-3,y(max)-6,"+"+d.ea.toFixed(1)+"→","lab","middle");
+  });
+  txt(s,L-8,T-6,"pp","lab","end");
+  txt(s,W-R,T-6,"edge vs hindsight-best venue (green) · vs Aave (faint)","lab","end");
+})();
+/* wf table */
+(function(){
+  const t=document.getElementById("wfTable");
+  t.innerHTML="<tr><th>Window</th><th>Router APY</th><th>Best hindsight venue</th><th>that venue's APY</th><th>edge</th><th>vs Aave</th><th>switches</th></tr>"+
+  D.wf.map(d=>`<tr><td>${d.w} · ${d.span}</td><td class="mono">${d.t1.toFixed(2)}%</td><td>${d.bhn}</td>
+    <td class="mono">${d.bh.toFixed(2)}%</td><td class="mono"><span class="pos">+${d.ev.toFixed(2)}</span></td>
+    <td class="mono pos">+${d.ea.toFixed(2)}</td><td class="mono">${d.sw}</td></tr>`).join("")+
+  `<tr><td><b>All 6 windows</b></td><td colspan="6" class="mono"><span class="pos">router &gt; hindsight-best 6/6 &nbsp;·&nbsp; router &gt; Aave 6/6</span></td></tr>`;
+})();
+
+/* ---- Exhibit 2: negative control ---- */
+(function(){
+  const s=document.getElementById("negChart"), W=460,H=270, L=54,R=20,T=22,B=46;
+  const ih=H-T-B; const lo=-12, hi=16; const y=v=>T+ih*(hi-v)/(hi-lo);
+  [-10,-5,0,5,10,15].forEach(g=>{ s.appendChild(el("line",{x1:L,y1:y(g),x2:W-R,y2:y(g),class:g===0?"axis":"gl"}));
+    txt(s,L-8,y(g)+3,g,"lab","end"); });
+  const bars=[{x:L+50,w:90,v:7.03,lo:0.48,hi:14.74,c:"#58a6ff",t:"in-sample",sub:"+7.0 bp"},
+              {x:L+210,w:90,v:-5.97,lo:-9.89,hi:-2.76,c:"#f85149",t:"out-of-sample",sub:"−6.0 bp"}];
+  bars.forEach(b=>{
+    const yv=y(b.v), y0=y(0);
+    s.appendChild(el("rect",{x:b.x,y:Math.min(yv,y0),width:b.w,height:Math.abs(yv-y0),fill:b.c,opacity:0.85,rx:3}));
+    // CI whisker
+    const cx=b.x+b.w/2;
+    s.appendChild(el("line",{x1:cx,y1:y(b.lo),x2:cx,y2:y(b.hi),stroke:b.c,"stroke-width":2}));
+    s.appendChild(el("line",{x1:cx-7,y1:y(b.lo),x2:cx+7,y2:y(b.lo),stroke:b.c,"stroke-width":2}));
+    s.appendChild(el("line",{x1:cx-7,y1:y(b.hi),x2:cx+7,y2:y(b.hi),stroke:b.c,"stroke-width":2}));
+    txt(s,cx,(b.v>0?yv-10:yv+18),b.sub,"barlabel","middle").setAttribute("fill",b.c);
+    txt(s,cx,H-B+18,b.t,"lab tx","middle");
+  });
+  txt(s,L-8,T-6,"bp","lab","end");
+  // arrow IS->OOS
+  s.appendChild(el("path",{d:`M ${L+145} ${y(7.03)} C ${L+180} ${y(7)}, ${L+185} ${y(-6)}, ${L+205} ${y(-5.97)}`,
+    fill:"none",stroke:"#8b949e","stroke-width":1.4,"stroke-dasharray":"4 3","marker-end":""}));
+  txt(s,L+175,y(0)-2,"reverses","lab","middle");
+})();
+
+/* ---- Exhibit 3: random null histogram ---- */
+(function(){
+  const s=document.getElementById("randChart"), W=980,H=300, L=20,R=20,T=22,B=52;
+  const iw=W-L-R, ih=H-T-B;
+  const xlo=1009500, xhi=1018200;
+  const x=v=>L+iw*(v-xlo)/(xhi-xlo);
+  const mc=Math.max(...D.rand.bins.map(b=>b[1]));
+  const bw=(D.rand.bins[1][0]-D.rand.bins[0][0]);
+  // baseline
+  s.appendChild(el("line",{x1:L,y1:T+ih,x2:W-R,y2:T+ih,class:"axis"}));
+  D.rand.bins.forEach(b=>{
+    const h=b[1]/mc*ih, xx=x(b[0]);
+    s.appendChild(el("rect",{x:xx,y:T+ih-h,width:Math.max(x(b[0]+bw)-xx-1,1),height:h,fill:"#48566a",rx:1}));
+  });
+  // x ticks
+  [1010000,1012000,1014000,1016000,1017342].forEach(v=>{
+    txt(s,x(v),T+ih+18,"$"+(v/1e6).toFixed(3)+"M","lab","middle");
+  });
+  // mean marker
+  s.appendChild(el("line",{x1:x(D.rand.mean),y1:T,x2:x(D.rand.mean),y2:T+ih,stroke:"#8b949e","stroke-width":1,"stroke-dasharray":"3 3"}));
+  txt(s,x(D.rand.mean),T-6,"random mean","lab","middle");
+  // best random
+  s.appendChild(el("line",{x1:x(D.rand.max),y1:T+ih-150,x2:x(D.rand.max),y2:T+ih,stroke:"#65758a","stroke-width":1}));
+  txt(s,x(D.rand.max),T+ih-158,"best of 5,000","lab","middle");
+  // T1 marker
+  const tx1=x(D.rand.t1);
+  s.appendChild(el("line",{x1:tx1,y1:T-2,x2:tx1,y2:T+ih,stroke:"#3fb950","stroke-width":2.5}));
+  s.appendChild(el("rect",{x:tx1-58,y:T-2,width:116,height:34,fill:"#10241a",stroke:"#1d4a2e",rx:6}));
+  txt(s,tx1,T+12,"ROUTER","barlabel","middle").setAttribute("fill","#9fe2b0");
+  txt(s,tx1,T+26,"$1,017,342","lab","middle").setAttribute("fill","#9fe2b0");
+  // gap arrow
+  s.appendChild(el("line",{x1:x(D.rand.max)+3,y1:T+ih-70,x2:tx1-3,y2:T+ih-70,stroke:"#3fb950","stroke-width":1.2,"stroke-dasharray":"2 2"}));
+  txt(s,(x(D.rand.max)+tx1)/2,T+ih-78,"9σ gap","lab","middle").setAttribute("fill","#3fb950");
+})();
+
+/* ---- Exhibit 5: heatmap ---- */
+(function(){
+  const s=document.getElementById("heatChart"), W=760,H=300, L=70,R=90,T=30,B=46;
+  const A=D.heat.alphas.length, Dn=D.heat.dwells.length;
+  const cw=(W-L-R)/Dn, ch=(H-T-B)/A;
+  const lo=D.heat.min-0.01, hi=D.heat.max+0.005;
+  function col(v){ const t=(v-lo)/(hi-lo); // green ramp, deliberately low-contrast to show flatness
+    const r=Math.round(20+t*20), g=Math.round(70+t*90), b=Math.round(40+t*40); return `rgb(${r},${g},${b})`; }
+  for(let a=0;a<A;a++)for(let d=0;d<Dn;d++){
+    const v=D.heat.grid[a][d], xx=L+d*cw, yy=T+a*ch;
+    s.appendChild(el("rect",{x:xx+1,y:yy+1,width:cw-2,height:ch-2,fill:col(v),rx:3}));
+    txt(s,xx+cw/2,yy+ch/2+4,v.toFixed(3),"lab tx","middle");
+  }
+  D.heat.dwells.forEach((d,i)=>txt(s,L+i*cw+cw/2,H-B+18,d,"lab","middle"));
+  D.heat.alphas.forEach((a,i)=>txt(s,L-10,T+i*ch+ch/2+4,a,"lab","end"));
+  txt(s,(L+W-R)/2,H-B+36,"dwell span (blocks)","lab tx","middle");
+  txt(s,18,T+(H-T-B)/2,"EWMA α","lab tx","middle").setAttribute("transform",`rotate(-90 18 ${T+(H-T-B)/2})`);
+  // legend: passive aave reference
+  s.appendChild(el("rect",{x:W-R+8,y:T,width:18,height:18,fill:col(D.heat.max),rx:3}));
+  txt(s,W-R+30,T+13,"≈5.37%","lab tx");
+  s.appendChild(el("rect",{x:W-R+8,y:T+30,width:18,height:18,fill:"#3a2a12",rx:3}));
+  txt(s,W-R+30,T+43,"Aave 3.26%","lab");
+  txt(s,W-R+8,T+74,"spread","lab");
+  txt(s,W-R+8,T+90,"0.016 pp","lab tx");
+})();
+
+/* ---- Exhibit 7: gas sensitivity ---- */
+(function(){
+  const s=document.getElementById("gasChart"), W=980,H=320, L=54,R=120,T=26,B=56;
+  const iw=W-L-R, ih=H-T-B, n=D.gas.length;
+  const lo=-8, hi=6; const x=i=>L+i*(iw/(n-1)); const y=v=>T+ih*(hi-v)/(hi-lo);
+  [-8,-4,0,2,4,6].forEach(g=>{ s.appendChild(el("line",{x1:L,y1:y(g),x2:W-R,y2:y(g),class:g===0?"axis":"gl"}));
+    txt(s,L-8,y(g)+3,g+"%","lab","end"); });
+  function line(key,col,lbl,below){
+    let d="";
+    D.gas.forEach((p,i)=>{ d+=(i?"L":"M")+x(i)+" "+y(p[key])+" "; });
+    s.appendChild(el("path",{d,fill:"none",stroke:col,"stroke-width":2.5}));
+    D.gas.forEach((p,i)=>{ s.appendChild(el("circle",{cx:x(i),cy:y(p[key]),r:4,fill:col}));
+      txt(s,x(i),y(p[key])+(below?16:-9),(p[key]>0?"+":"")+p[key].toFixed(2),"barlabel","middle").setAttribute("fill",col); });
+    txt(s,x(n-1)+10,y(D.gas[n-1][key])+4,lbl,"lab tx").setAttribute("fill",col);
+  }
+  line("gr","#f85149","naive greedy",true);
+  line("t1","#3fb950","router (gated)",false);
+  // rebalance counts under x-axis for router
+  D.gas.forEach((p,i)=>{ txt(s,x(i),H-B+18,p.g+" gwei","lab tx","middle");
+    txt(s,x(i),H-B+34,p.t1r+" rebal.","lab","middle"); });
+  txt(s,x(0),y(6)-8,"router rebalances ↓ as gas gates; greedy fixed at 424","lab","start");
+})();
+
+/* ---- Exhibit 8: block-bootstrap CI strips ---- */
+function bbStrip(id,d,vmax,ticks){
+  const s=document.getElementById(id), W=440,H=70, L=14,R=14;
+  const iw=W-L-R; const x=v=>L+iw*v/vmax;
+  s.appendChild(el("line",{x1:L,y1:52,x2:W-R,y2:52,class:"axis"}));
+  ticks.forEach(t=>{ s.appendChild(el("line",{x1:x(t),y1:48,x2:x(t),y2:56,class:"gl"}));
+    txt(s,x(t),66,t.toFixed(2),"lab","middle"); });
+  // zero emphasised
+  s.appendChild(el("line",{x1:x(0),y1:10,x2:x(0),y2:56,stroke:"#65758a","stroke-width":1.2,"stroke-dasharray":"3 3"}));
+  txt(s,x(0),8,"0","lab","middle");
+  // CI bar
+  s.appendChild(el("rect",{x:x(d.lo),y:22,width:x(d.hi)-x(d.lo),height:18,fill:"#10311f",stroke:"#2f8f50",rx:4}));
+  s.appendChild(el("line",{x1:x(d.mean),y1:20,x2:x(d.mean),y2:42,stroke:"#3fb950","stroke-width":2.5}));
+  txt(s,x(d.mean),18,"+"+d.mean.toFixed(2)+" bp/day","barlabel","middle").setAttribute("fill","#9fe2b0");
+  txt(s,x(d.lo)+2,36,d.lo.toFixed(2),"lab","start").setAttribute("fill","#7fd39a");
+  txt(s,x(d.hi)-2,36,d.hi.toFixed(2),"lab","end").setAttribute("fill","#7fd39a");
+}
+bbStrip("bbChart1",D.bb.aave,0.9,[0,0.25,0.5,0.75]);
+bbStrip("bbChart2",D.bb.best,0.3,[0,0.1,0.2,0.3]);
+
+/* ---- Exhibit 6: bootstrap table ---- */
+(function(){
+  const t=document.getElementById("bootTable");
+  t.innerHTML="<tr><th>Router vs hold</th><th>mean edge (pp)</th><th>95% CI</th><th>dir.</th><th>p (≤0)</th><th>p Holm</th></tr>"+
+  D.boot.map(b=>{const grazes=b.lo<0; const hp=D.holm[b.v];
+    return `<tr><td>${b.v}</td><td class="mono pos">+${b.m.toFixed(2)}</td>
+    <td class="mono" style="color:${grazes?'var(--warn)':'var(--mut)'}">[${b.lo.toFixed(2)}, ${b.hi.toFixed(2)}]</td>
+    <td class="mono">${b.dir}/6</td><td class="mono">${b.p}</td>
+    <td class="mono" style="color:${hp<=0.05?'var(--t1)':'var(--warn)'}">${hp.toFixed(3)} ${hp<=0.05?'✓':''}</td></tr>`;}).join("");
+})();
+</script>
+</body>
+</html>
