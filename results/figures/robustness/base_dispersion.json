@@ -1,0 +1,87 @@
+{
+  "source": "DeFiLlama yields API (apyBase, daily)",
+  "chain": "Base",
+  "venues": {
+    "aave-v3": {
+      "pool": "7e0661bf-8cf3-45e6-9424-31916d4c7b84",
+      "tvl_usd_m": 29.9
+    },
+    "compound-v3": {
+      "pool": "0c8567f8-ba5b-41ad-80de-00a71895eb19",
+      "tvl_usd_m": 0.8
+    },
+    "fluid-lending": {
+      "pool": "7372edda-f07f-4598-83e5-4edec48c4039",
+      "tvl_usd_m": 8.9
+    },
+    "moonwell-lending": {
+      "pool": "69cf831d-624a-4f23-b5e3-c0f63ad1fa01",
+      "tvl_usd_m": 1.4
+    }
+  },
+  "window": "2024-10-15..2026-06-23",
+  "n_days": 586,
+  "mean_apy_pct": {
+    "aave-v3": 4.708,
+    "compound-v3": 4.587,
+    "fluid-lending": 4.034,
+    "moonwell-lending": 5.666
+  },
+  "daily_spread_pp": {
+    "median": 2.173,
+    "p90": 6.173,
+    "max": 40.421
+  },
+  "leader_share_pct": {
+    "moonwell-lending": 43.5,
+    "aave-v3": 23.9,
+    "compound-v3": 20.3,
+    "fluid-lending": 12.3
+  },
+  "n_crossovers": 232,
+  "crossovers_per_month": 11.88,
+  "gross_fuel_ceiling": {
+    "always_daily_max_apy": 6.781,
+    "best_single_hold": "moonwell-lending",
+    "best_single_hold_apy": 5.829,
+    "gross_edge_pp": 0.952
+  },
+  "net_of_l2_gas": {
+    "100": {
+      "gas_0.15": {
+        "net_edge_usd_vs_besthold": -33.21,
+        "net_edge_pp": -21.329,
+        "pays_off": false
+      },
+      "gas_0.03": {
+        "net_edge_usd_vs_besthold": -5.37,
+        "net_edge_pp": -3.265,
+        "pays_off": false
+      }
+    },
+    "10000": {
+      "gas_0.15": {
+        "net_edge_usd_vs_besthold": 123.76,
+        "net_edge_pp": 0.743,
+        "pays_off": true
+      },
+      "gas_0.03": {
+        "net_edge_usd_vs_besthold": 151.6,
+        "net_edge_pp": 0.91,
+        "pays_off": true
+      }
+    },
+    "1000000": {
+      "gas_0.15": {
+        "net_edge_usd_vs_besthold": 15821.45,
+        "net_edge_pp": 0.95,
+        "pays_off": true
+      },
+      "gas_0.03": {
+        "net_edge_usd_vs_besthold": 15849.29,
+        "net_edge_pp": 0.951,
+        "pays_off": true
+      }
+    }
+  }
+}
