@@ -1,7 +1,6 @@
-# Reproducible companion notebook — Predictive MCDM USDC allocator
+# Reproducible study notebook — Predictive MCDM USDC allocator
 
-`reproduce_predictive_mcdm_defi.ipynb` recomputes **every empirical number in the paper**
-(ICICPE Scopus Vol-2) from a single cached input, with **no API keys** and **no `fractal-defi`**.
+`reproduce_predictive_mcdm_defi.ipynb` recomputes **every empirical number of the study** from a single cached input, with **no API keys** and **no `fractal-defi`**.
 Academic layout: each section is *markdown (theory) → code → markdown (interpretation)*, top to bottom.
 
 ## What it reproduces (all from `per_block_panel.parquet`)
@@ -15,7 +14,7 @@ Academic layout: each section is *markdown (theory) → code → markdown (inter
 | §9 Robustness | random-null **9σ**, **PBO=0**, flat plateau, gas sweep, block-bootstrap |
 | §10 Capacity | yield-impact curve 8.5% → 7.6% ($1M→$50M) |
 | §11 L2/Base | live DeFiLlama dispersion (optional, needs internet) |
-| §12 Ledger | every paper number beside its reproduced value |
+| §12 Ledger | every reported number beside its reproduced value |
 
 ## Run on Kaggle
 1. **Create a dataset** containing both files (from `data/cached/`):
@@ -36,8 +35,8 @@ Academic layout: each section is *markdown (theory) → code → markdown (inter
 
 ## Provenance / honesty notes
 - The engine is validated to reproduce the production `EventReplayEngine` **to the dollar**.
-- §7 H1 (N=4 monthly) is reproduced **self-consistently on the 6-way curves**; the paper's printed H1 table predates
-  the 6-way regeneration (3-protocol basis per `results_macros.tex`) — the robust inference is the per-window bootstrap.
+- §7 H1 (N=4 monthly) is reproduced **self-consistently on the 6-way curves**; the study's printed H1 table predates
+  the 6-way regeneration (it used a different, earlier 3-protocol basis) — the robust inference is the per-window bootstrap.
 - §8 T3 OOS reproduces to ≤0.02 bp per window (lifelines 0.30.x); sign, mean, CI, p and 0/5 wins are exact.
 - §10 capacity reproduces the continuous-model curve to within ~0.03 pp.
 

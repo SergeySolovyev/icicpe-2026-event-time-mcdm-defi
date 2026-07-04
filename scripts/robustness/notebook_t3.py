@@ -1,5 +1,5 @@
 """Self-contained pure-python reproduction of the T3 Cox-hazard
-expanding-window walk-forward — the paper's HONEST out-of-sample
+expanding-window walk-forward — the study's HONEST out-of-sample
 negative-control result.
 
 This module reproduces, from ONLY the cached panel + DSR events (NO

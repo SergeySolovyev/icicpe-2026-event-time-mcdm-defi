@@ -1,8 +1,8 @@
 """Self-contained, pure-numpy reproduction core for the Kaggle notebook.
 
-Every decision policy from the paper, reimplemented as a tight scalar loop
+Every decision policy in this study, reimplemented as a tight scalar loop
 over the per-block panel (NO fractal-defi, NO API keys, NO lifelines for the
-non-T3 policies). Validated to reproduce results_macros.tex to the dollar:
+non-T3 policies). Validated to reproduce the reference values to the dollar:
   B1 Aave hold 3.26% $1,010,605 | B2 Compound 2.69% $1,008,757
   B3 greedy 5.35% 424 | B4 EMA 4.64% 70 | T1 5.37% 322 | T2 5.34% 175
 Engine semantics match backtest/replay_per_block.py: accrue current venue's

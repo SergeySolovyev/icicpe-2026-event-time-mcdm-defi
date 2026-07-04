@@ -1,6 +1,6 @@
 """Robustness suite, recomputed from the panel (self-contained, reuses notebook_core).
 
-Reproduces the investor-pack / paper robustness numbers 6-way from per_block_panel:
+Reproduces the robustness numbers 6-way from per_block_panel:
   walk-forward 6/6, per-venue paired bootstrap + Holm, random-destination null (9sigma),
   strategy-family PBO=0, parameter plateau, gas-cost sweep, moving-block bootstrap + N_eff.
 All on the validated fast engine (notebook_core.run_t1 etc.).

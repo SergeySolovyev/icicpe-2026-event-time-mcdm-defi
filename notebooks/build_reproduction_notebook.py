@@ -2,8 +2,7 @@
 validated reproduction modules (notebook_core / notebook_robust / notebook_t3).
 
 Academic structure: every section is a markdown cell (theory) -> a code cell ->
-a markdown cell (interpretation of the output). Every number in the paper
-(results_macros.tex) is recomputed from the single cached input
+a markdown cell (interpretation of the output). Every reported number is recomputed from the single cached input
 per_block_panel.parquet (+ events_dsr.parquet), with NO API keys and NO
 fractal-defi. Output: notebooks/reproduce_predictive_mcdm_defi.ipynb
 """
@@ -43,12 +42,11 @@ def code(t): cells.append(nbf.v4.new_code_cell(t.strip("\n")))
 
 # ============================================================ TITLE / ABSTRACT
 md(r"""
-# Predictive MCDM Allocator across Six USDC Lending Venues — Fully Reproducible Companion Notebook
+# Predictive MCDM Allocator across Six USDC Lending Venues — A Fully Reproducible Study
 
-**Sergei Solovev** · companion to *"A Tiered Event-Time Allocator for Cross-Protocol USDC Yield"* (ICICPE Scopus Vol-2)
+**Sergei Solovev** · a self-contained, fully reproducible study
 
-> **What this notebook is.** A single, self-contained, top-to-bottom reproduction of *every* empirical number in the
-> paper, computed from one raw input — a per-Ethereum-block panel of the six venues' USDC supply rates. It needs **no API
+> **What this notebook is.** A single, self-contained, top-to-bottom reproduction of *every* empirical result of this study, computed from one raw input — a per-Ethereum-block panel of the six venues' USDC supply rates. It needs **no API
 > keys, no on-chain access, and no `fractal-defi`**: every decision policy (T1 gas-aware threshold, T2 Ornstein–Uhlenbeck
 > optimal-stopping, T3 Cox-hazard) and every statistic (walk-forward, paired bootstrap, Holm, PBO, the pre-registered
 > negative control) is re-implemented here in pure `numpy`/`pandas` (`lifelines` only for the Cox fit) and validated to
@@ -74,7 +72,7 @@ md(r"""
 Ethereum block (~12 s). All of its inputs are observable on-chain quantities — each venue's supply APR, the gas price, and
 the ETH/USD price. We therefore freeze those observables into a single table, `per_block_panel.parquet`
 (~3.93 M rows × 36 columns, Oct 2024 → Apr 2026), and treat it as the *raw experimental data*. Regenerating it from chain
-needs The Graph + an archive RPC, but **every number in the paper is downstream of this cached table** — so the
+needs The Graph + an archive RPC, but **every reported number is downstream of this cached table** — so the
 reproduction below is hermetic and key-free. The only auxiliary file is `events_dsr.parquet` (546 rows, the Maker DSR
 lead-rate series used by the T3 F1 features).
 
@@ -181,7 +179,7 @@ md(r"""
 
 **Theory.** Define the per-block dispersion as `max(APR) − min(APR)` across the six venues. If this were ~0, an allocator
 would have nothing to capture. We quantify the spread and how often the top-paying venue changes (the "crossover rate"),
-and break the spread's volatility down by quarter — the alternating calm/volatile regimes the paper exploits.
+and break the spread's volatility down by quarter — the alternating calm/volatile regimes the study exploits.
 """)
 code(r"""
 apr_full = np.column_stack([full[f"{p}_lending_apr"].to_numpy(float) for p in PROT6])
@@ -234,11 +232,11 @@ run_fixed / hold_final`. No other policy code exists.
 
 # ============================================================ §4 MAIN MATRIX
 md(r"""
-## 4 · Main result — the test-window matrix (Table, §V)
+## 4 · Main result — the test-window matrix
 
 **Theory.** On the locked-out test window (Jan–Apr 2026, 863,999 blocks, $1 M start) we replay all seven policies and
-report net APY, rebalance count, gas, and final equity. These are the headline numbers `\TOneAPY` … `\BuyholdFinalEquity`
-in `results_macros.tex`; the cell prints each beside its paper target.
+report net APY, rebalance count, gas, and final equity. These are the headline reference numbers (T1 net APY through buy-and-hold final equity);
+the cell prints each beside its reference value.
 """)
 code(r"""
 apr, gas, eth, blk, util, tvl, ts = slice_arrays(panel, "2026-01-01", "2026-05-01"); n = len(apr)
@@ -264,18 +262,18 @@ ax.set_ylabel("net APY (%)"); ax.set_title("Test-window net APY by policy"); ax.
 plt.xticks(rotation=20, ha="right"); plt.tight_layout(); plt.show()
 """)
 md(r"""
-**Output — exact reproduction.** Every cell matches `results_macros.tex` to the dollar and to the rebalance: T1 5.37 %
+**Output — exact reproduction.** Every cell matches the reference values to the dollar and to the rebalance: T1 5.37 %
 (322 rebalances, $1,017,341), T2 5.34 % (175), greedy 5.35 % (424), MCDM-EMA 4.64 % (70), passive Aave 3.26 %. T1 is the
 event-time winner; T2 ties it; greedy earns slightly less while churning 424× (gas drag); MCDM trails.
 """)
 
 # ============================================================ §5 REGIME
 md(r"""
-## 5 · Regime breakdown — calm vs volatile (§V)
+## 5 · Regime breakdown — calm vs volatile
 
 **Theory.** Split the test window into a calm quarter (2026-Q1) and a volatile one (early Q2). The reactive policies
-should *widen* their lead in the volatile regime, where dispersion is large. These reproduce the `\TOneAPYQone/Qtwo`
-macros.
+should *widen* their lead in the volatile regime, where dispersion is large. These reproduce the per-quarter
+reference values.
 """)
 code(r"""
 def _apy_set(a, b):
@@ -290,15 +288,15 @@ print(regime.to_string())
 print("\npaper: T1 4.39/8.37  T2 4.35/8.37  greedy 4.39/8.31  MCDM 3.63/7.72  Aave 2.75/4.81  Compound 2.72/2.59")
 """)
 md(r"""
-**Output.** Matches the paper's regime macros to ≤0.02 pp (the lone gap is MCDM-EMA Q2 = 7.70 % here vs 7.72 % in the
-paper — an EMA-seeding edge effect on the one-month slice, not a logic difference). In the calm quarter T1 ≈ greedy ≈
+**Output.** Matches the reference regime values to ≤0.02 pp (the lone gap is MCDM-EMA Q2 = 7.70 % here vs 7.72 % in the
+reference run — an EMA-seeding edge effect on the one-month slice, not a logic difference). In the calm quarter T1 ≈ greedy ≈
 4.39 % (gas gate rarely fires); in the volatile quarter all reactive policies jump to ~8.4 % while passive Aave reaches
 only 4.81 % — the edge is regime-driven and largest when dispersion is high.
 """)
 
 # ============================================================ §6 WALK-FORWARD
 md(r"""
-## 6 · Walk-forward across six non-overlapping windows (§V, generalisation)
+## 6 · Walk-forward across six non-overlapping windows (generalisation)
 
 **Theory.** The sharpest anti-overfitting test: re-measure the edge on six disjoint 3-month windows spanning Nov 2024 →
 Apr 2026 (calm *and* volatile regimes). In each, compare T1 to the **single best venue chosen with hindsight of that
@@ -332,22 +330,22 @@ walk-forward windows we take T1's net-APY margin over each passive venue, bootst
 a mean, 95% CI and one-sided p, then apply a **Holm** family-wise correction across the six venue contrasts. N=6
 independent windows is the honest sample size for "does the edge persist out-of-sample".
 
-*(The paper additionally reports a secondary monthly-Sharpe test, `tab:h1-monthly`, on the 4-month window. That statistic
+*(The study additionally reports a secondary monthly-Sharpe test on the 4-month window. That statistic
 is an explicitly low-power N=4 quantity computed on a different historical basis, so we do **not** recompute it here — on
 N=4 monthly observations it is basis-sensitive and not robustly reproducible. The per-window net-APY bootstrap below is
-the basis-independent inference that the paper's headline significance rests on.)*
+the basis-independent inference that the headline significance rests on.)*
 """)
 code(r"""
 pbh = paired_bootstrap_holm(deltas)
 print("Per-window paired bootstrap + Holm (T1 vs each venue hold, N=6 windows):")
 print(pbh.to_string(index=False))
 print(f"\n-> all six contrasts survive Holm at alpha=0.05: {bool(pbh.survives_holm.all())}")
-print("   (Euler V2 is the smallest-margin / hardest contrast, exactly as the paper flags.)")
+print("   (Euler V2 is the smallest-margin / hardest contrast.)")
 """)
 md(r"""
 **Output.** Every one of the six T1-vs-venue contrasts is positive with a 95% CI excluding zero and survives the Holm
-family-wise correction at α=0.05. Euler V2 is the tightest contrast (the paper flags it as the hardest), consistent with
-§6. This is the paper's primary significance result and it reproduces directly from the panel.
+family-wise correction at α=0.05. Euler V2 is the tightest contrast (the hardest), consistent with
+§6. This is the primary significance result and it reproduces directly from the panel.
 """)
 
 # ============================================================ §8 T3 NEGATIVE CONTROL
@@ -369,7 +367,7 @@ print(t3_windows[["window_id", "t1_apy_pct", "t3_apy_pct", "delta_bp"]].to_strin
 print(f"\nHONEST OOS T3-minus-T1: mean {t3_stats['mean_delta_bp']:+.2f} bp  "
       f"95% CI [{t3_stats['ci_low_95_bp']:+.2f}, {t3_stats['ci_high_95_bp']:+.2f}]  "
       f"p={t3_stats['p_one_sided_le0']:.3f}  wins={t3_stats['wins']}/{t3_stats['n_windows']}")
-print("paper:  in-sample +7.03 bp (5/6, leaky)  ->  honest OOS -5.97 bp (0/5, CI [-9.89,-2.76])")
+print("reference:  in-sample +7.03 bp (5/6, leaky)  ->  honest OOS -5.97 bp (0/5, CI [-9.89,-2.76])")
 
 fig, ax = plt.subplots(figsize=(7.5, 3.2))
 c = ["#c33" if d < 0 else "#2a7" for d in t3_windows.delta_bp]
@@ -385,7 +383,7 @@ parameter-light T1 instead**. (The *deployed* T3 in §4 is byte-identical to T1:
 state can't materialise, so it falls back to T1 on every block.)
 
 *Note on the per-window C-indices printed above:* these are training-subsample diagnostics for each expanding fit
-(≈0.64–0.67). They are a different quantity from the paper's headline out-of-fold C-index (0.563 for F3, 0.582 for
+(≈0.64–0.67). They are a different quantity from the headline out-of-fold C-index (0.563 for F3, 0.582 for
 F1+F3), which is computed on the full purged-CV design — the two are not meant to be equal and do not contradict.
 """)
 
@@ -445,14 +443,14 @@ code(r"""
 raw, n_rebal, cap = capacity(panel)
 print(f"T1 raw APY (18mo, full walk-forward) = {raw:.3f}%   n_rebalances = {n_rebal}")
 print(cap.assign(size=lambda d: (d.size_usd/1e6).map(lambda x: f"${x:.0f}M"))[["size","raw_apy","impact_bp","net_apy"]].to_string(index=False))
-print("paper (continuous model): net $1M 8.57% -> $50M 7.60%; ceiling ~$5-10M from venue depth")
+print("reference (continuous model): net $1M 8.57% -> $50M 7.60%; ceiling ~$5-10M from venue depth")
 fig, ax = plt.subplots(figsize=(7, 3))
 ax.plot(cap.size_usd/1e6, cap.net_apy, "o-", c="#2a7")
 ax.set_xscale("log"); ax.set_xlabel("position ($M, log)"); ax.set_ylabel("net APY %")
 ax.set_title("Capacity curve (yield-impact adjusted)"); plt.tight_layout(); plt.show()
 """)
 md(r"""
-**Output.** Net APY falls from ~8.5 % at $1 M to ~7.6 % at $50 M (reproducing the paper's continuous-model curve to
+**Output.** Net APY falls from ~8.5 % at $1 M to ~7.6 % at $50 M (reproducing the reference continuous-model curve to
 within a few bp). The binding real constraint is venue depth — the edge-carrying venues (Euler, Spark) cannot absorb
 $25 M+, so the realistic full-strategy ceiling is single-digit millions.
 """)
@@ -512,7 +510,7 @@ forecasting component we built (T3) was pre-registered as a likely negative and 
 50-line reactive rule. Honest boundaries: ~18 months / one chain; capacity is single-digit-$M (venue depth); the edge
 shrinks if venues converge.
 
-The ledger below confirms every headline paper number was recomputed in this single notebook from the cached panel.
+The ledger below confirms every headline reference number was recomputed in this single notebook from the cached panel.
 """)
 code(r"""
 ledger = pd.DataFrame([
@@ -528,7 +526,7 @@ ledger = pd.DataFrame([
     ("strategy-family PBO",      "0.00",      f"{pbo['PBO']:.2f}"),
     ("parameter plateau spread", "0.016 pp",  f"{pl['spread_pp']:.3f} pp"),
     ("capacity net @ $1M",       "8.57%",     f"{cap.net_apy.iloc[0]:.2f}%"),
-], columns=["paper quantity", "paper value", "reproduced here"])
+], columns=["quantity", "reference value", "reproduced here"])
 print(ledger.to_string(index=False))
 print("\nAll headline numbers reproduced from per_block_panel.parquet — no API keys, no fractal-defi.")
 """)
