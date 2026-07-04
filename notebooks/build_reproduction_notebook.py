@@ -42,37 +42,39 @@ def code(t): cells.append(nbf.v4.new_code_cell(t.strip("\n")))
 
 # ============================================================ TITLE / ABSTRACT
 md(r"""
-# Predictive MCDM Allocator across Six USDC Lending Venues - A Fully Reproducible Study
+# Predictive MCDM Allocator across Six USDC Lending Venues - A Reproducible Study
 
-**Sergei Solovev** - a self-contained, fully reproducible study
+**Sergei Solovev** - a self-contained, reproducible study
 
-> **What this notebook is.** A single, self-contained, top-to-bottom reproduction of *every* empirical result of this study, computed from one raw input - a per-Ethereum-block panel of the six venues' USDC supply rates. It needs **no API
-> keys, no on-chain access, and no `fractal-defi`**: every decision policy (T1 gas-aware threshold, T2 Ornstein-Uhlenbeck
-> optimal-stopping, T3 Cox-hazard) and every statistic (walk-forward, paired bootstrap, Holm, PBO, the pre-registered
-> negative control) is re-implemented here in pure `numpy`/`pandas` (`lifelines` only for the Cox fit) and validated to
-> reproduce the production engine **to the dollar**.
+> **Scope of this notebook.** A single, self-contained, top-to-bottom reproduction of every empirical result of this
+> study, computed from one raw input - a per-Ethereum-block panel of the six venues' USDC supply rates. It requires no
+> API keys, no on-chain access, and no `fractal-defi`: every decision policy (T1 gas-aware threshold, T2
+> Ornstein-Uhlenbeck optimal-stopping, T3 Cox-hazard) and every statistic (walk-forward, paired bootstrap, Holm, PBO,
+> the pre-registered negative control) is re-implemented here in pure `numpy`/`pandas` (`lifelines` only for the Cox
+> fit) and reproduces the reference engine to the dollar.
 
 **Abstract.** Fragmented DeFi lending markets pay materially different USDC supply rates that cross over through time.
-We test whether a *reactive, gas-aware* allocator - which at every block sits in the highest-paying venue net of gas -
-captures that dispersion, and whether the edge is real or curve-fit. The headline rule **T1** has one hyperparameter and
-no forecast. We pre-register an ML version (**T3**, Cox proportional-hazards) as a likely *negative control* and show it
-loses out-of-sample. Across six non-overlapping quarters T1 beats the best in-hindsight single venue **6/6**; the
-combinatorial Probability of Backtest Overfitting is **0**; and against 5,000 same-cadence random allocators T1 is **9sigma**
-out. Everything below recomputes from the cached panel.
+This study evaluates whether a reactive, gas-aware allocator - which at every block holds the highest-paying venue net
+of gas - captures that dispersion, and whether the estimated edge reflects a real effect or overfitting. The primary
+rule **T1** has one hyperparameter and no forecast. A machine-learning variant (**T3**, Cox proportional-hazards) is
+pre-registered as a likely negative control and is shown to lose out-of-sample. Across six non-overlapping quarters T1
+exceeds the best in-hindsight single venue in 6/6 windows; the combinatorial Probability of Backtest Overfitting is 0;
+and against 5,000 same-cadence random allocators T1 lies roughly nine standard deviations above the null distribution.
+All results below are recomputed from the cached panel.
 
 **How to run on Kaggle.** Attach the dataset containing `per_block_panel.parquet` (+ `events_dsr.parquet`), set the
-kernel to *Internet on* only if you want the optional S11 L2 measurement, then **Run All**. Runtime ~ 8-12 min.
+kernel to *Internet on* only if the optional S11 L2 measurement is required, then **Run All**. Runtime ~ 8-12 min.
 """)
 
 # ============================================================ S0 SETUP
 md(r"""
 ## 0 - Setup and reproducibility contract
 
-**Theory - why one per-block panel is enough.** The allocator is an *event-time* system: it makes a decision at every
-Ethereum block (~12 s). All of its inputs are observable on-chain quantities - each venue's supply APR, the gas price, and
-the ETH/USD price. We therefore freeze those observables into a single table, `per_block_panel.parquet`
-(~3.93 M rows x 36 columns, Oct 2024 -> Apr 2026), and treat it as the *raw experimental data*. Regenerating it from chain
-needs The Graph + an archive RPC, but **every reported number is downstream of this cached table** - so the
+**Motivation - why one per-block panel suffices.** The allocator is an event-time system: it makes a decision at every
+Ethereum block (~12 s). All of its inputs are observable on-chain quantities - each venue's supply APR, the gas price,
+and the ETH/USD price. These observables are frozen into a single table, `per_block_panel.parquet`
+(~3.93 M rows x 36 columns, Oct 2024 -> Apr 2026), which is treated as the raw experimental data. Regenerating it from
+chain requires The Graph and an archive RPC, but every reported number is downstream of this cached table, so the
 reproduction below is hermetic and key-free. The only auxiliary file is `events_dsr.parquet` (546 rows, the Maker DSR
 lead-rate series used by the T3 F1 features).
 
@@ -128,18 +130,18 @@ print(f"DSR   : {EVENTS_DSR_PATH}")
 """)
 md(r"""
 **Output.** ~3.93 M blocks spanning 18 months across the six venues, plus the DSR side file - the complete raw input.
-Everything from here is deterministic given this table.
+All subsequent results are deterministic given this table.
 """)
 
 # ============================================================ S1 DATA
 md(r"""
 ## 1 - The data - six USDC lending venues, observed per block
 
-**Theory.** We track the variable-supply USDC markets of **Aave V3, Compound V3, Spark, Morpho Blue, Euler V2, and Fluid**
-on Ethereum mainnet. For each we store `<venue>_lending_apr` (the supply APR a depositor earns, as a decimal fraction),
-plus utilisation and TVL (used by the MCDM baseline and the capacity model). The panel also carries `gas_price_gwei`,
-`eth_usd` (to price a rebalance in USD), and the Maker DSR lead rate. Because the series are *contemporaneous and
-observed*, the allocator never forecasts a rate - it reacts to the current cross-section.
+**Data.** The panel covers the variable-supply USDC markets of **Aave V3, Compound V3, Spark, Morpho Blue, Euler V2,
+and Fluid** on Ethereum mainnet. For each venue it stores `<venue>_lending_apr` (the supply APR a depositor earns, as a
+decimal fraction), plus utilisation and TVL (used by the MCDM baseline and the capacity model). The panel also carries
+`gas_price_gwei`, `eth_usd` (to price a rebalance in USD), and the Maker DSR lead rate. Because the series are
+contemporaneous and observed, the allocator forecasts no rate; it reacts to the current cross-section.
 """)
 code(r"""
 PROT6 = ["aave_v3", "compound_v3", "spark", "morpho_blue", "euler_v2", "fluid"]
@@ -168,18 +170,18 @@ ax.set_ylabel("supply APY (%)"); ax.set_title("Six USDC venues - daily mean supp
 ax.legend(ncol=6, fontsize=8, loc="upper center", bbox_to_anchor=(.5, -.18)); plt.tight_layout(); plt.show()
 """)
 md(r"""
-**Output.** The venues' rates are genuinely dispersed and the *leader* changes hands repeatedly - that crossing
-dispersion is the entire fuel for the allocator. No single venue dominates; capturing the moving maximum (net of gas) is
-the strategy.
+**Output.** The venues' rates are dispersed and the leader changes repeatedly; this crossing dispersion is the source of
+the allocator's return. No single venue dominates, and the strategy is to capture the moving maximum net of gas.
 """)
 
 # ============================================================ S2 SPREAD
 md(r"""
-## 2 - The cross-venue spread is the signal
+## 2 - The cross-venue spread as the signal
 
-**Theory.** Define the per-block dispersion as `max(APR) - min(APR)` across the six venues. If this were ~0, an allocator
-would have nothing to capture. We quantify the spread and how often the top-paying venue changes (the "crossover rate"),
-and break the spread's volatility down by quarter - the alternating calm/volatile regimes the study exploits.
+**Definition.** The per-block dispersion is defined as `max(APR) - min(APR)` across the six venues. If this were ~0, an
+allocator would have nothing to capture. This section quantifies the spread and how often the top-paying venue changes
+(the "crossover rate"), and reports the spread's volatility by quarter - the alternating calm and volatile regimes the
+study exploits.
 """)
 code(r"""
 apr_full = np.column_stack([full[f"{p}_lending_apr"].to_numpy(float) for p in PROT6])
@@ -200,33 +202,35 @@ print("\nspread by quarter (volatility regimes):\n", reg.to_string())
 """)
 md(r"""
 **Output.** A non-trivial median spread with frequent leadership turnover, and a clear alternation between calm quarters
-(low spread sigma) and volatile ones - the structure the regime analysis in S5 trades.
+(low spread sigma) and volatile ones - the structure examined by the regime analysis in S5.
 """)
 
 # ============================================================ S3 POLICIES (ENGINE)
 md(r"""
 ## 3 - The decision policies (the reproduction engine)
 
-**Theory.**
+**Policies.**
 
-* **T1 - gas-aware threshold.** At each block, switch to the highest-APR venue *iff the expected extra yield over the
-  EWMA-estimated dwell beats the gas cost*: switch <=> `position - (best-current) - dwell / BLOCKS_PER_YEAR > gas_cost`,
-  with one hyperparameter (an EWMA span; `dwell` self-estimates how long the lead persists). No forecast, no fitted surface.
-* **T2 - OU optimal stopping.** Model the top-vs-runner-up spread as Ornstein-Uhlenbeck `dS=kappa(theta-S)dt+sigmadW`, recalibrated by
-  MLE every 5,000 blocks; switch when the spread exceeds the closed-form Bellman boundary `S*=theta+sigma-sqrt(K/(kappa-dt))`. When mean
-  reversion is absent (kappa<=10^-6) it *degenerates to T1* - which is why T2~T1 empirically.
-* **T3 - Cox hazard.** Predict the "leader-flip" hazard `lambda=lambda0-exp(beta'x)` from F1/F3/F4 features; use `E[dwell]=1/lambda` in
-  T1's cost rule. The one component with a fitted surface - pre-registered as a likely negative (S8).
+* **T1 - gas-aware threshold.** At each block, switch to the highest-APR venue if and only if the expected extra yield
+  over the EWMA-estimated dwell exceeds the gas cost: switch <=> `position - (best-current) - dwell / BLOCKS_PER_YEAR >
+  gas_cost`, with one hyperparameter (an EWMA span; `dwell` self-estimates how long the lead persists). No forecast and
+  no fitted surface.
+* **T2 - OU optimal stopping.** The top-vs-runner-up spread is modelled as Ornstein-Uhlenbeck `dS=kappa(theta-S)dt+sigmadW`,
+  recalibrated by MLE every 5,000 blocks; the policy switches when the spread exceeds the closed-form Bellman boundary
+  `S*=theta+sigma-sqrt(K/(kappa-dt))`. When mean reversion is absent (kappa<=10^-6) it reduces to T1, which is consistent with the
+  empirical finding that T2 approximates T1.
+* **T3 - Cox hazard.** The "leader-flip" hazard `lambda=lambda0-exp(beta'x)` is predicted from F1/F3/F4 features and `E[dwell]=1/lambda`
+  is used in T1's cost rule. This is the one component with a fitted surface, pre-registered as a likely negative (S8).
 * **Baselines.** B1/B2 buy-and-hold Aave/Compound; B3 greedy (chase the max every block, no gas gate); B4 a 4-factor
   MCDM on EMA-smoothed APR/util/TVL.
 
-The engine accrues the current venue's APR each block (`pos-=1+apr/BPY`) and pays gas per switch, reading gas+ETH **per
-block** from the panel. The cell below is the *entire* compute core - the same functions used for every result. It is
-validated to reproduce the production `EventReplayEngine` to the dollar.
+The engine accrues the current venue's APR each block (`pos-=1+apr/BPY`) and pays gas per switch, reading gas and ETH
+per block from the panel. The cell below is the complete compute core - the same functions used for every result. It
+reproduces the reference `EventReplayEngine` to the dollar.
 """)
 code(CORE)
 md(r"""
-**Note.** These ~250 lines are the whole engine. Later cells only *call* `run_t1 / run_t2 / run_greedy / run_ema /
+**Note.** These ~250 lines constitute the entire engine. Later cells only call `run_t1 / run_t2 / run_greedy / run_ema /
 run_fixed / hold_final`. No other policy code exists.
 """)
 
@@ -234,9 +238,9 @@ run_fixed / hold_final`. No other policy code exists.
 md(r"""
 ## 4 - Main result - the test-window matrix
 
-**Theory.** On the locked-out test window (Jan-Apr 2026, 863,999 blocks, $1 M start) we replay all seven policies and
-report net APY, rebalance count, gas, and final equity. These are the headline reference numbers (T1 net APY through buy-and-hold final equity);
-the cell prints each beside its reference value.
+**Setup.** On the held-out test window (Jan-Apr 2026, 863,999 blocks, $1 M start) all seven policies are replayed and
+net APY, rebalance count, gas, and final equity are reported. These are the principal reference values (T1 net APY
+through buy-and-hold final equity); the cell prints each beside its reference value.
 """)
 code(r"""
 apr, gas, eth, blk, util, tvl, ts = slice_arrays(panel, "2026-01-01", "2026-05-01"); n = len(apr)
@@ -262,18 +266,19 @@ ax.set_ylabel("net APY (%)"); ax.set_title("Test-window net APY by policy"); ax.
 plt.xticks(rotation=20, ha="right"); plt.tight_layout(); plt.show()
 """)
 md(r"""
-**Output - exact reproduction.** Every cell matches the reference values to the dollar and to the rebalance: T1 5.37 %
-(322 rebalances, $1,017,341), T2 5.34 % (175), greedy 5.35 % (424), MCDM-EMA 4.64 % (70), passive Aave 3.26 %. T1 is the
-event-time winner; T2 ties it; greedy earns slightly less while churning 424x (gas drag); MCDM trails.
+**Output.** Every cell matches the reference values to the dollar and to the rebalance: T1 5.37 % (322 rebalances,
+$1,017,341), T2 5.34 % (175), greedy 5.35 % (424), MCDM-EMA 4.64 % (70), passive Aave 3.26 %. T1 attains the highest net
+APY; T2 is statistically indistinguishable from it; greedy earns slightly less while rebalancing 424x (gas drag); MCDM
+trails.
 """)
 
 # ============================================================ S5 REGIME
 md(r"""
 ## 5 - Regime breakdown - calm vs volatile
 
-**Theory.** Split the test window into a calm quarter (2026-Q1) and a volatile one (early Q2). The reactive policies
-should *widen* their lead in the volatile regime, where dispersion is large. These reproduce the per-quarter
-reference values.
+**Setup.** The test window is split into a calm quarter (2026-Q1) and a volatile one (early Q2). The reactive policies
+are expected to widen their margin in the volatile regime, where dispersion is large. The cell reproduces the
+per-quarter reference values.
 """)
 code(r"""
 def _apy_set(a, b):
@@ -288,20 +293,20 @@ print(regime.to_string())
 print("\npaper: T1 4.39/8.37  T2 4.35/8.37  greedy 4.39/8.31  MCDM 3.63/7.72  Aave 2.75/4.81  Compound 2.72/2.59")
 """)
 md(r"""
-**Output.** Matches the reference regime values to <=0.02 pp (the lone gap is MCDM-EMA Q2 = 7.70 % here vs 7.72 % in the
-reference run - an EMA-seeding edge effect on the one-month slice, not a logic difference). In the calm quarter T1 ~ greedy ~
-4.39 % (gas gate rarely fires); in the volatile quarter all reactive policies jump to ~8.4 % while passive Aave reaches
-only 4.81 % - the edge is regime-driven and largest when dispersion is high.
+**Output.** Matches the reference regime values to <=0.02 pp (the single gap is MCDM-EMA Q2 = 7.70 % here vs 7.72 % in
+the reference run - an EMA-seeding boundary effect on the one-month slice, not a logic difference). In the calm quarter
+T1 ~ greedy ~ 4.39 % (the gas gate rarely fires); in the volatile quarter all reactive policies rise to ~8.4 % while
+passive Aave reaches only 4.81 %. The margin is regime-dependent and largest when dispersion is high.
 """)
 
 # ============================================================ S6 WALK-FORWARD
 md(r"""
 ## 6 - Walk-forward across six non-overlapping windows (generalisation)
 
-**Theory.** The sharpest anti-overfitting test: re-measure the edge on six disjoint 3-month windows spanning Nov 2024 ->
-Apr 2026 (calm *and* volatile regimes). In each, compare T1 to the **single best venue chosen with hindsight of that
-window** - the hardest passive benchmark. Surviving every window is the physicist's "does it reproduce?". The cell first
-defines the robustness module, then runs the walk-forward.
+**Setup.** This is the primary out-of-sample generalisation test: the edge is re-measured on six disjoint 3-month
+windows spanning Nov 2024 -> Apr 2026 (both calm and volatile regimes). In each window, T1 is compared to the single
+best venue chosen with hindsight of that window, which is a demanding passive benchmark. Persistence across every window
+indicates the effect is not window-specific. The cell first defines the robustness module, then runs the walk-forward.
 """)
 code(ROBUST)
 code(r"""
@@ -317,23 +322,23 @@ ax.axhline(0, c="#333", lw=.8); ax.set_ylabel("edge over best hold (pp)")
 ax.set_title("T1 beats the best in-hindsight venue in all 6 windows"); plt.tight_layout(); plt.show()
 """)
 md(r"""
-**Output.** **6/6.** T1 beats the hindsight-best venue by +0.45 to +1.85 pp in every window, and passive Aave by
-+2.1 to +9.2 pp - the edge is structural, not a single lucky period.
+**Output.** T1 exceeds the hindsight-best venue in 6/6 windows, by +0.45 to +1.85 pp in every window, and passive Aave
+by +2.1 to +9.2 pp. The effect is consistent across windows rather than confined to a single period.
 """)
 
 # ============================================================ S7 SIGNIFICANCE
 md(r"""
 ## 7 - Significance - per-window paired bootstrap + Holm correction
 
-**Theory.** The primary significance test is a **per-window paired bootstrap**: for each of the six non-overlapping
-walk-forward windows we take T1's net-APY margin over each passive venue, bootstrap the six paired margins (B=10,000) for
-a mean, 95% CI and one-sided p, then apply a **Holm** family-wise correction across the six venue contrasts. N=6
-independent windows is the honest sample size for "does the edge persist out-of-sample".
+**Method.** The primary significance test is a per-window paired bootstrap: for each of the six non-overlapping
+walk-forward windows, T1's net-APY margin over each passive venue is taken, the six paired margins are bootstrapped
+(B=10,000) for a mean, 95% CI and one-sided p, and a Holm family-wise correction is applied across the six venue
+contrasts. N=6 independent windows is the applicable sample size for assessing whether the edge persists out-of-sample.
 
-*(The study additionally reports a secondary monthly-Sharpe test on the 4-month window. That statistic
-is an explicitly low-power N=4 quantity computed on a different historical basis, so we do **not** recompute it here - on
-N=4 monthly observations it is basis-sensitive and not robustly reproducible. The per-window net-APY bootstrap below is
-the basis-independent inference that the headline significance rests on.)*
+*(The study additionally reports a secondary monthly-Sharpe test on the 4-month window. That statistic is an explicitly
+low-power N=4 quantity computed on a different historical basis and is not recomputed here; on N=4 monthly observations
+it is basis-sensitive and not robustly reproducible. The per-window net-APY bootstrap below is the basis-independent
+inference on which the primary significance result rests.)*
 """)
 code(r"""
 pbh = paired_bootstrap_holm(deltas)
@@ -350,15 +355,15 @@ S6. This is the primary significance result and it reproduces directly from the 
 
 # ============================================================ S8 T3 NEGATIVE CONTROL
 md(r"""
-## 8 - The pre-registered negative control - T3 (the honesty centrepiece)
+## 8 - Out-of-sample evaluation of the T3 hazard tier (pre-registered negative control)
 
-**Theory.** T3 is a Cox proportional-hazards model on "leader-flip" survival: features = F1 (Maker DSR lead rate),
-F3 (cross-venue fragmentation spreads), F4 (gas/peg). Fit one model **in-sample** on the whole panel and it looks like a
-small win (+7.0 bp over T1). But that is leakage. The honest test is an **expanding-window walk-forward**: for each window
-W2...W6, train the Cox model *strictly on prior blocks* (with a purge gap of 46,512 blocks ~ 6.5 days so no label reaches
-into the test window) and evaluate out-of-sample. The cell defines the T3 module (feature builders + flip labels +
-`lifelines` Cox + a fast hazard replay) and runs the expanding walk-forward. *(This is the slowest section, ~1-2 min:
-it fits a Cox model per window.)*
+**Setup.** T3 is a Cox proportional-hazards model on "leader-flip" survival: features = F1 (Maker DSR lead rate),
+F3 (cross-venue fragmentation spreads), F4 (gas/peg). Fitting one model in-sample on the whole panel yields an apparent
+small increment (+7.0 bp over T1), but this reflects look-ahead leakage. The leakage-free test is an expanding-window
+walk-forward: for each window W2...W6, the Cox model is trained strictly on prior blocks (with a purge gap of 46,512
+blocks ~ 6.5 days so no label reaches into the test window) and evaluated out-of-sample. The cell defines the T3 module
+(feature builders + flip labels + `lifelines` Cox + a fast hazard replay) and runs the expanding walk-forward. *(This is
+the slowest section, ~1-2 min: it fits a Cox model per window.)*
 """)
 code(T3)
 code(r"""
@@ -377,25 +382,27 @@ ax.set_title("Pre-registered negative control: the ML model loses OOS in every w
 plt.tight_layout(); plt.show()
 """)
 md(r"""
-**Output - the most important result.** Out-of-sample the ML model **loses in 0/5 windows**, mean -5.97 bp, CI entirely
-below zero. A team that p-hacks ships the in-sample +7 bp; we ran the honest test, watched it flip sign, and **shipped the
-parameter-light T1 instead**. (The *deployed* T3 in S4 is byte-identical to T1: its artifact lists a feature the live
-state can't materialise, so it falls back to T1 on every block.)
+**Output.** Out-of-sample the model underperforms T1 in 0/5 windows, mean -5.97 bp, with a confidence interval entirely
+below zero. In-sample the increment is +7.0 bp; under the leakage-free expanding-window protocol it reverses to -5.97 bp
+(0/5 windows), so the hazard tier is not adopted and the parameter-light T1 is retained. (The deployed T3 in S4 is
+byte-identical to T1: its artifact lists a feature the live state cannot materialise, so it falls back to T1 on every
+block.)
 
 *Note on the per-window C-indices printed above:* these are training-subsample diagnostics for each expanding fit
-(~0.64-0.67). They are a different quantity from the headline out-of-fold C-index (0.563 for F3, 0.582 for
-F1+F3), which is computed on the full purged-CV design - the two are not meant to be equal and do not contradict.
+(~0.64-0.67). They are a different quantity from the primary out-of-fold C-index (0.563 for F3, 0.582 for F1+F3), which
+is computed on the full purged-CV design; the two are not expected to be equal and do not contradict each other.
 """)
 
 # ============================================================ S9 ROBUSTNESS
 md(r"""
 ## 9 - Robustness suite - is the edge curve-fit?
 
-**Theory.** Four independent attacks. (a) **Random-destination null**: keep T1's exact switch cadence and gas, but send
-each segment to a *random* venue - isolates whether the *selection* (not the churn) is the alpha. (b) **Strategy-family
-PBO/CSCV** (Bailey-Lopez de Prado): over {T1, 6 holds}, the probability the in-sample-best strategy underperforms OOS.
-(c) **Parameter plateau**: net APY across a 30-point grid of T1's two knobs - a flat surface cannot have been tuned.
-(d) **Gas-cost sweep** + **moving-block bootstrap with effective N** (serial-correlation-aware significance).
+**Method.** Four independent tests. (a) **Random-destination null**: keep T1's exact switch cadence and gas, but send
+each segment to a random venue - isolates whether the selection (not the turnover) is the source of return. (b)
+**Strategy-family PBO/CSCV** (Bailey-Lopez de Prado): over {T1, 6 holds}, the probability the in-sample-best strategy
+underperforms out-of-sample. (c) **Parameter plateau**: net APY across a 30-point grid of T1's two parameters - a flat
+surface is inconsistent with tuning. (d) **Gas-cost sweep** and **moving-block bootstrap with effective N**
+(serial-correlation-aware significance).
 """)
 code(r"""
 rn = random_null(apr, gas, eth, blk)
@@ -425,19 +432,20 @@ axes[2].axhline(0, c="#888", lw=.8); axes[2].set_title("Gas-cost sweep"); axes[2
 plt.tight_layout(); plt.show()
 """)
 md(r"""
-**Output.** (a) T1 beats *all* 5,000 random allocators, **9sigma** - the venue *selection* is the alpha, not the churn.
-(b) **PBO = 0**; the in-sample winner is the OOS winner in 100 % of splits. (c) a **flat plateau** (~0.016 pp across 30
-settings) - nothing to tune. (d) the edge degrades gracefully with gas (T1 5.10 %->4.13 % over 10-200 gwei while naive
-greedy collapses to -7.6 %), and survives a serial-correlation-aware bootstrap at an honest N_eff~24.
+**Output.** (a) T1 exceeds all 5,000 random allocators, roughly nine standard deviations above the null; the return
+derives from venue selection, not turnover. (b) PBO = 0; the in-sample winner is the out-of-sample winner in 100 % of
+splits. (c) a flat plateau (~0.016 pp across 30 settings), indicating no scope for tuning. (d) the edge declines
+gradually with gas (T1 5.10 %->4.13 % over 10-200 gwei while naive greedy falls to -7.6 %) and remains significant under
+a serial-correlation-aware bootstrap at N_eff~24.
 """)
 
 # ============================================================ S10 CAPACITY
 md(r"""
-## 10 - Capacity - how much money can it hold?
+## 10 - Capacity - deployable size
 
-**Theory.** The edge is finite: depositing size `P` into a venue depresses its own supply rate (Krause-2005 depth ->
-`yield_impact ~ 1/2-kappa-u-P/(TVL+P)`, a *continuous* drag paid every block). We sweep $1 M -> $50 M, time-weighting the impact
-by where T1 actually sits, on the full 18-month raw return.
+**Model.** The edge is finite: depositing size `P` into a venue depresses its own supply rate (Krause-2005 depth ->
+`yield_impact ~ 1/2-kappa-u-P/(TVL+P)`, a continuous drag paid every block). The sweep spans $1 M -> $50 M, time-weighting the
+impact by where T1 actually sits, on the full 18-month raw return.
 """)
 code(r"""
 raw, n_rebal, cap = capacity(panel)
@@ -457,12 +465,12 @@ $25 M+, so the realistic full-strategy ceiling is single-digit millions.
 
 # ============================================================ S11 L2
 md(r"""
-## 11 - Appendix - does the mechanism exist on L2 (Base)? *(optional, needs internet)*
+## 11 - Appendix - presence of the mechanism on L2 (Base) *(optional, needs internet)*
 
-**Theory.** The mechanism is chain-agnostic. On an L2 gas is ~$0.15, so the gas gate fires far more often - but the
-*fuel* is still the cross-venue spread. We pull live daily supply rates for the comparable Base USDC lenders from
-DeFiLlama (free, no key) and measure the dispersion + whether it pays net of L2 gas. If the kernel has no internet, the
-cell falls back to the committed measurement.
+**Setup.** The mechanism is chain-agnostic. On an L2 gas is ~$0.15, so the gas gate fires far more often, but the source
+of return remains the cross-venue spread. The cell pulls live daily supply rates for the comparable Base USDC lenders
+from DeFiLlama (free, no key) and measures the dispersion and whether it pays net of L2 gas. If the kernel has no
+internet, the cell falls back to the committed measurement.
 """)
 code(r"""
 COMMITTED = {"venues": "Aave V3 / Compound V3 / Fluid / Moonwell (Base)",
@@ -495,22 +503,23 @@ except Exception as ex:
     print(COMMITTED)
 """)
 md(r"""
-**Output.** Live (or committed): the four comparable Base USDC lenders show a median daily spread ~2.2 pp with the leader
-rotating ~12x/month - real fuel, slightly *more* dispersion than mainnet, but thinner venues (so the L2 sweet spot is
-~$10k-$300k, not institutional size).
+**Output.** Live (or committed): the four comparable Base USDC lenders show a median daily spread ~2.2 pp with the
+leader rotating ~12x/month - slightly more dispersion than mainnet, but thinner venues, so the viable L2 position size is
+~$10k-$300k rather than institutional size.
 """)
 
 # ============================================================ S12 CONCLUSION + REPRO TABLE
 md(r"""
 ## 12 - Conclusion and reproduction ledger
 
-The allocator's edge is a **reaction to an observable cross-section, not a forecast** - which is why it generalises
-(walk-forward 6/6), has nothing to tune (flat plateau, PBO=0), and survives every null (random-destination 9sigma). The one
-forecasting component we built (T3) was pre-registered as a likely negative and **lost out-of-sample**, so we ship the
-50-line reactive rule. Honest boundaries: ~18 months / one chain; capacity is single-digit-$M (venue depth); the edge
-shrinks if venues converge.
+The allocator's edge is a reaction to an observable cross-section rather than a forecast, which is consistent with its
+out-of-sample generalisation (walk-forward 6/6), the absence of tunable parameters (flat plateau, PBO=0), and its
+persistence against the nulls (random-destination roughly nine standard deviations above the null). The one forecasting
+component (T3) was pre-registered as a likely negative and underperformed out-of-sample, so the parameter-light reactive
+rule is retained. Limitations: the sample spans ~18 months on a single chain; capacity is single-digit-$M (venue depth);
+and the edge diminishes if venue rates converge.
 
-The ledger below confirms every headline reference number was recomputed in this single notebook from the cached panel.
+The ledger below confirms every principal reference number was recomputed in this single notebook from the cached panel.
 """)
 code(r"""
 ledger = pd.DataFrame([
