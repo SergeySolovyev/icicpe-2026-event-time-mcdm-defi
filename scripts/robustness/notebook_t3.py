@@ -1,5 +1,5 @@
 """Self-contained pure-python reproduction of the T3 Cox-hazard
-expanding-window walk-forward — the study's HONEST out-of-sample
+expanding-window walk-forward - the study's HONEST out-of-sample
 negative-control result.
 
 This module reproduces, from ONLY the cached panel + DSR events (NO
@@ -9,7 +9,7 @@ fractal-defi imports), the two headline T3 facts:
      on pre-window data, replay it on the window, and compare net APY to
      the training-free T1 threshold policy on the same window. The
      T3-minus-T1 delta is NEGATIVE on all 5 windows (mean ~ -5.97 bp,
-     0/5 wins) — a pre-registered negative control. Adding the predictive
+     0/5 wins) - a pre-registered negative control. Adding the predictive
      hazard layer on top of T1 does NOT help out of sample; it slightly
      hurts (model-driven dwell occasionally over/under-switches vs T1's
      EWMA dwell, paying gas without net benefit).
@@ -26,7 +26,7 @@ Engine semantics (matched to notebook_core / backtest.replay_per_block):
   - gas paid per switch = gas_used(200000) * gas_price_gwei * 1e-9 * eth
   - gas + eth are read PER BLOCK from the panel columns gas_price_gwei +
     eth_usd (this is why run_t1 reproduces the fractal engine to the
-    dollar — the engine reads per-block columns even though it is
+    dollar - the engine reads per-block columns even though it is
     constructed with default_gas_price_gwei=25).
 
 CRITICAL gotcha reproduced here: the panel ships f1_dsr_apr_frac /
@@ -51,10 +51,10 @@ REPRODUCTION RESULT (lifelines 0.30.3, this run vs canonical):
     p_one_sided_le0 = 1.0 (matches)
 
   DEPLOYED full-panel t3_cox.json on test window 2026-01-01..2026-05-01:
-    T3 == T1 to the dollar — net APY 5.368%, final $1,017,341, 322
+    T3 == T1 to the dollar - net APY 5.368%, final $1,017,341, 322
     switches, |T3-T1| = $0.00, 100% T1 fallback. (The deployed artifact
     lists f3_top_protocol_id, which the live policy can't materialise, so
-    it falls back to T1 on every row — reproduced exactly here.)
+    it falls back to T1 on every row - reproduced exactly here.)
 
   Deviations: only W4 differs, by 0.02 bp. The Cox final fit subsamples
   COX_MAX_ROWS=20000 rows at a fixed seed (123) and lifelines'
@@ -110,7 +110,7 @@ _DEFAULT_PANEL_PATH = (
 
 # ====================================================================== F1
 def build_f1(panel: pd.DataFrame, events_dsr_path: Path | str) -> pd.DataFrame:
-    """Port of F1LeadBuilder.build — 5 lead-rate features indexed by
+    """Port of F1LeadBuilder.build - 5 lead-rate features indexed by
     block_number:
         f1_dsr_apr                 DSR ffilled onto the block grid
         f1_dsr_lag_300             DSR ~1h ago  (300-row positional shift)
@@ -161,7 +161,7 @@ def build_f1(panel: pd.DataFrame, events_dsr_path: Path | str) -> pd.DataFrame:
 
 # ====================================================================== F3
 def build_f3(panel: pd.DataFrame) -> pd.DataFrame:
-    """Port of F3FragmentationBuilder.build — 15 unordered pair spreads
+    """Port of F3FragmentationBuilder.build - 15 unordered pair spreads
     (i<j in sorted-name order) + 3 universe summaries + top_protocol_id
     (callers drop the last one before fitting). Sorted protocol order ==
     sorted(PROT) == [aave_v3, compound_v3, euler_v2, fluid, morpho_blue,
