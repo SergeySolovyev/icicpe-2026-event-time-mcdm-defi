@@ -2,11 +2,16 @@
 validated reproduction modules (notebook_core / notebook_robust / notebook_t3).
 
 Academic structure: every section is a markdown cell (theory) -> a code cell ->
-a markdown cell (interpretation of the output). Every reported number is recomputed from the single cached input
+a markdown cell (interpretation of the output). The reproduction engine is NOT
+pasted as one block: each module is split into its functions and each function
+is presented where it is first needed, framed by a short explanation before it
+(what it computes and why) and a walkthrough after it (how the code does it).
+Every reported number is recomputed from the single cached input
 per_block_panel.parquet (+ events_dsr.parquet), with NO API keys and NO
 fractal-defi. Output: notebooks/reproduce_predictive_mcdm_defi.ipynb
 """
 import re
+from collections import OrderedDict
 from pathlib import Path
 
 import nbformat as nbf
@@ -32,9 +37,53 @@ def load_module_src(name: str) -> str:
     return "\n".join(out).strip() + "\n"
 
 
-CORE = load_module_src("notebook_core")
-ROBUST = load_module_src("notebook_robust")
-T3 = load_module_src("notebook_t3")
+_TOP = re.compile(r"^(?:def [A-Za-z_]\w*|[A-Za-z_]\w* = )")   # top-level def / constant
+_BANNER = re.compile(r"^#\s*[-=]{4,}")                          # decorative comment rules
+
+
+def split_module(name: str) -> "OrderedDict[str, str]":
+    """Split a reproduction module into top-level chunks keyed by the function /
+    constant name. Module docstring and imports are dropped (the notebook's
+    setup cell already imports everything). Comment lines immediately above a
+    definition travel with it; decorative banner rules are removed."""
+    lines = load_module_src(name).splitlines()
+    starts = [i for i, ln in enumerate(lines) if _TOP.match(ln)]
+    if not starts:
+        raise RuntimeError(f"{name}: no top-level definitions found")
+    # pull leading comment lines into the chunk they introduce
+    adj = []
+    for i in starts:
+        j = i
+        while j > 0 and lines[j - 1].startswith("#"):
+            j -= 1
+        adj.append(j)
+    chunks: "OrderedDict[str, str]" = OrderedDict()
+    for a, b in zip(adj, adj[1:] + [len(lines)]):
+        body = [ln for ln in lines[a:b] if not _BANNER.match(ln)]
+        head = next(ln for ln in body if _TOP.match(ln))
+        key = re.match(r"(?:def )?([A-Za-z_]\w*)", head).group(1)
+        chunks[key] = "\n".join(body).strip("\n")
+    return chunks
+
+
+def pick(chunks: "OrderedDict[str, str]", names) -> str:
+    """Concatenate the named chunks in the given order (one-line constants are
+    grouped without blank lines between them)."""
+    parts = []
+    for nm in names:
+        if nm not in chunks:
+            raise KeyError(f"{nm!r} not found; available: {list(chunks)}")
+        c = chunks[nm].strip("\n")
+        if parts and "\n" not in c and "\n" not in parts[-1]:
+            parts[-1] = parts[-1] + "\n" + c
+        else:
+            parts.append(c)
+    return "\n\n".join(parts) + "\n"
+
+
+CORE = split_module("notebook_core")
+ROBUST = split_module("notebook_robust")
+T3 = split_module("notebook_t3")
 
 cells = []
 def md(t): cells.append(nbf.v4.new_markdown_cell(t.strip("\n")))
@@ -52,6 +101,11 @@ md(r"""
 > Ornstein-Uhlenbeck optimal-stopping, T3 Cox-hazard) and every statistic (walk-forward, paired bootstrap, Holm, PBO,
 > the pre-registered negative control) is re-implemented here in pure `numpy`/`pandas` (`lifelines` only for the Cox
 > fit) and reproduces the reference engine to the dollar.
+
+> **How to read it.** Each section follows the same pattern: a short statement of the theory, the code that
+> implements it, and an interpretation of the output. The reproduction engine is presented the same way, one function
+> at a time, where the function is first needed - the aim is that every number in the ledger of Section 12 can be
+> traced back through the code that produced it without leaving this notebook.
 
 **Abstract.** Fragmented DeFi lending markets pay materially different USDC supply rates that cross over through time.
 This study evaluates whether a reactive, gas-aware allocator - which at every block holds the highest-paying venue net
@@ -209,29 +263,136 @@ md(r"""
 md(r"""
 ## 3 - The decision policies (the reproduction engine)
 
-**Policies.**
+**Policies.** Every policy is evaluated on the same accounting: the position earns the current venue's APR block by
+block and pays a gas cost in USD each time it moves. The policies differ only in the *rule* that decides when to move.
 
 * **T1 - gas-aware threshold.** At each block, switch to the highest-APR venue if and only if the expected extra yield
-  over the EWMA-estimated dwell exceeds the gas cost: switch <=> `position - (best-current) - dwell / BLOCKS_PER_YEAR >
-  gas_cost`, with one hyperparameter (an EWMA span; `dwell` self-estimates how long the lead persists). No forecast and
-  no fitted surface.
-* **T2 - OU optimal stopping.** The top-vs-runner-up spread is modelled as Ornstein-Uhlenbeck `dS=kappa(theta-S)dt+sigmadW`,
-  recalibrated by MLE every 5,000 blocks; the policy switches when the spread exceeds the closed-form Bellman boundary
-  `S*=theta+sigma-sqrt(K/(kappa-dt))`. When mean reversion is absent (kappa<=10^-6) it reduces to T1, which is consistent with the
-  empirical finding that T2 approximates T1.
-* **T3 - Cox hazard.** The "leader-flip" hazard `lambda=lambda0-exp(beta'x)` is predicted from F1/F3/F4 features and `E[dwell]=1/lambda`
-  is used in T1's cost rule. This is the one component with a fitted surface, pre-registered as a likely negative (S8).
-* **Baselines.** B1/B2 buy-and-hold Aave/Compound; B3 greedy (chase the max every block, no gas gate); B4 a 4-factor
-  MCDM on EMA-smoothed APR/util/TVL.
+  over the expected dwell exceeds the gas cost:
 
-The engine accrues the current venue's APR each block (`pos-=1+apr/BPY`) and pays gas per switch, reading gas and ETH
-per block from the panel. The cell below is the complete compute core - the same functions used for every result. It
-reproduces the reference `EventReplayEngine` to the dollar.
+  `switch  <=>  position * (APR_best - APR_current) * dwell / BLOCKS_PER_YEAR  >  gas_cost_usd`
+
+  The left-hand side is the extra dollars the spread would earn if the current leader stayed on top for `dwell` more
+  blocks; the right-hand side is what the move costs. `dwell` is not forecast from a model - it is an exponentially
+  weighted average of how long past leaders actually stayed on top. T1 has one hyperparameter (the EWMA weight
+  `alpha`; the seed value `dwell0` only initialises the estimate and washes out). No forecast and no fitted surface.
+* **T2 - OU optimal stopping.** The top-vs-runner-up spread is modelled as an Ornstein-Uhlenbeck process
+  `dS = kappa * (theta - S) * dt + sigma * dW`, recalibrated by maximum likelihood every 5,000 blocks; the policy
+  switches when the spread exceeds the closed-form Bellman boundary
+  `S* = theta + sigma * sqrt(K / kappa)` with `K = gas_cost / position` (the cost as a fraction of the position; one
+  block is the time unit). When mean reversion is absent (`kappa <= 1e-6`) the rule reduces to T1, which is consistent
+  with the empirical finding that T2 approximates T1.
+* **T3 - Cox hazard.** The "leader-flip" hazard `lambda = lambda0 * exp(beta'x)` is predicted from F1/F3 features, and
+  `E[dwell] = 1 / lambda` replaces T1's EWMA dwell in the same cost rule. This is the one component with a fitted
+  surface, pre-registered as a likely negative (S8).
+* **Baselines.** B1/B2 buy-and-hold Aave/Compound; B3 greedy (chase the max every block, no gas gate); B4 a 4-factor
+  MCDM on EMA-smoothed APR/utilisation/TVL.
+
+The engine accrues the current venue's APR each block (`pos *= 1 + apr / BPY`) and pays gas per switch, reading gas and
+ETH per block from the panel. The cells below are the complete compute core, one function at a time - the same functions
+are used for every result that follows, and they reproduce the reference `EventReplayEngine` to the dollar.
 """)
-code(CORE)
+
+# --- 3.1 primitives
 md(r"""
-**Note.** These ~250 lines constitute the entire engine. Later cells only call `run_t1 / run_t2 / run_greedy / run_ema /
-run_fixed / hold_final`. No other policy code exists.
+### 3.1 - Accounting primitives
+
+Four small functions and three constants define the arithmetic that every policy shares. `slice_arrays` turns a date
+range of the panel into dense `numpy` arrays (one row per block, one column per venue); `gas_cost` prices a rebalance in
+USD; `hold_final` compounds a buy-and-hold position; `net_apy` annualises a final position into a comparable rate.
+""")
+code(pick(CORE, ["BPY", "GAS_USED", "PROT", "slice_arrays", "gas_cost", "hold_final", "net_apy"]))
+md(r"""
+**What the cell defines.**
+
+* `BPY = 2,628,000` is the number of 12-second blocks in a year; dividing an annual APR by it gives the per-block growth
+  factor. `GAS_USED = 200,000` is the gas consumed by one rebalance transaction (the engine default).
+* `slice_arrays` selects `[start, end)` by timestamp and returns `apr[n, 6]`, `gas[n]`, `eth[n]`, `block[n]`, plus
+  utilisation and TVL matrices. Missing rates stay `NaN` - a venue with no observed rate is never selected, and, if it is
+  currently held, the accrual step simply skips that block.
+* `gas_cost = gas_used * gas_price_gwei * 1e-9 * eth_usd` converts gwei per gas unit into dollars. Because `gas` and
+  `eth` are read per block, the cost of a switch varies through the sample exactly as it did on chain.
+* `hold_final` multiplies `1 + apr / BPY` over every block (with `NaN -> 0` growth), i.e. continuous compounding of a
+  position that never moves.
+* `net_apy` converts a final position into an annualised rate: `(final / p0) ** (BPY / n) - 1`. All policies are
+  compared on this quantity.
+""")
+
+# --- 3.2 T1
+md(r"""
+### 3.2 - T1, the gas-aware threshold rule
+
+This is the primary policy of the study and the reference against which every other rule is measured. It carries no
+fitted parameters: the only learned quantity is the running estimate of how long a leader tends to remain the leader,
+and that estimate is updated from the data as the replay proceeds.
+""")
+code(pick(CORE, ["run_t1"]))
+md(r"""
+**How the loop works, block by block.**
+
+1. *Accrue.* If a venue is held (`cur >= 0`) and its APR is not `NaN`, the position grows by `1 + apr / BPY`.
+2. *Track the leader.* `wins[i]` is the venue with the highest APR this block. When the leader changes
+   (`win != last_win`), the number of blocks the previous leader lasted, `block[i] - last_win_blk`, is folded into the
+   dwell estimate with `dwell = alpha * (elapsed) + (1 - alpha) * dwell`. This is the EWMA; `alpha = 0.1` weights the
+   most recent regime at 10 %.
+3. *Cold start.* On the first block the position is placed in the current leader and one gas cost is paid; this
+   counts as the first rebalance for every policy.
+4. *Switch test.* Whenever the leader differs from the held venue, the inequality
+   `pos * (best[i] - apr[i, cur]) * dwell / BPY > cost[i]` is evaluated. The left side is the expected dollar gain
+   from the spread over the expected dwell; if it exceeds the dollar cost of the move, the position switches and pays
+   `cost[i]`. Otherwise it holds, even though a higher rate is available - this is the gas gate that separates T1 from
+   the greedy baseline.
+
+`want_equity=True` records the position after every block (used by the block bootstrap in S9); `switch_log` records
+every `(block index, destination)` pair (used by the random-destination null and the capacity model).
+""")
+
+# --- 3.3 baselines
+md(r"""
+### 3.3 - Baselines B1-B4
+
+Each baseline removes one ingredient of T1 so that its contribution can be measured. B1/B2 remove switching altogether;
+B3 removes the gas gate; B4 replaces the single-factor spread rule with a multi-criteria score.
+""")
+code(pick(CORE, ["run_fixed", "run_greedy", "run_ema"]))
+md(r"""
+**What each baseline controls for.**
+
+* `run_fixed` (B1 always-Aave, B2 always-Compound) enters the target venue on the first block it has a rate and never
+  moves again. It answers: what does a depositor earn by parking in one venue?
+* `run_greedy` (B3) moves to the highest-APR venue on every block on which it changes, paying gas each time (ties are
+  held). It answers: how much of T1's return comes from the *selection* and how much from the *discipline* of the gas
+  gate? The difference between B3 and T1 is the gas drag of unconditional chasing.
+* `run_ema` (B4) scores each venue on four EMA-smoothed factors with fixed weights - APR 0.40, risk 0.25 (as
+  `1 - utilisation / max`), cost 0.20, stability 0.15 (TVL share) - and switches when the best score beats the held
+  score by more than `thr = 0.05`. Note that in this reimplementation the cost factor is a constant `1.0` for every
+  venue, so it shifts all scores equally and does not affect the choice; the effective weights are APR / risk /
+  stability. This is the MCDM design of the earlier vault prototype and is included as the multi-criteria benchmark.
+""")
+
+# --- 3.4 T2
+md(r"""
+### 3.4 - T2, Ornstein-Uhlenbeck optimal stopping
+
+T2 asks whether modelling the spread's dynamics improves on T1's empirical dwell. The top-vs-runner-up spread is
+treated as a mean-reverting process; if the process reverts, a spread above its long-run mean is expected to shrink,
+so the policy should demand a larger spread before paying to move. The stopping boundary has a closed form.
+""")
+code(pick(CORE, ["ou_fit", "run_t2"]))
+md(r"""
+**How the calibration and the boundary work.**
+
+* `ou_fit` estimates the OU parameters from the last `window = 5,000` spread observations by the discrete-time
+  regression `S[t+1] = a + b * S[t] + e`. The mapping is `kappa = -ln(b)` (mean-reversion speed per block),
+  `theta = a / (1 - b)` (long-run mean), and `sigma` from the residual variance scaled by `2 * kappa / (1 - b^2)`.
+  If the regression slope is at or above one there is no mean reversion and `kappa` is returned as zero.
+* `run_t2` keeps the last 5,000 finite spreads in a ring buffer and recalibrates every `recalibrate_every = 5,000`
+  blocks. Its accrual, dwell tracking and cold start are identical to T1.
+* When the leader differs from the held venue, two branches exist. If `kappa <= 1e-6` (no measurable mean reversion)
+  or the spread is not finite, the rule *falls back to T1's inequality*. Otherwise it computes the Bellman boundary
+  `S* = theta + sigma * sqrt((cost / pos) / kappa)` and switches only if the current spread exceeds it.
+
+Because the fitted `kappa` is small for long stretches of the sample, T2 spends much of its time in the T1 branch -
+which is why the two policies produce nearly identical results in S4 and S5.
 """)
 
 # ============================================================ S4 MAIN MATRIX
@@ -306,9 +467,13 @@ md(r"""
 **Setup.** This is the primary out-of-sample generalisation test: the edge is re-measured on six disjoint 3-month
 windows spanning Nov 2024 -> Apr 2026 (both calm and volatile regimes). In each window, T1 is compared to the single
 best venue chosen with hindsight of that window, which is a demanding passive benchmark. Persistence across every window
-indicates the effect is not window-specific. The cell first defines the robustness module, then runs the walk-forward.
+indicates the effect is not window-specific.
+
+**The code.** `walk_forward` replays T1 on each window with capital reset to $1 M, computes the six buy-and-hold rates
+on the same blocks, and records T1's margin over the *best* of them and over passive Aave. It also returns, per venue,
+the list of six per-window margins - the paired differences that the significance test in S7 resamples.
 """)
-code(ROBUST)
+code(pick(ROBUST, ["PRETTY", "WINDOWS", "walk_forward"]))
 code(r"""
 wf, deltas = walk_forward(panel)
 print(wf.to_string(index=False))
@@ -339,7 +504,14 @@ contrasts. N=6 independent windows is the applicable sample size for assessing w
 low-power N=4 quantity computed on a different historical basis and is not recomputed here; on N=4 monthly observations
 it is basis-sensitive and not robustly reproducible. The per-window net-APY bootstrap below is the basis-independent
 inference on which the primary significance result rests.)*
+
+**The code.** `paired_bootstrap_holm` resamples the six per-window margins of each venue with replacement 10,000 times
+and records the distribution of the resampled mean; the one-sided p-value is the share of resampled means at or below
+zero. `_holm` applies the step-down correction: the six p-values are sorted, the k-th smallest is multiplied by
+`(6 - k + 1)`, and the running maximum is taken so that adjusted p-values stay monotone. A contrast "survives" if its
+adjusted p-value is at most 0.05.
 """)
+code(pick(ROBUST, ["_holm", "paired_bootstrap_holm"]))
 code(r"""
 pbh = paired_bootstrap_holm(deltas)
 print("Per-window paired bootstrap + Holm (T1 vs each venue hold, N=6 windows):")
@@ -357,15 +529,170 @@ S6. This is the primary significance result and it reproduces directly from the 
 md(r"""
 ## 8 - Out-of-sample evaluation of the T3 hazard tier (pre-registered negative control)
 
-**Setup.** T3 is a Cox proportional-hazards model on "leader-flip" survival: features = F1 (Maker DSR lead rate),
-F3 (cross-venue fragmentation spreads), F4 (gas/peg). Fitting one model in-sample on the whole panel yields an apparent
-small increment (+7.0 bp over T1), but this reflects look-ahead leakage. The leakage-free test is an expanding-window
+**Setup.** T3 is a Cox proportional-hazards model on "leader-flip" survival: features = F1 (Maker DSR lead rate) and
+F3 (cross-venue fragmentation spreads). Fitting one model in-sample on the whole panel yields an apparent small
+increment (+7.0 bp over T1), but this reflects look-ahead leakage. The leakage-free test is an expanding-window
 walk-forward: for each window W2...W6, the Cox model is trained strictly on prior blocks (with a purge gap of 46,512
-blocks ~ 6.5 days so no label reaches into the test window) and evaluated out-of-sample. The cell defines the T3 module
-(feature builders + flip labels + `lifelines` Cox + a fast hazard replay) and runs the expanding walk-forward. *(This is
-the slowest section, ~1-2 min: it fits a Cox model per window.)*
+blocks ~ 6.5 days so no label reaches into the test window) and evaluated out-of-sample.
+
+The T3 machinery is presented in six steps: the protocol constants, the two feature builders (F1, F3), the survival
+labels, the Cox fit, the hazard replay, and the expanding-window driver. *(The driver is the slowest cell of the
+notebook, ~1-2 min: it fits a Cox model per window.)*
 """)
-code(T3)
+
+# --- 8.1 constants
+md(r"""
+### 8.1 - Protocol constants
+
+The numbers below fix the leakage protocol. They follow the sample-construction rules of *Advances in Financial
+Machine Learning* (triple-barrier horizon, purging, embargo) and are the same values used by the reference training
+scripts; the reproduction changes none of them.
+""")
+code(pick(T3, ["WINDOWS", "HORIZON_BLOCKS", "EMBARGO_BLOCKS", "PURGE_GAP", "SUBSAMPLE_STRIDE", "MIN_TRAIN_ROWS",
+               "COX_MAX_ROWS", "PENALIZER", "N_BOOT", "BOOT_SEED", "_LAG_1H", "_LAG_6H"]))
+md(r"""
+**What each constant does.**
+
+* `HORIZON_BLOCKS = 7,200` (24 h) is the *vertical barrier* of the label: if the leader has not changed within 7,200
+  blocks the observation is censored rather than labelled with a longer duration.
+* `EMBARGO_BLOCKS = 39,312` (~1 % of the panel) is the buffer left after the training period so that the last training
+  labels, which look up to one horizon ahead, cannot overlap the test window. `PURGE_GAP = HORIZON + EMBARGO =
+  46,512` blocks (~6.5 days) is the total gap between the end of training data and the first test block.
+* `SUBSAMPLE_STRIDE = 60` takes one training row per 60 blocks (~12 min): consecutive blocks carry nearly identical
+  features and labels, so a stride reduces redundancy without losing information. `MIN_TRAIN_ROWS` guards against a
+  degenerate design; `COX_MAX_ROWS = 20,000` caps the final fit at a fixed-seed subsample so the fit is both tractable
+  and deterministic.
+* `PENALIZER = 0.001` is the ridge penalty of the Cox fit; `N_BOOT` / `BOOT_SEED` parameterise the paired bootstrap of
+  the per-window deltas; `_LAG_1H` / `_LAG_6H` are the lags (in rows = blocks) of the F1 features.
+* This module carries its own copy of the window table (`WINDOWS`); W6 is written with an explicit end-of-day
+  timestamp. The first window is not used for T3 because no training data precedes it.
+""")
+
+# --- 8.2 F1
+md(r"""
+### 8.2 - F1: lead-rate features
+
+The F1 class follows the "lead instrument" idea from the HFT literature: a related, slower-moving rate may lead the
+venues' rates. Here the lead instrument is the Maker DSR (the Sky/Maker savings rate), which is set by governance and
+changes rarely. F1 encodes its level, two lags, a one-hour change, and its spread against the current best venue.
+""")
+code(pick(T3, ["build_f1"]))
+md(r"""
+**How the features are built without look-ahead.**
+
+* The DSR series lives in a separate event file (546 rate changes). `pd.merge_asof(..., direction="backward")` joins
+  each block to the *most recent DSR event at or before that block* - an as-of join, so a block never sees a future
+  rate change. Blocks before the first recorded event receive `NaN`.
+* Because the panel is a dense grid with one row per block, positional shifts of 300 and 1,800 rows are exactly one
+  and six hours of lag; `f1_dsr_delta_300` is the one-hour change.
+* `f1_lead_spread_dsr_vs_top` is the DSR minus the highest venue APR at the same block - positive when the
+  governance-set rate is above the market, a condition under which the market rates have historically risen.
+* Any `NaN` in a feature row later triggers the T1 fallback inside the T3 replay (S8.6), so missing lead data can never
+  produce a model-driven decision.
+""")
+
+# --- 8.3 F3
+md(r"""
+### 8.3 - F3: fragmentation features
+
+The F3 class describes the *cross-section* of venues at a block: how far apart the rates are and how they are
+arranged. These are the same quantities T1 reacts to, now offered to the model as covariates for the flip hazard.
+""")
+code(pick(T3, ["build_f3"]))
+md(r"""
+**What is produced.** For the six venues in sorted-name order the builder emits the 15 pairwise spreads
+`APR_i - APR_j` (all unordered pairs), plus three summaries of the row - `max - min`, the gap between the top two
+venues, and the standard deviation of the six rates - and the integer identity of the current leader,
+`f3_top_protocol_id`. The last column is *dropped before fitting* in the expanding-window models (S8.5). Its presence
+in the deployed artifact is what makes the deployed T3 model fall back to T1 on every block, a point revisited in S8.7.
+""")
+
+# --- 8.4 labels
+md(r"""
+### 8.4 - Survival labels: blocks until the leader flips
+
+The model does not predict the rate; it predicts *how long the current leader will remain the leader*. That is a
+duration with right-censoring - exactly the object survival analysis was built for - and the label is constructed
+with the triple-barrier logic of AFML: an event barrier (the flip) and a vertical barrier (the horizon).
+""")
+code(pick(T3, ["build_flip_labels"]))
+md(r"""
+**How the label is computed.** `top_idx` is the leader at each block and `flip_positions` are the blocks at which it
+changes. For every block `i`, `blocks_to_flip` is the distance to the next flip; if that distance is within
+`horizon = 7,200` blocks the observation is a *completed* duration (`event_observed = 1`), otherwise it is *censored*
+at the horizon (`event_observed = 0`) - the flip is known to lie beyond 24 h but not when. The single forward pass with
+the pointer `j` keeps the construction linear in the number of blocks.
+""")
+
+# --- 8.5 Cox
+md(r"""
+### 8.5 - The Cox proportional-hazards fit
+
+The Cox model writes the flip hazard as `lambda(t | x) = lambda0(t) * exp(beta'x)`: a baseline hazard common to all
+blocks, scaled multiplicatively by the covariates. It is fitted by partial likelihood, which uses only the *ordering*
+of the durations and handles censoring naturally; `lifelines` provides the estimator.
+""")
+code(pick(T3, ["fit_cox"]))
+md(r"""
+**How the fit is set up.**
+
+* The design matrix joins F1, F3 (without `f3_top_protocol_id`) and the labels on `block_number` and drops any row
+  with a missing value; columns with zero variance are removed (a constant covariate cannot be estimated).
+* If the design exceeds `COX_MAX_ROWS`, a fixed-seed subsample of 20,000 rows is drawn so that the fit is
+  reproducible. `CoxPHFitter(penalizer=0.001)` adds a small ridge penalty for numerical stability.
+* Two quantities leave the fit: the coefficient vector `beta` (aligned to `feature_names`) and the mean of the
+  estimated baseline hazard, which the replay uses as `lambda0`. A concordance index is computed on a separate
+  3,000-row subsample as a training-side diagnostic; it is *not* the out-of-fold C-index reported elsewhere in the
+  study, and the two are not expected to coincide.
+""")
+
+# --- 8.6 replay
+md(r"""
+### 8.6 - The T3 replay: a model-driven dwell inside T1's rule
+
+T3 does not introduce a new decision rule. It keeps T1's inequality and replaces the EWMA dwell with the model's
+expected time to the next flip, `E[dwell] = 1 / lambda`. Everything else - accrual, gas, cold start - is unchanged, so
+any difference between T3 and T1 is attributable to the dwell estimate alone.
+""")
+code(pick(T3, ["run_t3"]))
+md(r"""
+**How the replay decides.**
+
+* The EWMA dwell of T1 is maintained on every block regardless of which branch is taken, because the fallback needs it.
+* On a block where the feature row has no `NaN` and at least two venues have rates, the *model path* is used: the
+  linear predictor `beta . x` is clipped to `[-50, 50]` for numerical safety, `hazard = lambda0 * exp(.)`, and
+  `e_dwell = 1 / hazard`. The switch test is then `pos * spread * e_dwell / BPY > cost` - T1's rule with the model's
+  dwell.
+* If any feature is missing (or fewer than two venues are quoted), the block is decided by the *T1 fallback* with the
+  EWMA dwell. This guarantees the policy is never worse-defined than T1 when the model cannot speak, and it is the
+  mechanism by which a model with an unmaterialisable feature degrades to T1 exactly.
+""")
+
+# --- 8.7 protocol
+md(r"""
+### 8.7 - The expanding-window protocol
+
+The last piece is the driver that makes the evaluation honest. For each window from W2 onward it trains on the strict
+past, leaves the purge gap, materialises the features on the test window, replays T3 and T1 on the *same* blocks, and
+records the difference in basis points; the five differences are then bootstrapped as paired observations.
+""")
+code(pick(T3, ["_is_supported_feature", "_build_feature_matrix", "_paired_bootstrap", "expanding_t3",
+               "deployed_t3_equals_t1"]))
+md(r"""
+**How the protocol is enforced in code.**
+
+* `expanding_t3` sets `train_end_block = first_test_block - PURGE_GAP` and trains only on blocks strictly below it,
+  subsampled with the stride. The training set therefore *grows* window by window (expanding, not rolling) and never
+  touches a block that a test-window label could reach.
+* `_build_feature_matrix` rebuilds F1 from the DSR events and F3 from the window panel in the exact column order of the
+  fitted model. It also reproduces a second safety mechanism of the live policy, encoded by `_is_supported_feature`: if
+  the fitted artifact names any feature the live policy cannot materialise (the case of `f3_top_protocol_id`), the
+  whole matrix is set to `NaN` and the replay falls back to T1 for the entire window.
+* `deployed_t3_equals_t1` uses that mechanism to show that the *deployed* full-panel T3 artifact replays to exactly
+  T1 on the test window - the reason the T3 row of the main matrix in S4 equals T1 to the dollar.
+* `_paired_bootstrap` treats the per-window deltas as paired observations and reports the mean, its 95 % interval and
+  the one-sided p-value for `H0: mean <= 0`.
+""")
 code(r"""
 t3_windows, t3_stats = expanding_t3(panel, EVENTS_DSR_PATH)
 print(t3_windows[["window_id", "t1_apy_pct", "t3_apy_pct", "delta_bp"]].to_string(index=False))
@@ -403,6 +730,28 @@ each segment to a random venue - isolates whether the selection (not the turnove
 underperforms out-of-sample. (c) **Parameter plateau**: net APY across a 30-point grid of T1's two parameters - a flat
 surface is inconsistent with tuning. (d) **Gas-cost sweep** and **moving-block bootstrap with effective N**
 (serial-correlation-aware significance).
+
+**The code.** Each test is one function; all of them call the S3 engine.
+""")
+code(pick(ROBUST, ["random_null", "family_pbo", "param_plateau", "gas_sweep", "block_bootstrap"]))
+md(r"""
+**How each test is implemented.**
+
+* `random_null` first replays T1 with `switch_log` on to obtain its exact switch blocks and destinations. It then
+  re-prices the *same* sequence of segments with random destinations: each segment's growth is read from a table of
+  cumulative log-growth per venue, so 5,000 random allocators are evaluated without re-running the loop. The z-score
+  places T1's final position against that null distribution.
+* `family_pbo` implements combinatorially symmetric cross-validation: the window is cut into `S = 8` blocks, every
+  choice of 4 blocks is used in-sample and the complementary 4 out-of-sample (70 splits), the in-sample best of {T1,
+  six holds} is identified, and its out-of-sample rank is converted to a logit. PBO is the share of splits in which
+  that logit is at or below zero (the in-sample winner is below the out-of-sample median).
+* `param_plateau` re-runs T1 over `dwell0 in {250 .. 8000} x alpha in {0.02 .. 0.4}` and reports the spread of net
+  APY across the 30 settings.
+* `gas_sweep` replaces the per-block gas column with a flat level from 10 to 200 gwei and re-runs T1 and greedy at
+  each level.
+* `block_bootstrap` builds daily equity for T1 and for the benchmark hold, takes daily log-excess returns, resamples
+  them in moving blocks of five days 10,000 times, and estimates the effective sample size from the autocorrelation
+  sum of the excess series.
 """)
 code(r"""
 rn = random_null(apr, gas, eth, blk)
@@ -443,9 +792,24 @@ a serial-correlation-aware bootstrap at N_eff~24.
 md(r"""
 ## 10 - Capacity - deployable size
 
-**Model.** The edge is finite: depositing size `P` into a venue depresses its own supply rate (Krause-2005 depth ->
-`yield_impact ~ 1/2-kappa-u-P/(TVL+P)`, a continuous drag paid every block). The sweep spans $1 M -> $50 M, time-weighting the
-impact by where T1 actually sits, on the full 18-month raw return.
+**Model.** The edge is finite: depositing size `P` into a venue depresses its own supply rate. Under a kinked
+interest-rate model the marginal depositor lowers utilisation, and the earned rate falls by approximately
+`yield_impact ~ 1/2 * kappa * u * P / (TVL + P)`, where `kappa` is the slope of the rate curve, `u` the utilisation
+and `TVL` the pool size - a continuous drag paid every block, not a one-off slippage. The sweep spans $1 M -> $50 M,
+time-weighting the impact by where T1 actually sits, on the full 18-month raw return.
+
+**The code.** `IRM_SLOPE` holds the per-venue rate-curve slopes; `capacity` combines the walk-forward replay with the
+impact formula.
+""")
+code(pick(ROBUST, ["IRM_SLOPE", "capacity"]))
+md(r"""
+**How the capacity curve is computed.** T1 is replayed over the six walk-forward windows with capital reset to $1 M in
+each; the geometric product of the window returns, annualised, is the *raw* APY. The switch log gives the number of
+blocks spent in each venue, hence a time share per venue. For each deposit size `P`, the drag in basis points is the
+share-weighted sum over venues of `1/2 * slope * util * P / (TVL + P)`, using each venue's mean TVL and utilisation over
+the sample; net APY is raw APY minus that drag. The model is deliberately conservative in one respect and generous in
+another: it charges the impact continuously, but it assumes the venue can absorb `P` at all - which, for the thin
+venues, is the binding constraint discussed in the output.
 """)
 code(r"""
 raw, n_rebal, cap = capacity(panel)
@@ -543,6 +907,19 @@ md(r"""
 *Reproducibility:* this notebook + `per_block_panel.parquet` + `events_dsr.parquet` are the complete artifact. Author:
 Sergei Solovev. Engine validated to reproduce the production `EventReplayEngine` to the dollar.
 """)
+
+# ============================================================ COMPLETENESS GUARD
+# Every top-level definition of the three modules must appear in the notebook,
+# except the two module-path constants the notebook does not need.
+_emitted = set()
+for c in cells:
+    if c.cell_type == "code":
+        _emitted.update(m.group(1) for m in re.finditer(r"^(?:def )?([A-Za-z_]\w*)(?:\(| = )", c.source, re.M))
+_expected_missing = {"_DEFAULT_DSR_PATH", "_DEFAULT_PANEL_PATH"}
+_missing = (set(CORE) | set(ROBUST) | set(T3)) - _emitted
+if _missing != _expected_missing:
+    raise RuntimeError(f"definitions dropped from the notebook: {sorted(_missing - _expected_missing)}; "
+                       f"unexpectedly present: {sorted(_expected_missing - _missing)}")
 
 # ============================================================ WRITE
 nb = nbf.v4.new_notebook(cells=cells)

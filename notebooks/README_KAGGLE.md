@@ -2,6 +2,10 @@
 
 `reproduce_predictive_mcdm_defi.ipynb` recomputes **every empirical number of the study** from a single cached input, with **no API keys** and **no `fractal-defi`**.
 Academic layout: each section is *markdown (theory) -> code -> markdown (interpretation)*, top to bottom.
+The reproduction engine is not pasted as one block: each function is presented where it is first needed, with a
+short explanation before it and a walkthrough of the code after it (S3: primitives -> T1 -> baselines -> T2;
+S6/S7/S9/S10: each robustness function beside the cell that calls it; S8: constants -> F1 -> F3 -> labels -> Cox ->
+replay -> expanding-window protocol). 77 cells, 27 of them code.
 
 ## What it reproduces (all from `per_block_panel.parquet`)
 | Section | Result |
