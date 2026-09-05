@@ -88,7 +88,7 @@ protocol additionally enters the N\,$\times$\,M paired bootstrap as
 a passive-hold counter-factual with $N=6$ per-window deltas.  The
 policy ladder is run at three tiers; the deployed T3 falls back to
 T1 in replay (\Cref{sec:emp-t3neg}), and when wired and tested
-out-of-sample it loses to T1 --- a pre-registered negative result
+out-of-sample it loses to T1 --- a post-hoc corrected negative result
 (\Cref{tab:wf-t3-vs-t1}).
 
 \paragraph{Primary inference: walk-forward N\,$\times$\,M paired
@@ -224,7 +224,7 @@ finding (\Cref{tab:wf-nxm} below).
     actually executing, \emph{loses} to T1 (\Cref{tab:wf-t3-vs-t1}).
     Bootstrap $p$ is floored at $10^{-4}$ (6-point resample) and not
     corrected for multiplicity across the 18 contrasts; under Holm
-    correction the five $p<10^{-4}$ contrasts per policy remain
+    correction (computed in the companion reproduction notebook, \S 7) the five $p<10^{-4}$ contrasts per policy remain
     significant, while the Euler contrast is the least
     robust --- it is non-significant on a 3-protocol active panel.}
   \label{tab:wf-nxm}
@@ -285,7 +285,7 @@ claims of decreasing strength.
 \paragraph{Strong claim — all six contrasts significant.} T1
 strongly outperforms passive holds of every in-scope protocol on
 the 6-way active panel: vs Aave $+4.05$\,pp, vs Compound
-$+3.86$\,pp, vs Fluid $+2.22$\,pp, vs Morpho $+3.82$\,pp, vs Spark
+$+3.86$\,pp, vs Fluid $+2.25$\,pp, vs Morpho $+3.82$\,pp, vs Spark
 $+3.02$\,pp, vs Euler $+2.69$\,pp (all 6/6 windows, $p < 10^{-4}$,
 Holm-corrected). The smallest-margin contrasts are Fluid and Euler;
 the Euler contrast is the least robust: on the narrower 3-protocol active panel it falls to
@@ -350,12 +350,12 @@ T3 evaluation is the negative result of \Cref{sec:emp-t3neg}.
 \end{figure}
 
 % [T3 honest negative result — supersedes the retracted +7.03/H1c]
-\subsection{T3 ML tier: a pre-registered negative result}
+\subsection{T3 ML tier: a post-hoc corrected negative result}
 \label{sec:emp-t3neg}
 
 We trained T3's Cox proportional-hazards model with full L\'opez de
 Prado AFML rigour (triple-barrier labels, purged 5-fold CV with
-embargo $\approx 5.4$ days, sample-uniqueness weighting, L2 ridge
+embargo $\approx 5.4$ days, L2 ridge
 sweep), reaching out-of-fold C-index $0.563$ (F3 only) and $0.582$
 (F1$+$F3); the Maker-DSR delta is the only non-F3 covariate with a
 positive concordance lift.  Concordance, however, did not translate
@@ -384,7 +384,7 @@ $\TThreeWins/\TThreeNWindows$ windows).  The model-driven dwell
 estimate mis-times switches relative to T1's EWMA dwell.  The
 scientific reading is clean: the F3 cross-protocol spread \emph{is}
 the decision variable, the gas-aware threshold T1 captures it, and
-the hazard layer adds nothing out-of-sample --- a pre-registered
+the hazard layer adds nothing out-of-sample --- a post-hoc corrected
 negative result that pre-empts the ``if T3$\equiv$T1, why ML?''
 question.
 
@@ -420,9 +420,15 @@ slippage model double-counts and is superseded): T1 net APY eases from
 $8.57$\,\% ($\$1$M) to $7.60$\,\% ($\$50$M), retaining a
 $+2.98$--$3.93$\,pp edge over passive Aave across the range. The binding
 constraint, however, is venue \emph{depth}, not per-trade slippage: the
-edge-carrying venues Euler (TVL $\sim\$16$M) and Spark ($\sim\$29$M)
-cannot absorb a $\$25$M$+$ deposit, so the realistic full-strategy
-capacity ceiling is $\sim\$5$--$10$M; above it the allocator is
+edge-carrying venues Euler (USDC TVL $\sim\$2.6$M mean on the test
+window, minimum $\$1.7$M; $\sim\$16$M panel-wide mean) and Spark
+($\sim\$36$M on the test window; $\sim\$29$M panel-wide) cannot absorb a
+$\$25$M$+$ deposit.  On the test window a $\$1$M position is already
+$\sim 40\%$ of the Euler pool while T1 holds Euler on $\sim 49\%$ of
+blocks, and the replay applies no price impact; the $\$1$M headline is
+therefore an upper bound on the Euler-carried edge rather than a
+deployable size, and the full-strategy capacity ceiling is below the
+previously stated $\sim\$5$--$10$M.  Above it the allocator is
 effectively deep-venue-only, with a smaller but still positive edge.
 (The sweep runs on the deployed allocator, which is T1.)
 
@@ -523,6 +529,6 @@ $\sim 0$\,pp above F3 alone --- the substantive negative finding
 for one of the three live MacKenzie signal classes in this
 DeFi-lending mapping.  The binding inferential result is
 \Cref{tab:wf-nxm}: T1 outperforms passive holds of all six in-scope
-protocols by $+2.2$--$4.1$\,pp in all 6 windows ($p < 10^{-4}$ each,
+protocols by $+2.2$--$4.1$\,pp in all 6 windows ($p$ at the $10^{-4}$ bootstrap floor,
 Holm-corrected); the Euler V2 contrast ($+2.69$\,pp)
 is the least robust and panel-dependent.

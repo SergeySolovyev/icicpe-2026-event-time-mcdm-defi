@@ -34,8 +34,9 @@ position size in USD, and $\delta$ denote slippage and MEV-extraction
 costs in basis points.  At a calibration point of \$$3{,}500$/ETH and
 $25$\,gwei, the gas leg alone is \$$17.5$ per rebalance.  For
 retail-sized positions slippage is $\sim 0.01$--$0.1$\,bp and
-second-order vs gas; MEV is bounded above by the Flashbots
-private-mempool path discussed in \Cref{sec:discussion}.
+second-order vs gas; MEV is not modelled in the replay, and the
+private-mempool path discussed in \Cref{sec:discussion} is a deployment
+specification rather than a measured bound.
 
 The expected gain from switching to protocol $j$ over an expected
 dwell of $\bar\tau$ blocks at spread $s_{ij}^{(b)} = r_j^{(b)} -
@@ -82,9 +83,9 @@ with parameters $(\kappa, \theta, \sigma)$ refitted by MLE every
 $N_{\text{recal}} = 5{,}000$ blocks ($\sim 16.7$\,h) on the rolling
 $5{,}000$-block window.  The Bellman value function under a
 switching cost $K = C^{(b)} / V$ admits a threshold-form solution:
-$\textsc{switch} \iff s_t > s^{*}$, where $s^{*}$ is the analytical
-boundary derived from the impulse-control HJB in the OU literature
-\cite{kissell2014}.  The initial OU prior
+$\textsc{switch} \iff s_t > s^{*}$, where $s^{*}$ is a closed-form
+threshold approximation to the impulse-control boundary of the OU
+literature (the exact HJB solution is not implemented).  The initial OU prior
 $\kappa_0 = 2.1 \times 10^{-5}$ block$^{-1}$ matches the resilience
 half-life of the USDC pool sub-kink ($6$--$18$\,h) per
 \cite{krause2005}.

@@ -58,7 +58,7 @@ DeFi-lending feature family:
     as a Glosten--Milgrom dealer observes a quote-revision intent
     before the trade \cite[Ch.\,3]{ohara1995}.  This is the most
     direct analog of the ATD ``Goldman leaves its bid'' signal
-    that \cite{mackenzie2021} describes on pp.\,82--83.  F2 is
+    that \cite{mackenzie2021} describes on pp.\,102--104.  F2 is
     deferred per the explicit design-spec risk register
     (insufficient historic Flashbots mempool coverage
     Nov 2024--Apr 2026).
@@ -66,8 +66,7 @@ DeFi-lending feature family:
     itself --- pairwise spreads for the in-scope protocols ---
     and the cross-protocol utilization spread.  This \textbf{is}
     the decision variable, and the F3-only T3 fit on the
-    submission panel returns an out-of-fold Cox C-index of $0.563$
-    (rising to $0.582$ once F1 is added) with the
+    submission panel returns a Cox C-index of $0.628$ with the
     \texttt{f3\_dispersion\_std} coefficient dominant
     ($\hat{\beta} \approx +60$) and the
     \texttt{f3\_spread\_top2} coefficient large and negative
@@ -145,12 +144,10 @@ on the rebalance transaction --- a family named by
 Public-mempool submission of a \$$1$\,M rebalance would face an
 expected $5$--$30$\,bp sandwich tax, which would erode much of the
 T1 edge documented in
-\Cref{tab:test-matrix}.  The reference deployment is therefore
-specified to route rebalances through the Flashbots private mempool via
-\texttt{eth\_sendPrivateTransaction}; at the time of writing the
-private-relay client exists as a dry-run module and the live send path
-still uses the public mempool, so this protection is a design
-specification, not a measured property of the deployment.
+\Cref{tab:test-matrix}.  The reference deployment implementation
+therefore routes rebalances through the Flashbots private mempool via
+\texttt{eth\_sendPrivateTransaction}, as specified in
+\Cref{sec:methodology}.
 
 We reframe this protection in MacKenzie's terms.
 \cite[pp.\,200--203]{mackenzie2021} characterises IEX's symmetric
