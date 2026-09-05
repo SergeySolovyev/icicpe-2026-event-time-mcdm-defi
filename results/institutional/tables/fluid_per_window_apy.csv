@@ -1,7 +1,7 @@
-window_id,fluid_apy_pct,n_days
-W1,9.745057745991904,92
-W2,3.5653753624319995,89
-W3,3.902263234390846,92
-W4,4.613853694424441,92
-W5,4.045435400121566,92
-W6,3.1376172989089124,89
+window_id,fluid_apy_pct,n_days,n_blocks,source
+W1,16.790429984968604,92,662400,per_block_panel.parquet:fluid_lending_apr (fToken series); per-block compounding; annualised as rebuild_nxm_6way_active._policy_apy_per_window; regenerated 2026-09-05
+W2,5.854273913997687,89,640800,per_block_panel.parquet:fluid_lending_apr (fToken series); per-block compounding; annualised as rebuild_nxm_6way_active._policy_apy_per_window; regenerated 2026-09-05
+W3,3.751477744771936,92,662400,per_block_panel.parquet:fluid_lending_apr (fToken series); per-block compounding; annualised as rebuild_nxm_6way_active._policy_apy_per_window; regenerated 2026-09-05
+W4,4.899764882322732,92,662400,per_block_panel.parquet:fluid_lending_apr (fToken series); per-block compounding; annualised as rebuild_nxm_6way_active._policy_apy_per_window; regenerated 2026-09-05
+W5,4.118415740343728,92,662400,per_block_panel.parquet:fluid_lending_apr (fToken series); per-block compounding; annualised as rebuild_nxm_6way_active._policy_apy_per_window; regenerated 2026-09-05
+W6,3.295249795499333,89,640799,per_block_panel.parquet:fluid_lending_apr (fToken series); per-block compounding; annualised as rebuild_nxm_6way_active._policy_apy_per_window; regenerated 2026-09-05
