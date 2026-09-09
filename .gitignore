@@ -142,3 +142,8 @@ submission_*.manifest.txt
 
 # Alternate-name PDF builds when main.pdf is locked in a reader.
 papers/icicpe-scopus-vol2-submission/main_hf.pdf
+
+# MIRAGE runtime data; frozen evidence lives in mirage/snapshots/ instead.
+data/cached/mirage/
+mirage/feed/latest.json
+.graph-deploy-key

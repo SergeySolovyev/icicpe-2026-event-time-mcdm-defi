@@ -1,233 +1,174 @@
-# MIRAGE — pre-deposit data-credibility checks for lending markets
+# MIRAGE — pre-deposit checks for Morpho Blue
 
-**ETHOnline 2026 · Continuity Track** · built on top of this repository's existing
-event-time USDC allocator.
+MIRAGE adds evidence-backed market checks to this repository's existing USDC
+allocator. Intended submission: **ETHOnline 2026, Continuity Track**.
 
-Before an allocator moves USDC into a Morpho Blue market, MIRAGE checks three things
-that nothing checks automatically today:
+**Current release:** block-pinned accounting checks, live Graph discovery, an
+allocator entry gate and reproducible offline evidence. Oracle reference prices,
+collateral exit depth and bytecode interpretation are still being implemented.
+Reports explicitly mark those missing checks `insufficient`; an accounting pass
+does not admit a market.
 
-1. **Is the oracle price frozen?** An oracle can print a constant compiled into its own bytecode.
-2. **Is the reported size a phantom?** Recursive self-borrow loops inflate `supplyAssets` by orders of magnitude.
-3. **Can the collateral actually be sold?** Debt against the depth of the pool that has to absorb a liquidation.
+## BEFORE — existing work
 
-**MIRAGE is not a yield optimiser.** It does not look for the highest rate. It *declines*
-capital wherever the number the rate rests on does not match reality.
+This repository already contained an event-time USDC allocator for Aave V3,
+Compound V3, Spark, Morpho Blue, Euler V2 and Fluid. The last baseline commit is
+[`520b676`](https://github.com/SergeySolovyev/icicpe-2026-event-time-mcdm-defi/commit/520b676).
 
----
+- [T1](decision/t1_threshold.py) uses APR, estimated time until the leader changes,
+  capital and switching costs.
+- [T2](decision/t2_optimal_stopping.py) uses optimal stopping; [T3](decision/t3_hazard.py)
+  uses a survival model, with fallback to T1.
+- [EventReplayEngine](backtest/replay_per_block.py) accrues yield and charges gas
+  around the existing [DecisionPolicy interface](decision/base.py).
+- [The reproduction notebook](notebooks/reproduce_predictive_mcdm_defi.ipynb)
+  and research results predate MIRAGE. They are not new hackathon results.
 
-## Why this repository needed it
+The event-time policies do **not** rank by TVL. Their existing `morpho_blue` venue
+is one selected wstETH/USDC market, not all permissionless Morpho markets.
+MIRAGE's contribution is an explicit check of a proposed destination, rather
+than replacing TVL and claiming that this changes T1's historical decisions.
 
-The allocator in this repository ranks venues on APY and TVL. That is exactly the input a
-phantom market maximises. Measured on Ethereum mainnet on 2026-09-08, at block ~25 933 700,
-by direct `eth_call` — the Morpho public API was used only to enumerate market ids, never for
-a number:
+The second foundation is
+[revert.pro's bytecode feature-extraction repository](https://github.com/SergeySolovyev/icicpe-2026-defi-vuln-detection).
+Its extractor normalizes and disassembles runtime bytecode and counts features.
+It does not recover immutable values. Planned reuse is the input normalization,
+disassembly and program-counter indexing patterns, with attribution. New oracle
+interpretation must handle known templates, proxies and storage explicitly;
+listing PUSH constants is not proof of their meaning. This integration is pending.
 
-| | |
+## AFTER — work added during ETHOnline 2026
+
+The first hackathon commit, `e56cd7f` on 9 September, added the MIT license and
+Morpho discovery subgraph. This release adds:
+
+| Component | Implemented behavior |
 |---|---|
-| USDC markets on Morpho mainnet | 697 |
-| What they **report** | **$11 743 183 052** |
-| What can actually be **withdrawn** today | **$98 630 191** |
-| Ratio | **119×** |
-| Cross-check: `balanceOf(USDC)` on the singleton | $97 014 123 — agrees |
+| [Subgraph](subgraph/) | Indexes only tuple `CreateMarket`, with no contract calls in the mapping |
+| [Discovery client](mirage/discovery/subgraph.py) | Reads live Graph market IDs at one block; validates pagination, deployment, indexing status and block hash |
+| [Chain reader](mirage/chain/morpho.py) | Reads raw Morpho params and state with single RPC calls at a numeric block |
+| [RPC transport](mirage/chain/rpc.py) | Rotates endpoints; validates Multicall3 count and byte boundaries; recovers by single calls |
+| [Accounting detector](mirage/detectors/phantom_volume.py) | Computes free liquidity, utilization and normalized share exchange rate |
+| [Report and snapshots](mirage/scan.py) | Preserves target, calldata, raw return, block number and hash; refuses overwriting a frozen snapshot |
+| [Allocator gate](mirage/gate.py) | Vetoes new entries into explicitly mapped markets with blocked, missing, stale or incomplete evidence |
 
-The worst single case, market `0x8eaf7b29…` (PAXG/USDC): reports **$6.21B**, recovers to
-**$93 828** of principal against **$262** of collateral. Inflation **66 216×**, utilisation
-exactly 100.000 %.
+The gate calls the original policy once with the complete state. It neither
+forces an exit from a held position nor changes T1/T2/T3's candidate observations.
+Unmapped venues are outside MIRAGE coverage. Existing baselines remain unchanged.
 
-An allocator trained on APY and TVL drives straight into that. MIRAGE is the gate that stops it.
+## Live Graph deployment
 
----
+Version `v0.0.1` was deployed to
+[Subgraph Studio](https://thegraph.com/studio/subgraph/mirage-morpho-markets/) on
+9 September. Deployment ID:
+`QmYkbwLirDouGqfRapedCcQ8YCbM8dzKA13agskDwGzJ6K`.
 
-## BEFORE — what existed before the hackathon
+The query endpoint returned real market entities with
+`_meta.hasIndexingErrors = false` at block `19972938`. **Deployment and entity
+indexing succeeded; full synchronization and an end-to-end live scan are not
+yet verified.** See
+[the deployment guide](subgraph/README.md) for setup and verification.
 
-Two public MIT repositories, both created well before ETHOnline 2026.
-
-### This repository — event-time MCDM allocator
-
-Created 2026-05-28. Last pre-hackathon commit `520b676`, 2026-09-05, 203 commits.
-
-An event-time allocator for USDC across six Ethereum lending protocols: Aave V3,
-Compound V3, Spark, Morpho Blue, Euler V2, Fluid. The central idea is dropping the
-calendar grid in favour of **event time: one row equals one Ethereum block**. A panel of
-3 931 200 blocks (2024-10-31 → 2026-04-30); `decide()` runs on every block; yield accrues
-per block; gas is charged at the real gas price of that day.
-
-A three-rung ladder of decision rules:
-
-| Rung | File | What estimates the dwell |
-|---|---|---|
-| **T1** | `decision/t1_threshold.py` | EWMA of intervals between leader crossovers |
-| **T2** | `decision/t2_optimal_stopping.py` | closed-form Bellman boundary on an Ornstein–Uhlenbeck spread |
-| **T3** | `decision/t3_hazard.py` | `1/hazard` from a Cox proportional-hazards model |
-
-All three reduce to one inequality: switch when the expected extra yield over the estimated
-dwell exceeds the switching cost. The headline result is that **the simplest rung wins** —
-T1, ~50 lines with no trained parameters, beats every passive single-protocol hold by
-2.2–4.1 percentage points annualised across six non-overlapping three-month walk-forward
-windows, while the ML rung honestly *loses* out of sample by 5.97 bp, 0 of 5 windows.
-
-Reproduction notebook: `notebooks/reproduce_predictive_mcdm_defi.ipynb`, 77 cells, runs
-end-to-end from the panel to the final ledger.
-
-### Sibling repository — EVM bytecode feature extraction
-
-[`SergeySolovyev/icicpe-2026-defi-vuln-detection`](https://github.com/SergeySolovyev/icicpe-2026-defi-vuln-detection), MIT.
-
-A pipeline of 70 features computed **directly from EVM runtime bytecode**, no source
-required, trained on 117 091 Slither-labelled contracts. It exists because roughly 95 % of
-mainnet contracts ship without verified source, so source-required analysers cannot reach
-them — but the bytecode is always there.
-
----
-
-## AFTER — what is being built during ETHOnline 2026
-
-Everything below is new work, committed incrementally from 2026-09-09.
-
-### 1. Market-discovery subgraph — `subgraph/`
-
-A Subgraph Studio subgraph indexing **only** the Morpho Blue `CreateMarket` event.
-
-- `subgraph/subgraph.yaml` — manifest, specVersion 1.0.0, startBlock 18883124
-- `subgraph/schema.graphql` — one immutable `Market` entity
-- `subgraph/src/morpho-blue.ts` — the single handler, **zero `eth_call`**
-- `subgraph/abis/MorphoBlue.json` — the one event, nothing else
-
-1763 events, all ids unique. `CreateMarket` carries `loanToken`, `collateralToken`,
-`oracle`, `irm` and `lltv` in the log data itself, so the mapping never touches the chain.
-
-State-changing events (`Supply`, `Withdraw`, `Borrow`, `Repay`, `AccrueInterest`,
-`Liquidate`) are **deliberately not indexed** — roughly 17.5M events, the sync would not
-finish. Market state is read from the chain through Multicall3 instead.
-
-**Division of labour:** the subgraph answers *which markets exist and with what parameters*;
-the chain answers *how much money is actually there*. That boundary is what makes every
-dollar figure in this project independent of any API.
-
-### 2. Three detectors — `mirage/detectors/`
-
-| Detector | Method |
-|---|---|
-| **Frozen price** | `price()` at head and head−1 000 000; for factory oracles also the six immutable getters — all six zero means the price is compiled in |
-| **Phantom volume** | principal = `supplyShares / 1e6`; inflation = `supplyAssets / principal`; free liquidity = `supplyAssets − borrowAssets` |
-| **Exit depth** | debt priced by the oracle over the dollar depth of the pool that quotes it |
-
-Order matters: **phantom volume runs first**, and its principal feeds the other two. Without
-removing phantom inflation, no dollar figure on Morpho means anything.
-
-### 3. Uniswap price reference — `mirage/detectors/reference_price.py`
-
-A Uniswap v3/v4 TWAP as an **independent** reference price against whatever the market's
-oracle prints. This is not decoration: it is the only thing that separates *frozen* from
-*the collateral genuinely is worth par*. The USDT/USDT pair carries a constant oracle and
-that is correct, because it is redeemable at par on demand — MIRAGE reports it as its own
-false positive.
-
-The same module supplies pool depth for the exit-depth detector.
-
-### 4. Bytecode path for oracles with no interface
-
-Measured, not asserted:
-
-| Oracles | `BASE_FEED_1()` answers | Silent |
-|---|---|---|
-| Factory (455) | **455** | 0 |
-| **Non-factory (137)** | 9 | **128** |
-
-For the 455 factory oracles MIRAGE reads immutables through public getters — four
-`eth_call`s, exact and cheap. For the 128 that answer nothing, the runtime bytecode is the
-only remaining instrument, and that is where the sibling repository's machinery is reused:
-the same `pyevmasm` dependency, the same input-normalisation pattern, the same
-program-counter index. **$173 162 872** of principal on listed markets sits behind those
-non-factory oracles.
-
-### 5. Gate into the allocator — `mirage/gate.py`
-
-`MirageGatedPolicy` implements the existing `DecisionPolicy` ABC from
-`decision/base.py:87-99`, so it drops into `EventReplayEngine` at
-`backtest/replay_per_block.py:126` without a single line changed in the engine.
-
-A before/after backtest runs the same engine over two panels — one where Morpho TVL comes
-from the API, one where it comes from on-chain principal — so the damage is *demonstrated*,
-not claimed.
-
----
-
-## Judges: how to verify a number yourself
-
-Every finding in the public feed carries the literal `eth_call` behind it — target, calldata,
-block, raw return:
-
-```json
-"evidence": [{"to": "0xBBBB…", "data": "0x5c60e39a8eaf7b29…", "block": 25933700, "result": "0x…"}]
-```
-
-Paste it into `cast call` and you get the same number. Two examples you can run right now:
-
-```bash
-# Phantom volume: market(bytes32) on the Morpho singleton
-cast call 0xBBBBBbbBBb9cC5e90e3b3Af64bdAF62C37EEFFCb \
-  "market(bytes32)(uint128,uint128,uint128,uint128,uint128,uint128)" \
-  0x8eaf7b29f02ba8d8c1d7aeb587403dcb16e2e943e4e2f5f94b0963c2386406c9
-
-# Frozen price: the same oracle contract that priced USD0++ in January 2025
-cast call 0x1325Eb089Ac14B437E78D5D481e32611F6907eF8 "price()(uint256)"
-cast call 0x1325Eb089Ac14B437E78D5D481e32611F6907eF8 "BASE_FEED_1()(address)"
-```
-
-That oracle prints exactly `1e24` at head and one million blocks back, with all six address
-immutables zero. Today it also prices **deUSD/USDC**, whose issuer has publicly stated the
-asset no longer has value.
-
----
-
-## Known limits, stated up front
-
-- **Bytecode analysis covers roughly 20 % of exploitable bug classes** (ICSE 2023, sample of
-  516 real bugs). MIRAGE addresses the other 80 % by checking *data credibility* rather than
-  code correctness. It does not claim to be a vulnerability scanner.
-- **Morpho already publishes `warnings`** and has since May 2024. MIRAGE does not replace
-  them. What it adds is measurement: from a `warnings` array you cannot learn that a
-  reported $6.21B is really $93 828. Separately, markets Morpho flags RED hold **$9 150** of
-  free liquidity between them, while **100 %** of live money sits on unflagged markets.
-- **MEV is not modelled** in the backtest, and the reference deployment does not yet route
-  through a private mempool.
-
----
-
-## Repository layout
-
-```
-decision/          T1 / T2 / T3 policies + F1/F3/F4 feature builders   [pre-existing]
-backtest/          per-block replay engine, bootstrap, ablations       [pre-existing]
-data/              panel construction + ~20 protocol fetchers          [pre-existing]
-forecaster/        DA-BiGRU-CNN and classical baselines                [pre-existing]
-notebooks/         reproduction notebook, 77 cells                     [pre-existing]
-papers/            manuscript sources                                  [pre-existing]
-subgraph/          Morpho CreateMarket subgraph                        [NEW — hackathon]
-mirage/            detectors, chain readers, feed, allocator gate      [NEW — hackathon]
-```
-
----
+The Graph supplies market discovery; raw on-chain calls supply monetary inputs.
+`scan --source=subgraph` fails if Graph data is missing or inconsistent; it does
+not silently substitute a local snapshot or Morpho API.
 
 ## Quick start
 
-```bash
-python -m venv .venv && .venv\Scripts\activate      # Windows
-pip install -r requirements.txt
+Python 3.10+ is sufficient for the accounting CLI; it uses the standard library.
+Run from a clean clone's repository root:
 
-# Subgraph (needs a Subgraph Studio deploy key)
-cd subgraph && npm install
-node .\node_modules\@graphprotocol\graph-cli\bin\run.js codegen
-node .\node_modules\@graphprotocol\graph-cli\bin\run.js build
+```console
+python -m mirage demo --offline
+python -m mirage verify 0x8eaf7b29f02ba8d8c1d7aeb587403dcb16e2e943e4e2f5f94b0963c2386406c9 --block 25937912
 ```
 
----
+For a live scan after synchronization, set the query URL and choose a block
+which the subgraph has indexed. This is the **query URL**, not the deploy key:
+
+```powershell
+$env:MIRAGE_SUBGRAPH_URL = 'https://api.studio.thegraph.com/query/1759002/mirage-morpho-markets/v0.0.1'
+python -m mirage scan --source=subgraph
+```
+
+The default block is resolved from Ethereum's `finalized` tag. During initial
+sync, wait until the subgraph has caught up. The existing `prune: auto` setting
+can make old indexed blocks unavailable; the frozen chain snapshot's block is
+not guaranteed to remain queryable through Graph.
+
+The generated feed is `mirage/feed/latest.json` (ignored by Git). Monetary raw
+integers are strings to preserve precision in JavaScript consumers. RPC URLs
+can be configured with comma-separated `MIRAGE_RPC_URLS`.
+
+The gate uses the existing allocator dependencies, including pandas; install
+the repository's [requirements](requirements.txt) for allocator/replay work.
+There is no `mirage backtest` command or deployed transaction executor yet.
+
+## Verified snapshot, not a reconstructed principal
+
+The committed [snapshot](mirage/snapshots/mainnet-25937912.json.gz) contains two
+markets independently read through PublicNode and dRPC with **single** calls
+at block **25,937,912**. Both providers returned identical bytes and block hash.
+
+| Market | Stored supply claims, USDC | Free liquidity, USDC | Share rate / initial rate |
+|---|---:|---:|---:|
+| PAXG/USDC `0x8eaf7b29…` | 6,212,914,536.395500 | **0** | 66,215.818314× |
+| deUSD/USDC `0xbd1ad3b9…` | 348,282.184849 | **0.010000** | 109.652016× |
+
+Amounts are USDC units, not independent USD valuations. These are stored values
+at the cited block; `lastUpdate` is retained. The snapshot does not validate
+historical totals across all 697 markets and is not evidence of live Graph use.
+
+`totalSupplyShares / 1e6` is **not** recovered principal. New deposits buy shares
+at the current exchange rate. The exact normalized rate is
+`1e6 * (totalSupplyAssets + 1) / (totalSupplyShares + 1e6)`.
+A high rate prompts investigation; it does not prove phantom debt or insolvency.
+See [the accounting corrections and primary sources](docs/mirage/CORRECTIONS_2026-09-09.md).
+
+Free liquidity is `totalSupplyAssets - totalBorrowAssets`. Blocking entry when
+this is zero is an explicit MIRAGE policy choice, not a claim that Morpho
+prohibits deposits. It does not by itself establish a user's withdrawal rights.
+
+Every finding includes reproducible `eth_call` evidence. To independently
+recapture at a new numeric block:
+
+```console
+python -m scripts.mirage_capture_demo --block NEW_BLOCK_NUMBER
+```
+
+The command saves a new snapshot only after two independent provider captures
+agree. It refuses to replace an existing file.
+
+## Validation
+
+```console
+python -m unittest discover -s tests -p test_mirage_core.py -q
+python -m pytest -q tests/test_mirage_core.py tests/test_mirage_gate.py tests/test_t1_threshold.py
+```
+
+On 9 September: **60 tests passed**, including ABI truncation, pagination,
+share accounting, snapshot consistency, entry veto and a regression proving
+that changing TVL alone does not change T1's action. Core tests also run with
+`python -S`, skipping two optional `eth_abi` comparisons. These are offline
+tests; the separate two-provider snapshot capture is the live chain check.
+
+## Remaining work and submission limits
+
+- Complete the oracle, independent Uniswap reference and collateral exit checks.
+- Implement and attribute the revert.pro bytecode path; unknown cases stay insufficient.
+- Verify Graph synchronization and show its live data driving the allocator gate.
+- Build an explicitly labelled market-level decision demo and historical replay.
+  Historical loss prevention has not been demonstrated.
+- Add actual Uniswap integration, `FEEDBACK.md`, the feedback form and the demo video.
+  No Uniswap prize requirement is claimed complete yet.
+
+The [Graph Continuity prize](https://ethglobal.com/events/ethonline2026/prizes/the-graph)
+has a **$5,000 pool**, with awards of $2,500, $1,500 and $1,000. Eligibility requires
+live Graph data and meaningful application/agent use; a local build or an offline
+snapshot is insufficient. The separate composability prize is not established
+by one custom discovery subgraph. Clarify eligibility for unlabelled prizes
+with the organizers rather than assuming access.
 
 ## License
 
-MIT — see [`LICENSE`](LICENSE).
-
-## Author
-
-Sergei Solovev — [github.com/SergeySolovyev](https://github.com/SergeySolovyev)
+[MIT](LICENSE). Sergei Solovev.

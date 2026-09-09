@@ -1,0 +1,17 @@
+"""Checked against Ethereum keccak signatures; no runtime hashing dependency."""
+
+MORPHO = "0xBBBBBbbBBb9cC5e90e3b3Af64bdAF62C37EEFFCb"
+USDC = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
+MULTICALL3 = "0xcA11bde05977b3631167028862bE2a173976CA11"
+FACTORY = "0x3A7bB36Ee3f3eE32A60e9f2b33c1e5f2E83ad766"
+MARKET = "0x5c60e39a"
+MARKET_PARAMS = "0x2c3c9157"
+PRICE = "0xa035b1fe"
+BALANCE_OF = "0x70a08231"
+AGGREGATE3 = "0x82ad56cb"
+GETTERS = {
+    "BASE_VAULT": "0xeaa2d7b4", "BASE_FEED_1": "0xf50a4718",
+    "BASE_FEED_2": "0xdc53858c", "QUOTE_VAULT": "0x2e6f20a6",
+    "QUOTE_FEED_1": "0x56095e11", "QUOTE_FEED_2": "0xacfbd39e",
+    "SCALE_FACTOR": "0xce4b5bbe",
+}
