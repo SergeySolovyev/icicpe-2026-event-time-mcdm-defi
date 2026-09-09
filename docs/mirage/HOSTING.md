@@ -11,6 +11,74 @@ and the public browser loaded the four-market saved-evidence workbench.
 |---|---|
 | Service URL | https://mirage-workbench.onrender.com |
 | Platform | Existing Render Docker web service, free plan, Frankfurt |
+| Release commit | `9aeb01c46d26865e95f95ac190168692d87bbf64` |
+| Deployment ID | `dep-dagks5740ujc73fl7img` |
+| Dashboard timestamp | 9 September 2026, 15:16:20 Moscow |
+| Runtime live time | 9 September 2026, 15:17:34 Moscow |
+| Build/deploy duration | 1 minute 14 seconds |
+| Deployment and service state | Deploy succeeded; Live |
+| Service automatic deploys | Disabled |
+| Blueprint Auto Sync | No; service configuration and free plan unchanged |
+| Published code | Exact release commit is published on `master` and `mirage-diagnostics-replay` |
+| Default saved snapshot | Unchanged: `mainnet-full-25938082-diagnostics-v2.json.gz`, SHA-256 `3df5fa7330740453cf64464ff992e541b2095b01c952f34cd8c262afe888ed7b` |
+
+This release corrects the explanation returned when a supplied sale scenario cannot
+be evaluated because a token address is zero or token decimals are unavailable.
+New observations use `quote_reason_version: 2`; the affected exit finding remains
+`INSUFFICIENT`. Unversioned/version-0 and version-1 observations retain their exact
+legacy replay. A missing historical raw amount is not reconstructed.
+
+The default snapshot still records quote-reason version **1**. Its filename's
+`diagnostics-v2` describes the earlier diagnostic artifact, not this new quote-reason
+version. Its saved calls, four markets and block `25938082` were not changed.
+The release operator loaded all four saved markets in the public browser after
+deployment.
+
+One new public inspection through **Check another market** completed for market
+`0x54efdee08e272e929034a8f26f7ca34b1ebe364b275391169b28c6d7db24dbc8`
+at `10000` USDC. The browser showed **Live capture complete**, 697 Graph-discovered
+IDs and **one inspected market**, at block `25939677`, hash
+`0x24eaeb91bd0576a6c8b62fa370614e1b8febdf5528c476361e09f5d6412ba132`.
+The displayed evidence time was 9 September 2026, **12:00 UTC**, with minute precision.
+This is the evidence time, not a measured request completion timestamp.
+
+The expanded exit metrics retained `scenario_notional_loan: 10000` and showed
+`quote_status: insufficient`, `reason: zero_token_address`; input, output and token
+decimals remained **Unknown**. The overall market remained **INSUFFICIENT**:
+`oracle_code_unavailable`, `reference_unavailable` and `exit_depth_unavailable`
+were insufficient, while `accounting_observed` passed its accounting check.
+The release operator inspected the actual public DOM, screenshot and visible raw
+JSON containing the block hash. No funds moved. This one fresh capture has not been
+independently reread through two providers.
+
+The operator then clicked **Load demo**. At 12:22 UTC, the public DOM confirmed
+**Saved evidence**, block `25938082`, 697 discovered IDs and four inspected markets:
+PAXG BLOCK, deUSD INSUFFICIENT, wstETH INSUFFICIENT and WETH PASS. The amount was
+10000 USDC; **Waiting for a preview** and **Evidence required** confirmed the cleared
+preview state. The custom market ID was cleared and **Check another market** collapsed.
+This reset made no additional live inspection.
+
+[Clean Linux CI for the exact release](https://github.com/SergeySolovyev/icicpe-2026-event-time-mcdm-defi/actions/runs/34349726175)
+passed **221 tests with 2 warnings in 9.30 seconds**. The official SDK stdio example
+returned PAXG 10000 `switch` → `hold`, WETH 10000 `switch` → `switch`, and WETH
+20000 `switch` → `hold`, then shut down normally. The Docker build and offline
+four-market container replay passed. The CI image ID was
+`sha256:2e76c7fde0580e758d525ebedfa5ed801c894776510be9c9ff5f22eb8af98c6a`;
+this is not the digest of Render's separately built image. A separate local focused
+run passed 51 tests in 116.54 seconds. See the
+[quote-reason v2 release proof](QUOTE_REASON_V2_VERIFICATION_2026-09-09.json).
+
+## Historical deployments and browser checks
+
+These records describe earlier releases and captures. Their observations remain
+bound to the specified release, block and saved artifact.
+
+### Earlier 66198ad deployment
+
+| Item | Observed value |
+|---|---|
+| Service URL | https://mirage-workbench.onrender.com |
+| Platform | Existing Render Docker web service, free plan, Frankfurt |
 | Release commit | `66198ad3e97d647cc5bafad818bb83a00e3d668c` |
 | Deployment ID | `dep-dagjrku1egvs73bdmmlg` |
 | Dashboard timestamp | 9 September 2026, 14:06:59 Moscow |
@@ -58,11 +126,6 @@ Render's manual deployment selected the specific commit from the published branc
 The main `master` checkout remained at `6af7790` for the ongoing capture. The service
 and free plan were retained, with automatic deploys disabled. Documentation commits
 after this release must not be presented as the deployed product commit.
-
-## Historical deployments and browser checks
-
-The following observations describe earlier releases and live captures on 9 September.
-They do not add a new live chain check to the current release verification.
 
 ### Earlier c2ed741 deployment
 

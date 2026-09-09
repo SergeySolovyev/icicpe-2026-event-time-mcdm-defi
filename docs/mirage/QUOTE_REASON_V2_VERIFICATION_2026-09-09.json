@@ -1,0 +1,139 @@
+{
+  "schema": "mirage-quote-reason-v2-release-verification/1",
+  "checked_on": "2026-09-09",
+  "scope": "Quote-reason version 2 release, exact legacy replay and unchanged default saved evidence; one completed targeted public live inspection verified the corrected zero-token explanation without upgrading admission.",
+  "observation_provenance": "Compiled from the release operator/root agent's actual local test, GitHub CI, Render dashboard/log and public-browser observations. This documentation pass did not repeat tests, browser actions or network calls.",
+  "implementation": {
+    "head_sha": "9aeb01c46d26865e95f95ac190168692d87bbf64",
+    "published_refs": ["master", "mirage-diagnostics-replay"],
+    "push_exit_code": 0,
+    "quote_reason_version": 2,
+    "change": "A supplied scenario encountering zero token addresses or unavailable token decimals receives that actual failure reason instead of an unspecified-size placeholder. A supplied raw collateral amount is retained in new version-2 observations.",
+    "compatibility": "Unversioned/version-0 and version-1 observations retain exact legacy replay. Missing historical raw amounts are not reconstructed. Unknown or malformed version values are rejected.",
+    "decision_scope": "Diagnostic explanation correction; the affected unavailable exit findings remain insufficient. No new quote, routing result or admission approval is invented."
+  },
+  "local_focused_tests": {
+    "tests_passed": 51,
+    "test_seconds": 116.54,
+    "exit_code": 0
+  },
+  "linux_ci": {
+    "url": "https://github.com/SergeySolovyev/icicpe-2026-event-time-mcdm-defi/actions/runs/34349726175",
+    "head_sha": "9aeb01c46d26865e95f95ac190168692d87bbf64",
+    "conclusion": "success",
+    "tests_passed": 221,
+    "warnings": 2,
+    "test_seconds": 9.30,
+    "job_urls": [
+      "https://github.com/SergeySolovyev/icicpe-2026-event-time-mcdm-defi/actions/runs/34349726175/job/102459739238",
+      "https://github.com/SergeySolovyev/icicpe-2026-event-time-mcdm-defi/actions/runs/34349726175/job/102459739582"
+    ],
+    "sdk_transport": "Official SDK stdio client and actual server",
+    "sdk_saved_scenarios": [
+      {"market": "PAXG/USDC", "amount_usdc": "10000", "original": "switch", "gated": "hold"},
+      {"market": "WETH/USDC", "amount_usdc": "10000", "original": "switch", "gated": "switch"},
+      {"market": "WETH/USDC", "amount_usdc": "20000", "original": "switch", "gated": "hold"}
+    ],
+    "sdk_normal_shutdown": true,
+    "docker_build": "success",
+    "offline_container_replay": "pass; four saved markets with networking disabled",
+    "ci_image_sha256": "2e76c7fde0580e758d525ebedfa5ed801c894776510be9c9ff5f22eb8af98c6a",
+    "image_scope": "Image built by this CI run; not a claimed digest of Render's separately built image"
+  },
+  "deployment": {
+    "public_url": "https://mirage-workbench.onrender.com",
+    "platform": "Existing Render Docker web service",
+    "plan": "free",
+    "region": "Frankfurt",
+    "head_sha": "9aeb01c46d26865e95f95ac190168692d87bbf64",
+    "deployment_id": "dep-dagks5740ujc73fl7img",
+    "dashboard_deployment_result": "Deploy succeeded",
+    "dashboard_status": "Live",
+    "dashboard_timestamp": "2026-09-09T15:16:20+03:00",
+    "runtime_live_at": "2026-09-09T15:17:34+03:00",
+    "duration_seconds": 74,
+    "service_auto_deploy": false,
+    "blueprint_auto_sync": false,
+    "service_configuration_changed": false
+  },
+  "saved_snapshot": {
+    "path": "mirage/snapshots/mainnet-full-25938082-diagnostics-v2.json.gz",
+    "sha256": "3df5fa7330740453cf64464ff992e541b2095b01c952f34cd8c262afe888ed7b",
+    "block_number": 25938082,
+    "quote_reason_version": 1,
+    "market_count": 4,
+    "changed_by_this_release": false,
+    "public_browser_after_deployment": "Four saved markets loaded",
+    "version_scope": "The snapshot filename's diagnostics-v2 is distinct from quote_reason_version. This existing artifact retains quote-reason version 1 and its original raw evidence."
+  },
+  "targeted_public_live_check": {
+    "status": "completed_and_visually_verified",
+    "market_id": "0x54efdee08e272e929034a8f26f7ca34b1ebe364b275391169b28c6d7db24dbc8",
+    "amount_usdc": "10000",
+    "action": "Check another market with the explicit market ID",
+    "request_started_by_release_operator": true,
+    "completed": true,
+    "ui_completion_label": "Live capture complete",
+    "discovery_provider_display": "The Graph",
+    "discovered_market_count": 697,
+    "inspected_market_count": 1,
+    "block_number": 25939677,
+    "block_hash": "0x24eaeb91bd0576a6c8b62fa370614e1b8febdf5528c476361e09f5d6412ba132",
+    "displayed_evidence_time": "2026-09-09 12:00 UTC",
+    "displayed_time_precision": "minute; evidence time shown by the UI, not a measured request completion timestamp",
+    "block_hash_provenance": "Visible raw JSON in Reproduce the Evidence",
+    "quote_reason": "zero_token_address",
+    "aggregate_market_severity": "insufficient",
+    "findings": [
+      {"code": "oracle_code_unavailable", "severity": "insufficient"},
+      {"code": "reference_unavailable", "severity": "insufficient"},
+      {"code": "accounting_observed", "severity": "pass"},
+      {"code": "exit_depth_unavailable", "severity": "insufficient"}
+    ],
+    "expanded_exit_metric_display": {
+      "scenario_notional_loan": "10000",
+      "quote_status": "insufficient",
+      "reason": "zero_token_address",
+      "amount_in_raw": "Unknown",
+      "amount_out_raw": "Unknown",
+      "collateral_decimals": "Unknown",
+      "loan_decimals": "Unknown"
+    },
+    "visual_verification": "Release operator inspected the completed public-page DOM, expanded exit metrics and actual screenshot.",
+    "transaction_submitted": false,
+    "scope": "One fresh inspection of the explicit market, following live Graph discovery. The discovery count is not completed detector coverage; no missing input, output or token decimals are invented."
+  },
+  "restore_saved_demo": {
+    "load_demo_requested_after_live_check": true,
+    "status": "confirmed_in_public_dom",
+    "observed_at_utc_minute": "2026-09-09T12:22Z",
+    "mode_label": "Saved evidence",
+    "block_number": 25938082,
+    "discovered_market_count": 697,
+    "inspected_market_count": 4,
+    "amount_usdc": "10000",
+    "market_verdicts": [
+      {"market": "PAXG/USDC", "severity": "block"},
+      {"market": "deUSD/USDC", "severity": "insufficient"},
+      {"market": "wstETH/USDC", "severity": "insufficient"},
+      {"market": "WETH/USDC", "severity": "pass"}
+    ],
+    "preview_labels": ["Waiting for a preview", "Evidence required"],
+    "custom_market_id_cleared": true,
+    "check_another_market_panel_collapsed": true,
+    "additional_live_calls": 0,
+    "scope": "Release operator confirmed the restored saved page and cleared preview state; this reset made no additional live inspection."
+  },
+  "limitations": [
+    "The fresh public live result has not received the frozen demo's separate two-provider reread.",
+    "The live evidence timestamp has minute precision; request duration was not measured.",
+    "The default saved snapshot was not migrated or replaced by this release.",
+    "No private partial-universe audit artifacts or full-universe completion claims are included.",
+    "A diagnostic correction does not certify oracle safety, exit capacity or future execution."
+  ],
+  "historical_records_preserved": [
+    "ROUTE_UI_VERIFICATION_2026-09-09.json",
+    "DIAGNOSTIC_VERIFICATION_2026-09-09.json",
+    "VERIFICATION_2026-09-09.json"
+  ]
+}
