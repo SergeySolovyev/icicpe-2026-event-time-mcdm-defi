@@ -1,0 +1,33 @@
+# Keep unrelated research and local files out of this build's context as well
+# as its image. The Dockerfile itself uses explicit COPY inputs.
+**
+!Dockerfile.mirage
+!requirements-mirage.txt
+!LICENSE
+!mirage/
+!mirage/*.py
+!mirage/chain/
+!mirage/chain/*.py
+!mirage/detectors/
+!mirage/detectors/*.py
+!mirage/discovery/
+!mirage/discovery/*.py
+!mirage/vendor/
+!mirage/vendor/__init__.py
+!mirage/vendor/revert_pro/
+!mirage/vendor/revert_pro/*.py
+!mirage/vendor/revert_pro/LICENSE
+!mirage/vendor/revert_pro/PROVENANCE.md
+!mirage/web/
+!mirage/web/index.html
+!mirage/web/app.js
+!mirage/web/style.css
+!mirage/snapshots/
+!mirage/snapshots/demo.json
+!mirage/snapshots/*.json.gz
+!decision/
+!decision/__init__.py
+!decision/base.py
+!decision/t1_threshold.py
+!scripts/
+!scripts/mirage_host.py

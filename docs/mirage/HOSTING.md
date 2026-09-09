@@ -66,8 +66,10 @@ Preparation check on 9 September 2026: 23 helper configuration cases passed. Doc
 installed locally, but its Linux engine pipe was unavailable; no image build or container
 smoke test has been completed in this preparation. No Render deployment was performed.
 
-Build from a clean checkout when using an external builder: explicit `COPY` controls image
-contents, while Docker build-context transfer is a separate concern.
+`Dockerfile.mirage.dockerignore` also limits the build context to the product's
+source, dependencies and saved evidence; unrelated research, Git history and local
+configuration are excluded before transfer. It applies specifically to this Dockerfile,
+as described in [Docker's build-context documentation](https://docs.docker.com/build/concepts/context/#filename-and-location).
 
 ```powershell
 docker build --file Dockerfile.mirage --tag mirage-workbench:local .

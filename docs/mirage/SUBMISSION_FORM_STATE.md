@@ -1,19 +1,21 @@
 # ETHOnline form state — observed 9 September 2026
 
-Read in the root task's internal Codex browser from rendered DOM. No form
-values were changed and no save/submit buttons were pressed.
+Read in the root task's internal Codex browser from rendered DOM. The name and
+three description fields have now been filled as an UNSAVED draft. No save or
+submit button has been pressed; reloading can discard these local field values.
 
 - Signed in: dashboard welcomes Sergei and says attendance is fully confirmed.
 - Continuity Track: checked. This is no longer an outstanding choice.
-- Project: Vega Allocator, category DeFi, shield emoji. Showcase slug remains
-  vega-allocator-vbqty; draft rename to MIRAGE is still to be saved.
+- Saved project: Vega Allocator; unsaved name field: MIRAGE. Category DeFi and
+  shield emoji. Showcase slug remains vega-allocator-vbqty.
 - Discord: dashboard explicitly says event Discord is not connected.
 - Demonstration URL: empty, required.
-- Short description: empty, maximum 100 characters.
-- Description: empty, minimum 280 characters.
-- How it is made: empty, minimum 280 characters.
+- Short description: filled from SUBMISSION_DRAFT.md, 90 characters.
+- Description: filled from SUBMISSION_DRAFT.md, 1059 characters.
+- How it is made: filled from SUBMISSION_DRAFT.md, 1753 characters, including MCP.
 - Public GitHub repositories: required. Account picker and repository selector
-  shown; no repository selected in the visible first form step.
+  shown; no repository selected. Opening the account selector showed only
+  "Add GitHub Account". GitHub account linking remains an owner action.
 - First-step action: Save & Continue. No later pages were accessed.
 - Prize selections and video fields on later pages: not yet inspected.
 
