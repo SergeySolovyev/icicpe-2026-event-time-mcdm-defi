@@ -116,6 +116,18 @@ explicitly outside its coverage.
 See [the architecture and local API](docs/mirage/ARCHITECTURE.md) for the complete
 data path and the boundary between collected evidence, replay and policy.
 
+## AI use and planning provenance
+
+Sergey supplied the two existing repositories, the product direction and the
+initial research context. OpenAI Codex agents generated and revised most of the
+new MIRAGE implementation, tests, interface and documentation. Earlier Claude
+Code assistance is reported in the supplied preparation history. See the
+[file-level AI disclosure](docs/mirage/AI_USE.md),
+[corrected build specification](docs/mirage/planning/BUILD_SPEC.md) and
+[prompt provenance](docs/mirage/planning/PROMPT_PROVENANCE.md).
+These documents identify the observed contributions and unresolved historical
+attribution; they are not a complete original prompt archive.
+
 ## What the demo proves
 
 The Graph discovery at block **25,938,082** returned **697 USDC market IDs**.

@@ -40,6 +40,41 @@
   function marketName(market) { return market?.display?.collateral_symbol || KNOWN[market?.market_id?.toLowerCase()] || shortHex(market?.market_id, 5, 4); }
   function loanName(market) { return market?.display?.loan_symbol || "USDC"; }
   function metricValues(market) { return Object.assign({}, ...(market?.findings || []).map((finding) => finding.metrics || {})); }
+  function usdcUnits(value) {
+    const text = String(value ?? "");
+    if (!/^(?:0|[1-9]\d{0,9})(?:\.\d{1,6})?$/.test(text)) return null;
+    const [whole, fraction = ""] = text.split(".");
+    const units = BigInt(whole) * 1000000n + BigInt(fraction.padEnd(6, "0"));
+    return units > 0n && units <= 1000000000000000n ? units : null;
+  }
+  function saleAmountLabel(units) {
+    const fraction = String(units % 1000000n).padStart(6, "0").replace(/0+$/, "");
+    return `${grouped(units / 1000000n)}${fraction ? "." + fraction : ""} USDC`;
+  }
+  function checkedSaleAmount(market) {
+    // Bind the displayed size to the canonical exit finding, never snapshot metadata.
+    const finding = market?.findings?.find((item) => String(item.code || "").startsWith("exit_"));
+    if (!["exit_size_quoted", "exit_size_exceeds_policy"].includes(finding?.code) || finding?.metrics?.quote_status !== "ok") return null;
+    // Decimal evidence may retain trailing zeros beyond six fractional places.
+    const recorded = String(finding.metrics.scenario_notional_loan ?? "").replace(/(\.\d*?)0+$/, "$1").replace(/\.$/, "");
+    return usdcUnits(recorded);
+  }
+  function saleScopeLabel(market) {
+    const checked = checkedSaleAmount(market);
+    return checked === null ? "Sale quote unavailable" : `Sale checked: ${saleAmountLabel(checked)}`;
+  }
+  function renderAmountScope() {
+    const market = state.markets.find((item) => item.market_id === state.selected);
+    const checked = checkedSaleAmount(market);
+    const proposed = usdcUnits($("allocation-amount").value.trim().replaceAll(",", ""));
+    const scope = $("quote-scope");
+    scope.classList.toggle("needs-check", Boolean(market) && (checked === null || proposed !== checked));
+    if (!market) scope.textContent = "Select a market to see its recorded sale size.";
+    else if (checked === null) scope.textContent = "No completed sale quote is recorded for this market. Use Check market to request evidence.";
+    else if (proposed === null) scope.textContent = `Recorded sale check: ${saleAmountLabel(checked)}. Enter a valid amount to compare.`;
+    else if (proposed !== checked) scope.textContent = `Recorded sale check: ${saleAmountLabel(checked)}. The proposed ${saleAmountLabel(proposed)} is not checked. Use Check market.`;
+    else scope.textContent = `Recorded sale check: ${saleAmountLabel(checked)} at this report's block; matches this amount.`;
+  }
   function reportLive() { return state.report?.source?.kind === "the-graph" && state.report?.capture_mode === "live"; }
   function reportBlock() { return state.report?.block_number; }
   function utcTime(timestamp) { const value = Number(timestamp); if (timestamp === undefined || timestamp === null || !Number.isFinite(value)) return null; const date = new Date(value * 1000); return Number.isNaN(date.getTime()) ? null : date.toISOString().slice(0, 16).replace("T", " ") + " UTC"; }
@@ -104,6 +139,7 @@
     select.value = state.selected || "";
     $("evaluate-button").disabled = !state.selected;
     if (!state.scanning) $("scan-button").querySelector("span").textContent = state.selected ? "Check market" : "Refresh evidence";
+    renderAmountScope();
     renderMarkets();
   }
 
@@ -123,7 +159,7 @@
       const nameText = node("div"), primary = node("div", "market-primary", marketName(market));
       primary.append(node("span", "market-loan", ` / ${loanName(market)}`));
       nameText.append(primary, node("span", "market-secondary", shortHex(market.market_id, 5, 4))); name.append(nameText); nameCell.append(name);
-      const admission = node("td"); admission.append(severityBadge(market.severity));
+      const admission = node("td"); admission.append(severityBadge(market.severity), node("small", "sale-scope", saleScopeLabel(market)));
       const liquidity = node("td", `number market-value${String(metrics.available_liquidity_raw) === "0" ? " value-zero" : ""}`, usdc(metrics.available_liquidity_raw));
       liquidity.title = `${usdc(metrics.available_liquidity_raw, 6)} USDC available at this block`;
       const share = node("td", "number rate-value", ratio(metrics.share_price_multiple_vs_initial));
@@ -186,7 +222,7 @@
   function openDrawer(market, focus) {
     state.drawerMarket = market; state.lastFocus = focus || document.activeElement;
     $("drawer-title").textContent = `${marketName(market)} / ${loanName(market)}`;
-    $("drawer-severity").replaceChildren(severityBadge(market.severity));
+    $("drawer-severity").replaceChildren(severityBadge(market.severity), node("small", "sale-scope", saleScopeLabel(market)));
     $("drawer-block").textContent = `Block ${grouped(market.block_number ?? reportBlock() ?? "—")}`;
     $("drawer-id").textContent = market.market_id || "Market ID unavailable";
     const metrics = metricValues(market), metricsRoot = $("drawer-metrics"); metricsRoot.replaceChildren();
@@ -220,6 +256,7 @@
   function setDestination(id) { state.selected = id; $("allocation-market").value = id; resetPreview(); renderMarkets(); if (!state.scanning) $("scan-button").querySelector("span").textContent = id ? "Check market" : "Refresh evidence"; }
   function resetPreview() {
     state.previewToken += 1;
+    renderAmountScope();
     $("preview-context").textContent = reportBlock() != null ? `Preview will use report block ${grouped(reportBlock())}. No transactions.` : "Replay at the report's block. No historical profit claim.";
     $("original-action").textContent = "Waiting for a preview";
     $("original-rationale").textContent = "Run the original policy for this destination and amount.";

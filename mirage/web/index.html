@@ -74,8 +74,9 @@
         <label class="field-label" for="allocation-market">Destination</label>
         <div class="dark-select-wrap"><select id="allocation-market"><option value="">Load a report to choose a market</option></select></div>
         <label class="field-label amount-label" for="allocation-amount">Proposed allocation</label>
-        <div class="amount-field"><input id="allocation-amount" type="text" inputmode="decimal" value="10000" autocomplete="off" spellcheck="false" aria-describedby="amount-hint"><span>USDC</span></div>
-        <p class="amount-hint" id="amount-hint">An editable scenario. No funds are moved.</p>
+        <div class="amount-field"><input id="allocation-amount" type="text" inputmode="decimal" value="10000" autocomplete="off" spellcheck="false" aria-describedby="amount-hint quote-scope"><span>USDC</span></div>
+        <p class="amount-hint" id="amount-hint">Also sets a hypothetical collateral sale's USDC value at the recorded TWAP; no funds move.</p>
+        <p class="quote-scope" id="quote-scope" aria-live="polite">Select a market to see its recorded sale size.</p>
         <p class="preview-context" id="preview-context">Replay at the report's block. No historical profit claim.</p>
         <button class="button button-aqua" id="evaluate-button" type="button" disabled>Preview allocation <svg width="18" height="18" viewBox="0 0 20 20" aria-hidden="true"><path d="m7 4 6 6-6 6"/></svg></button>
         <p class="allocator-error" id="allocator-error" role="status" hidden></p>

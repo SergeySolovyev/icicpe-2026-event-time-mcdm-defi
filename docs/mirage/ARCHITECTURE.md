@@ -118,10 +118,14 @@ the collector does not simulate a new accrual or claim an instantaneous rate.
 | `POST /api/scan` | Start read-only Graph discovery and selected-market checks |
 
 The scan JSON body accepts `{"amount_usdc":"10000","market_id":"0x..."}`.
-Omitting the market ID uses the documented demo shortlist. Only one refresh is
-active at a time. A successful refresh validates and saves a new snapshot before
-replacing the report. Local Host/Origin checks limit browser access to this server;
-it is not an authenticated public deployment.
+Omitting the market ID uses the documented demo shortlist. One refresh may run
+per visitor session, with at most two live jobs across a public server. A successful
+refresh validates and saves a new snapshot before replacing that visitor's report.
+Public mode uses bounded, isolated cookie sessions; these separate visitors, but
+are not user accounts or wallet authentication. The server checks the exact public
+Host/Origin and retains its loopback-only default for local use. The verified
+[Render deployment](HOSTING.md) enables public mode explicitly. Live captures and
+visitor sessions are ephemeral; the frozen demo is part of the deployed image.
 
 The gate performs no network calls, signatures or transactions. Its default
 freshness requirement is the exact decision block. Future evidence is always

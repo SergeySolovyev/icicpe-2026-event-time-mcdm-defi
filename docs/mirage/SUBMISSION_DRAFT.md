@@ -34,6 +34,8 @@ Uniswap v3 supplies a geometric TWAP and QuoterV2 sale simulations. MIRAGE compa
 
 An optional stdio MCP server uses the official Python SDK to expose three reusable tools: get_saved_report, inspect_market, and preview_saved_allocation. An official SDK client successfully called all three, including a live Graph-to-RPC inspection of PAXG at block 25938274. AI agents can consume the same structured evidence and allocation comparison as the workbench. Findings are computed by explicit rules; no LLM or ML safety score decides admission.
 
+AI use: Sergey supplied the existing repositories, product direction and initial research context. OpenAI Codex agents generated and revised most new MIRAGE code, tests, interface and documentation; earlier Claude Code assistance is reported for preparation and the initial subgraph. The repository's docs/mirage/AI_USE.md provides file-level attribution and links to the corrected specification and selected prompt provenance. Historical attribution and completeness of the original planning archive remain under review.
+
 ### Public GitHub repositories
 
 Primary implementation and Continuity history:
@@ -93,10 +95,11 @@ The [ETHGlobal rules](https://ethglobal.com/rules) make the disclosure of existi
 
 ## Sergey — final actions
 
-1. Review the MIRAGE project fields, use `https://mirage-workbench.onrender.com` as the demo URL, connect GitHub in ETHGlobal and select the public repository. Sergey makes the final form save; Continuity is already selected.
+1. Connect GitHub in ETHGlobal so the prepared MIRAGE draft can select the public repository and be saved. The verified demo URL is `https://mirage-workbench.onrender.com`; Continuity is already selected. Saving these editable fields is distinct from Sergey's final submission.
 2. Record and upload the human-narrated demo using [DEMO_SCRIPT.md](DEMO_SCRIPT.md). Confirm that a signed-out viewer can open the video and application.
 3. Complete the Uniswap developer feedback form linked from `FEEDBACK.md`; record completion without exposing private account data.
 4. Review sponsor selections and the later form steps, then make the final project and prize submissions yourself. No submission is performed by this document.
 5. Connect the event Discord if still required for event participation or organizer questions.
+6. Confirm the personal research/design/validation contributions and historical AI attribution in [AI_USE.md](AI_USE.md). Resolve the incomplete original planning archive against the event's specification-disclosure rule before final submission; the corrected public specification is not represented as the complete original archive.
 
 Working deadline provided by Sergey: **13 September 2026, 19:00 Moscow / 12:00 EDT**. Confirm the dashboard countdown before the final submission; do not plan around midnight.
