@@ -1,0 +1,3 @@
+# Optional official MCP SDK. FastMCP lives on the maintained v1 line.
+# This does not change the stdlib core/web requirements.
+mcp==1.30.0
