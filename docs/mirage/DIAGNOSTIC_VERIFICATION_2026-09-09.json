@@ -1,0 +1,39 @@
+{
+  "recorded_date": "2026-09-09",
+  "implementation_commit": "bb0e20cd946f7dfd9571d286788278fb7842a9b2",
+  "scope": "Versioned diagnostics, resumable capture tools, and offline replay. No new network evidence or Render deployment in this verification.",
+  "snapshot": {
+    "path": "mirage/snapshots/mainnet-full-25938082-diagnostics-v2.json.gz",
+    "sha256": "3df5fa7330740453cf64464ff992e541b2095b01c952f34cd8c262afe888ed7b",
+    "parent_sha256": "91aa45a2134eb8757ff4dcd9a4e651447067fa55ba20c40f700ac4840c2385fa",
+    "block": 25938082,
+    "changed_derived_fields": 12,
+    "unchanged_content_sha256": "0e3d503ef3beef842c599ed6164496ba312a06d794b9736585fef3b200b0a7aa",
+    "unique_preserved_eth_calls": 185,
+    "unique_preserved_code_reads": 8,
+    "new_network_calls": 0,
+    "replayed_market_severities": ["block", "insufficient", "insufficient", "pass"],
+    "review": "A separate Codex agent independently compared source/candidate raw fields, deep diff, provenance, anchored result counts, replay and overwrite refusals. This is not a human audit or a second-provider reread."
+  },
+  "linux_ci": {
+    "url": "https://github.com/SergeySolovyev/icicpe-2026-event-time-mcdm-defi/actions/runs/34340178487",
+    "head_sha": "bb0e20cd946f7dfd9571d286788278fb7842a9b2",
+    "conclusion": "success",
+    "platform": "Ubuntu 24.04, Python 3.12, isolated pinned product dependencies",
+    "tests_passed": 218,
+    "warnings": 2,
+    "test_seconds": 5.45,
+    "sdk_example": "Actual stdio client: PAXG 10000 switch/hold; WETH 10000 switch/switch; WETH 20000 switch/hold with exact_size=false.",
+    "docker_build": "success",
+    "ci_image_sha256": "19744cf94c5583b16b069e664cf287208b72769ea01c597c3ce2e608b89597b8",
+    "docker_replay": "--network=none: block 25938082, four markets, gated hold",
+    "image_scope": "Image built in this CI run; not a Render image digest."
+  },
+  "windows_local": {
+    "combined_run": "217 passed, one MCP initialize timeout at the existing 40-second limit, two warnings, 148.45 seconds. A separate SDK example was running concurrently.",
+    "failed_test": "tests/test_mirage_mcp.py::test_stdio_full_snapshot_returns_report_and_closes",
+    "unchanged_single_test_rerun": "1 passed in 45.41 seconds; no code or timeout changes",
+    "sdk_example": "All three actual stdio scenarios passed on the new saved default.",
+    "accounting_summary_cli": "The public summary script replayed the published 697-market accounting snapshot; exact stored asset sums and coverage matched the original summary."
+  }
+}

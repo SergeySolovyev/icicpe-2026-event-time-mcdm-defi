@@ -58,3 +58,10 @@ The deUSD exit explanation now identifies the unavailable reference route. PAXG'
 linear-walk diagnostic no longer calls its runtime malformed; the walk offset
 remains visible. Neither change supplies the missing oracle/reference evidence
 or turns an insufficient finding into a pass.
+
+For implementation commit `bb0e20cd946f7dfd9571d286788278fb7842a9b2`,
+[clean Ubuntu/Python 3.12 CI](https://github.com/SergeySolovyev/icicpe-2026-event-time-mcdm-defi/actions/runs/34340178487)
+passed all 218 tests, the actual MCP SDK example, and a Docker build with saved
+replay under `--network=none`. The [verification record](DIAGNOSTIC_VERIFICATION_2026-09-09.json)
+also records the local Windows startup timeout and its successful unchanged rerun.
+This is code/build verification, not a Render deployment or new live chain capture.

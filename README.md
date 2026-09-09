@@ -300,7 +300,7 @@ Offline tests and historical recorded mainnet fixtures are separate from a fresh
 live refresh. No historical P&L, state-changing transaction, universal oracle
 safety, complete liquidation capacity, or v2/v4/Pendle/Curve integration is claimed.
 
-On 9 September, clean Ubuntu/Python 3.12 [CI passed all 176 tests](https://github.com/SergeySolovyev/icicpe-2026-event-time-mcdm-defi/actions/runs/34329377252)
+On 9 September, clean Ubuntu/Python 3.12 [CI passed all 218 tests](https://github.com/SergeySolovyev/icicpe-2026-event-time-mcdm-defi/actions/runs/34340178487)
 with these dependencies and without research packages. `--noconftest` skips the
 repository's Windows research-DLL preload; test fixtures remain in the focused
 test files. CI also built the product Docker image and replayed the saved report
