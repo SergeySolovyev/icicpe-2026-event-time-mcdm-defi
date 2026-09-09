@@ -19,6 +19,9 @@ on:
       - ".dockerignore"
       - "scripts/mirage_host.py"
       - "scripts/mirage_mcp_demo.py"
+      - "scripts/mirage_capture_universe.py"
+      - "scripts/mirage_summarize_universe.py"
+      - "scripts/mirage_rederive_snapshot.py"
       - "LICENSE"
   workflow_dispatch:
 

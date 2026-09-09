@@ -86,12 +86,16 @@ The Graph supplies the market set; direct contract observations supply monetary 
 
 ## What does the independent verification cover?
 
-For the committed four-market snapshot, 185 distinct contract calls and eight code
+For the original four-market capture, 185 distinct contract calls and eight code
 reads were repeated individually through each of two RPC providers and matched.
 Offline replay then recomputes derived findings. This checks captured responses and
 internal consistency; it is not a cryptographic proof of arbitrary supplied data.
 
-**Show:** [verification record](VERIFICATION_2026-09-09.json) and the snapshot hash
+The current default is an [offline diagnostic derivation](DIAGNOSTIC_REPLAY.md)
+with identical raw inputs; it has a new file hash and records its parent hash.
+
+**Show:** [original verification record](VERIFICATION_2026-09-09.json),
+[derivation record](DIAGNOSTIC_REPLAY.md), and the current snapshot hash
 in [the demo manifest](../../mirage/snapshots/demo.json). The 697 discovered IDs are
 not 697 completed inspections. Later live checks have their own block and scope.
 

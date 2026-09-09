@@ -24,7 +24,7 @@ ADDRESS_GETTERS = tuple(key for key in GETTERS if key != "SCALE_FACTOR")
 
 
 def collect_oracle(client: RpcClient, address: str, anchor: BlockAnchor,
-                   lookback: int = 1_000_000) -> dict:
+                   lookback: int = 1_000_000, *, bytecode_diagnostics_version: int = 2) -> dict:
     """Collect current/historical prices, all nine getters and feed timestamps.
 
 Only successful RPC returns become Evidence. Failures remain explicit errors.
@@ -34,6 +34,8 @@ not as thousands of bytes embedded in every market's public finding.
     enc_addr(address)
     if type(lookback) is not int or lookback <= 0:
         raise ValueError("lookback must be a positive block count")
+    if type(bytecode_diagnostics_version) is not int or bytecode_diagnostics_version not in (1, 2):
+        raise ValueError("Unsupported bytecode diagnostics version")
     address = address.lower()
     result = {
         "address": address, "chain_id": anchor.chain_id, "block_number": anchor.number,
@@ -101,7 +103,8 @@ not as thousands of bytes embedded in every market's public finding.
     if result["factory_verified"] is True and len(result["getters"]) == len(ORACLE_GETTERS):
         result["template"] = "morpho-chainlink-oracle-v2"
     else:
-        result["bytecode"] = inspect_bytecode(raw_code)
+        result["bytecode"] = (inspect_bytecode(raw_code) if bytecode_diagnostics_version == 2
+                              else inspect_bytecode(raw_code, diagnostics_version=1))
 
     if anchor.number >= lookback:
         try:
@@ -218,7 +221,14 @@ def validate_oracle(observation: dict) -> dict:
             return calls[key]
 
     recorded = RecordedRpc()
-    replay = collect_oracle(recorded, obs["address"], current, obs["lookback_blocks"])
+    saved_bytecode = obs.get("bytecode")
+    if saved_bytecode is not None and not isinstance(saved_bytecode, dict):
+        raise ValueError("Invalid bytecode diagnostics")
+    # Snapshots predating versioned diagnostics must reproduce their exact v1
+    # dictionary, including its historical linear-walk classification.
+    diagnostics_version = saved_bytecode.get("diagnostics_version", 1) if saved_bytecode is not None else 2
+    replay = collect_oracle(recorded, obs["address"], current, obs["lookback_blocks"],
+                            bytecode_diagnostics_version=diagnostics_version)
     if recorded.used != calls.keys():
         raise ValueError("Oracle observation contains unused RPC evidence")
     # Error descriptions are transport diagnostics, not data. All economic and

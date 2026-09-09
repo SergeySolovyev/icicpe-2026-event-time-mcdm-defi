@@ -37,16 +37,22 @@ def _normalize(value: str | bytes) -> bytes:
     return bytes.fromhex(value)
 
 
-def inspect_bytecode(value: str | bytes, *, max_candidates: int = 64) -> dict:
+def inspect_bytecode(value: str | bytes, *, max_candidates: int = 64,
+                     diagnostics_version: int = 2) -> dict:
     """Return bounded JSON-safe diagnostics and provenance for one runtime."""
     if type(max_candidates) is not int or max_candidates < 0:
         raise ValueError("max_candidates must be a nonnegative integer")
+    if type(diagnostics_version) is not int or diagnostics_version not in (1, 2):
+        raise ValueError("Unsupported bytecode diagnostics version")
     result = {
         "status": "unavailable", "upstream_commit": UPSTREAM_COMMIT,
         "upstream_file_sha256": UPSTREAM_SHA256, "features_extracted": False,
         "push_candidates": [], "candidate_count": 0,
         "interpretation": "Structural diagnostics only; operands are candidates, not dependencies or security findings.",
     }
+    if diagnostics_version == 2:
+        result["diagnostics_version"] = 2
+        result["interpretation"] += " Status describes diagnostic collection, not EVM semantic validity."
     try:
         raw = _normalize(value)
     except ValueError:
@@ -75,6 +81,9 @@ def inspect_bytecode(value: str | bytes, *, max_candidates: int = 64) -> dict:
         pc += 1 + size
     result.update(push_candidates=candidates[:max_candidates], candidate_count=len(candidates),
                   candidates_truncated=len(candidates) > max_candidates, truncated_push=truncated)
+    if diagnostics_version == 2 and truncated:
+        result.update(truncated_push_offset=pc, linear_walk_note=
+                      "A linear PUSH scan can reach metadata or unreachable data; an incomplete operand does not establish malformed runtime.")
     prefix, suffix = bytes.fromhex("363d3d373d3d3d363d73"), bytes.fromhex("5af43d82803e903d91602b57fd5bf3")
     if len(raw) == 45 and raw.startswith(prefix) and raw.endswith(suffix):
         result["eip1167_implementation"] = "0x" + raw[10:30].hex()
@@ -85,7 +94,7 @@ def inspect_bytecode(value: str | bytes, *, max_candidates: int = 64) -> dict:
         extracted = _extractor()._extract_features_single(raw)
         features = {key: float(value) for key, value in extracted.items()}
         result.update(
-            status="malformed" if truncated else "ok", features_extracted=True,
+            status="malformed" if truncated and diagnostics_version == 1 else "ok", features_extracted=True,
             feature_count=len(features),
             features_sha256=hashlib.sha256(json.dumps(features, sort_keys=True, allow_nan=False).encode()).hexdigest(),
             structural_features={key: features[key] for key in STRUCTURAL_FEATURES},

@@ -136,7 +136,7 @@ attribution; they are not a complete original prompt archive.
 ## What the demo proves
 
 The Graph discovery at block **25,938,082** returned **697 USDC market IDs**.
-The [frozen demo](mirage/snapshots/mainnet-full-25938082-routes-v2.json.gz) inspects **four**
+The [frozen demo](mirage/snapshots/mainnet-full-25938082-diagnostics-v2.json.gz) inspects **four**
 markets from that discovery universe for a hypothetical **10,000 USDC** sale.
 **697 discovered does not mean 697 assessed.** Both discovery and inspected
 counts remain in the report's source metadata.
@@ -241,10 +241,18 @@ python -m mirage verify 0x8eaf7b29f02ba8d8c1d7aeb587403dcb16e2e943e4e2f5f94b0963
 python -m mirage serve --port 8766 --snapshot data/cached/mirage/my-market.json.gz
 ```
 
+For a complete discovered universe, the [resumable capture guide](docs/mirage/UNIVERSE_CAPTURE.md)
+provides per-market checkpoints at one fixed block and a validated offline summary.
+It preserves partial results and distinguishes collected observations from sufficient
+evidence; completing a capture does not grant admission to every market.
+
 `verify` is an explicit-market RPC capture, so it does not claim live Graph use.
 The default live anchor is Ethereum's `finalized` block; `--block` can select a
 numeric block. Saved snapshots refuse overwrites. [`demo.json`](mirage/snapshots/demo.json)
 selects the committed default; older accounting-only snapshots remain reproducible.
+The current demo [re-derives diagnostic explanations](docs/mirage/DIAGNOSTIC_REPLAY.md)
+from the unchanged recorded inputs. Its parent artifact and original provider
+verification record remain intact; this is not a newer mainnet capture.
 The earlier [`mainnet-full-25938082.json.gz`](mirage/snapshots/mainnet-full-25938082.json.gz)
 is retained as a regression artifact for the superseded direct-first routing
 policy, not as the current wstETH exit assessment.
@@ -282,7 +290,7 @@ an arbitrary file fabricated by a third party as Ethereum truth.
 
 ```console
 python -m pip install -r requirements-mirage.txt -r requirements-mirage-mcp.txt "pytest==8.3.5" "anyio==4.10.0" "eth-abi==5.2.0" "eth-hash[pycryptodome]==0.7.1"
-python -m pytest --noconftest -p anyio.pytest_plugin -q tests/test_mirage_core.py tests/test_mirage_gate.py tests/test_mirage_oracle.py tests/test_mirage_uniswap.py tests/test_mirage_workbench.py tests/test_mirage_mcp.py tests/test_t1_threshold.py
+python -m pytest --noconftest -p anyio.pytest_plugin -m "not network" -q tests/test_mirage_core.py tests/test_mirage_gate.py tests/test_mirage_oracle.py tests/test_mirage_uniswap.py tests/test_mirage_workbench.py tests/test_mirage_mcp.py tests/test_mirage_quote_reason.py tests/test_mirage_bytecode_metadata.py tests/test_mirage_universe.py tests/test_mirage_rederive.py tests/test_t1_threshold.py
 ```
 
 The tests cover ABI bounds and sign handling, pagination, accounting formulas,
@@ -296,10 +304,12 @@ On 9 September, clean Ubuntu/Python 3.12 [CI passed all 176 tests](https://githu
 with these dependencies and without research packages. `--noconftest` skips the
 repository's Windows research-DLL preload; test fixtures remain in the focused
 test files. CI also built the product Docker image and replayed the saved report
-and allocator with container networking disabled. The default four-market
-snapshot was independently reread through Tenderly and dRPC: **185 eth_call
+and allocator with container networking disabled. The original four-market
+capture was independently reread through Tenderly and dRPC: **185 eth_call
 returns and eight runtime-code reads matched on each provider**, with no JSON-RPC
 batching. See [the verification record](docs/mirage/VERIFICATION_2026-09-09.json).
+The current default preserves those exact recorded inputs and changes only
+[versioned diagnostic explanations](docs/mirage/DIAGNOSTIC_REPLAY.md).
 
 Continuity has been selected in the event dashboard. For the final submission,
 the owner still needs to finish the project fields and any remaining account

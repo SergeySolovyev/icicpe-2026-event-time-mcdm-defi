@@ -43,6 +43,19 @@ operand candidates are new code. They do not prove called dependencies or
 immutable meanings. Exact EIP-1167 recognition only identifies the embedded
 implementation address, not its behavior.
 
+Bytecode diagnostic version 2 reports whether structural collection completed;
+it does not infer runtime validity from a linear PUSH walk. Such a walk can enter
+metadata or unreachable bytes. Solidity commonly appends a
+[CBOR metadata trailer](https://docs.soliditylang.org/en/latest/metadata.html).
+An incomplete PUSH remains visible as a diagnostic, and the entire original
+runtime still goes to the unchanged 70-feature extractor. Unversioned saved
+diagnostics replay with the old version 1 classification, including its limits.
+
+Uniswap observations similarly record their quote-reason version. New captures
+distinguish a missing sale amount from an unavailable reference route for a
+supplied notional. Legacy observations replay their original explanation;
+neither version changes quote arithmetic, route selection or admission severity.
+
 The supported semantic oracle template is official Ethereum
 MorphoChainlinkOracleV2 factory membership plus successfully read configuration.
 Getter-compatible custom implementations and the legacy oracle used by the old
@@ -69,6 +82,13 @@ the hash check. Missing data, indexing errors or incompatible metadata abort
 discovery. The UI may keep showing its saved report after that failure, with
 the saved/live label unchanged.
 
+The [universe capture tools](UNIVERSE_CAPTURE.md) preserve a discovery manifest
+and one raw checkpoint per market. They resume missing captures at the original
+block, report failures explicitly and retain an accounting-only row when its
+full capture fails. Their output is separate from the default four-case demo.
+The summary replays raw observations before aggregating stored balances and
+distinguishes checks recorded from checks that have sufficient evidence.
+
 ## Policy scope
 
 | Check | Default consequence |
@@ -92,10 +112,12 @@ requires matching evidence. There is no inference from active liquidity or
 reserves to total market liquidation capacity.
 
 The default frozen evidence is
-[`mainnet-full-25938082-routes-v2.json.gz`](../../mirage/snapshots/mainnet-full-25938082-routes-v2.json.gz).
+[`mainnet-full-25938082-diagnostics-v2.json.gz`](../../mirage/snapshots/mainnet-full-25938082-diagnostics-v2.json.gz).
 It yields PAXG `block`, deUSD `insufficient`, wstETH `insufficient`, and WETH `pass`.
 The wstETH exit passes through WETH; its unsupported oracle is the remaining
-admission blocker. The earlier
+admission blocker. This is a [versioned offline diagnostic derivation](DIAGNOSTIC_REPLAY.md)
+of the retained routes-v2 capture, with identical raw inputs and quote amounts.
+The earlier
 [`mainnet-full-25938082.json.gz`](../../mirage/snapshots/mainnet-full-25938082.json.gz)
 is retained solely as a historical regression artifact for `direct-first/1`.
 Replay respects each artifact's recorded routing policy rather than silently

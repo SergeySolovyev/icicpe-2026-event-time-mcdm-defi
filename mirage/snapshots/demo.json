@@ -1,6 +1,6 @@
 {
-  "snapshot": "mainnet-full-25938082-routes-v2.json.gz",
-  "sha256": "91aa45a2134eb8757ff4dcd9a4e651447067fa55ba20c40f700ac4840c2385fa",
+  "snapshot": "mainnet-full-25938082-diagnostics-v2.json.gz",
+  "sha256": "3df5fa7330740453cf64464ff992e541b2095b01c952f34cd8c262afe888ed7b",
   "block": 25938082,
-  "scope": "four inspected markets; 697 Graph-discovered IDs; hypothetical 10000 USDC sale; compared exit routes"
+  "scope": "four inspected markets; 697 Graph-discovered IDs; hypothetical 10000 USDC sale; compared exit routes; offline diagnostic re-derivation of unchanged recorded evidence"
 }

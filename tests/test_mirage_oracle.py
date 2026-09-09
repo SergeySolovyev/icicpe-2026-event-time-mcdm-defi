@@ -321,7 +321,7 @@ class BytecodeTests(unittest.TestCase):
 
     @unittest.skipUnless(HAS_EXTRACTOR, "Install requirements-mirage.txt for the original extractor")
     def test_truncated_push_is_malformed_even_if_original_returns_zeros(self):
-        result = inspect_bytecode("0x7f01")
+        result = inspect_bytecode("0x7f01", diagnostics_version=1)
         self.assertTrue(result["truncated_push"])
         self.assertEqual(result["status"], "malformed")
 
