@@ -112,6 +112,9 @@ flowchart LR
 | [Entry gate](mirage/gate.py) and [decision comparison](mirage/allocator.py) | Run the existing T1 policy, then veto an entry that lacks acceptable, matching evidence |
 | [Local server](mirage/server.py) and [workbench](mirage/web/) | Inspect findings, copy evidence, check a live market and compare actual policy responses |
 
+For Uniswap review, the [Ethereum contract addresses](mirage/chain/uniswap.py#L14)
+and [QuoterV2 call](mirage/chain/uniswap.py#L337) link directly to the integration.
+
 The gate calls the original policy **once on the complete state**. By default it
 vetoes `block` and `insufficient`, requires the same decision block, and rejects
 future reports. It does not force liquidation of an existing position, rerank
@@ -276,8 +279,10 @@ python -m mirage.mcp_server
 
 Its real stdio transport was tested with saved evidence and a live PAXG check
 through Graph at block 25938274. No LLM or vulnerability classifier is required.
-The MCP test suite has 21 tests, including compact and full responses through
-a fresh-process stdio session. Default reports omit raw blobs and are 93.1%
+The MCP tests include compact and full responses through a fresh-process stdio
+session. Clients without a working-directory setting can use the
+[portable server launcher and configuration](docs/mirage/MCP.md).
+Default reports omit raw blobs and are 93.1%
 smaller on the frozen four-market fixture; full evidence remains available
 with `include_evidence=true`.
 

@@ -104,3 +104,16 @@ ABI words were validated. Selectors and all 697 cached ID widths checked out.
 These observations establish neither current whole-market totals nor a
 historical principal. They support a precise accounting observation and an
 explicit admission policy at the cited block.
+
+## 7. Sponsor prize pools are not individual awards
+
+The official ETHOnline pages were rechecked on 9 September 2026. In Continuity,
+[The Graph AI Tooling prize](https://ethglobal.com/events/ethonline2026/prizes/the-graph)
+has a **$5,000 pool**, split into **$2,500 / $1,500 / $1,000**. The
+[Uniswap Stack Contribution prize](https://ethglobal.com/events/ethonline2026/prizes/uniswap-foundation)
+has a **$2,000 pool**, split into **two $1,000 awards**.
+
+Earlier planning treated those pool headings as amounts available to one team.
+Do not reuse that arithmetic or the resulting "$9,166 available" headline.
+The sponsors' $15,000 and $5,000 totals also span distinct nominations and tracks.
+The Graph remains the larger individual award among these two chosen targets.

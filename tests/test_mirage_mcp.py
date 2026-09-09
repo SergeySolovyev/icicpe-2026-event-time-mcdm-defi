@@ -236,14 +236,18 @@ async def test_missing_snapshot_returns_error_not_an_empty_pass(tmp_path):
 
 
 @pytest.mark.anyio
-async def test_stdio_full_snapshot_returns_report_and_closes():
+@pytest.mark.parametrize("launcher", ["module", "absolute_script"])
+async def test_stdio_full_snapshot_returns_report_and_closes(launcher, tmp_path):
     # A fresh child catches first-import native-library stalls hidden by pytest's
     # already-imported scientific dependencies. No live tool is invoked.
     from mcp import ClientSession, StdioServerParameters
     from mcp.client.stdio import stdio_client
-    params = StdioServerParameters(command=sys.executable,
-                                   args=["-m", "mirage.mcp_server"],
-                                   cwd=str(Path(__file__).parents[1]))
+    repo = Path(__file__).resolve().parents[1]
+    if launcher == "module":
+        args, cwd = ["-m", "mirage.mcp_server"], repo
+    else:
+        args, cwd = [str(repo / "scripts/mirage_mcp_server.py")], tmp_path
+    params = StdioServerParameters(command=sys.executable, args=args, cwd=str(cwd))
     # tee-sys capture supplies a stream without a native fileno on Windows.
     async with stdio_client(params, errlog=sys.__stderr__) as (read, write):
         async with ClientSession(read, write, read_timeout_seconds=timedelta(seconds=40)) as client:
@@ -256,7 +260,9 @@ async def test_stdio_full_snapshot_returns_report_and_closes():
     assert full["markets"] == json.loads(json.dumps(expected["markets"]))
     assert compact["schema"] == "mirage-agent-summary/1" and full["schema"] == "mirage-feed/1"
     assert compact["mode"] == full["mode"] == "saved"
-    assert compact["block_hash"] == full["block_hash"] and compact["markets"]
+    assert compact["block_number"] == full["block_number"] == expected["block_number"]
+    assert compact["block_hash"] == full["block_hash"] == expected["block_hash"]
+    assert compact["markets"]
     assert len(compact_result.model_dump_json().encode()) < len(full_result.model_dump_json().encode()) / 4
     print("MCP stdio sizes: " + json.dumps({
         "block": compact["block_number"], "markets": len(compact["markets"]),

@@ -9,7 +9,24 @@ python -m pip install -r requirements-mirage.txt -r requirements-mirage-mcp.txt
 python -m mirage.mcp_server
 ```
 
-An MCP client should launch `python` with arguments `["-m", "mirage.mcp_server"]` and set its working directory to this repository. Use the full interpreter path when the client does not inherit your virtual environment. Add `--snapshot` and an absolute snapshot path to select another saved artifact. The default follows `mirage/snapshots/demo.json`. Do not type ordinary text into its stdin: this transport expects MCP JSON-RPC messages.
+For clients that can set the working directory, the module command above remains supported. For other clients, use the [portable server launcher](../../scripts/mirage_mcp_server.py): an absolute interpreter path and an absolute script path are sufficient, regardless of the client's working directory. The launcher locates this checkout from its own path; it does not change the client's directory or print a banner to protocol stdout.
+
+For a client that accepts an `mcpServers` JSON configuration, replace both example paths with this checkout and the interpreter where the requirements were installed:
+
+```json
+{
+  "mcpServers": {
+    "mirage": {
+      "command": "C:/path/to/mirage-venv/Scripts/python.exe",
+      "args": ["C:/path/to/repository/scripts/mirage_mcp_server.py"]
+    }
+  }
+}
+```
+
+Use `python -c "import sys; print(sys.executable)"` in the installed environment to find the interpreter. On Linux or macOS, use its absolute `bin/python` path. Forward slashes in the Windows example are intentional valid JSON paths; literal backslashes must be doubled. The configuration contains no wallet or deploy key.
+
+Append `"--snapshot"` and an absolute snapshot path to `args` to select another saved artifact. The default follows `mirage/snapshots/demo.json`. Do not type ordinary text into stdin: this transport expects MCP JSON-RPC messages. The script launches the same three tools and preserves the module entry point's validation and saved/live boundaries.
 
 ## Run the client demonstration
 
@@ -89,7 +106,9 @@ $env:OMP_NUM_THREADS = "1"
 python -m pytest --noconftest -p anyio.pytest_plugin -m "not network" -q tests/test_mirage_mcp.py
 ```
 
-`--noconftest` skips the repository's unrelated Windows research-DLL preload. Disabling plugin autoload and explicitly loading `anyio.pytest_plugin` keeps this invocation focused on the product dependencies. The tests use the SDK's in-memory client/server transport: real tool discovery and calls, saved snapshot replay, compact/full schema and known-fact equality, explicit omissions, validation without network, live discovery/capture sequencing, explicit failures and response during a blocked worker. A separate fresh-process stdio test checks both compact and full saved reports and clean shutdown. Live network smoke testing is separate and must be recorded with its actual block.
+`--noconftest` skips the repository's unrelated Windows research-DLL preload. Disabling plugin autoload and explicitly loading `anyio.pytest_plugin` keeps this invocation focused on the product dependencies. The tests use the SDK's in-memory client/server transport: real tool discovery and calls, saved snapshot replay, compact/full schema and known-fact equality, explicit omissions, validation without network, live discovery/capture sequencing, explicit failures and response during a blocked worker. A separate fresh-process stdio test checks compact/full reports and clean shutdown for both the module command in the checkout and the absolute launcher script from a temporary external directory. Both must reproduce the default snapshot's exact block/hash and markets. Live network smoke testing is separate and must be recorded with its actual block.
+
+On 9 September 2026, the absolute-script variant passed unchanged through the real SDK on Windows CPython 3.12.8: one test, 64.26 seconds including test-process startup. It used the default diagnostics-v2 snapshot and closed the child session normally. This verifies working-directory independence on that host, not a startup-performance guarantee or a new live capture.
 
 The stdio entry loads installed optional extractor dependencies on the main thread before starting the event loop. This was introduced after a native NumPy import stall was observed when the full snapshot was first replayed in a Windows worker thread. It defaults `OPENBLAS_NUM_THREADS` and `OMP_NUM_THREADS` to `1` inside the server process, preserving explicit caller values. It does not modify the vendored extractor, load a snapshot or contact a provider. An environment without those optional dependencies retains the core's explicit unavailable diagnostics.
 

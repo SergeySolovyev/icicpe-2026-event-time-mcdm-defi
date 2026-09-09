@@ -1,6 +1,6 @@
 # MIRAGE — three-minute demo
 
-Target: three minutes of human narration with normal-speed screen recording. Record at 1080p so the block, amount and evidence remain legible. The [Graph prize](https://ethglobal.com/events/ethonline2026/prizes/the-graph) asks for two to four minutes; the [observed project form](SUBMISSION_FORM_STATE.md) caps the video at four minutes and rejects accelerated video.
+Target: about three minutes and fifteen seconds of human narration with normal-speed screen recording. Record at 1080p so the block, amount and evidence remain legible. The [Graph prize](https://ethglobal.com/events/ethonline2026/prizes/the-graph) asks for two to four minutes; the [observed project form](SUBMISSION_FORM_STATE.md) caps the video at four minutes and rejects accelerated video.
 
 For the follow-up discussion, use [the judging questions and evidence links](JUDGE_QA.md).
 
@@ -19,7 +19,7 @@ The **Load demo** control restores the frozen four-market evidence selected by `
 
 Rehearse a fresh WETH check once to establish realistic RPC latency. During recording, show its live source and new block only after it finishes. The later numerical comparison deliberately uses **Load demo**, so those exact historical values remain reproducible. The [event's video rules](https://ethglobal.com/events/ethonline2026/info/details) allow editing out unnecessary waiting. If the real request is slow, cut only the waiting interval, retain the request and completed result for the same market/amount, and label the cut as waiting removed. Do not speed up footage, alter the result, or describe an unfinished request as a result. Human narration, 720p or higher, and a final duration of 2–4 minutes remain required; AI voiceover and filming the screen with a phone are prohibited.
 
-Optional MCP preparation: install `requirements-mirage-mcp.txt`, then configure a stdio MCP client to launch `python -m mirage.mcp_server` with this repository as its working directory. Follow [MCP.md](MCP.md). Initialize before recording and rehearse `get_saved_report` and `preview_saved_allocation` with the PAXG market ID and `amount_usdc: "10000"`. The former returns four saved markets; the latter shows original T1 `switch` and gated `hold`. These tools run without a new network capture. The separate verified live `inspect_market` call took 54.36 seconds at block `25938274`; allow real latency for any new live call. Do not paste ordinary text into the server's JSON-RPC stdin.
+MCP preparation for the Graph entry: install `requirements-mirage-mcp.txt` and rehearse the actual SDK client example below. A configured MCP client can also use the portable launcher in [MCP.md](MCP.md). Rehearse `get_saved_report` and `preview_saved_allocation` with the PAXG market ID and `amount_usdc: "10000"`. The former returns four saved markets; the latter shows original T1 `switch` and gated `hold`. These tools run without a new network capture. The separate verified live `inspect_market` call took 54.36 seconds at block `25938274`; allow real latency for any new live call. Do not paste ordinary text into the server's JSON-RPC stdin.
 
 For a ready-to-run terminal demonstration, use `python scripts/mirage_mcp_demo.py`.
 It launches the official SDK client and prints actual saved PAXG/WETH decisions,
@@ -47,7 +47,7 @@ including the amount mismatch. It does not run an LLM or collect live observatio
 
 **Say:**
 
-> One bad route can give the wrong answer. We quote the same three point two two wstETH on two routes, at the same block. Direct returns about five thousand nine hundred and twenty-eight USDC. Through WETH, about ten thousand and eight. The input and reference price stay unchanged. The better route passes the exit check. The market remains insufficient because its oracle template is unsupported.
+> One bad route can give the wrong answer. We use Uniswap v3's QuoterV2 to simulate selling the same three point two two wstETH on two routes, at the same block. Direct returns about five thousand nine hundred and twenty-eight USDC. Through WETH, about ten thousand and eight. The input and reference price stay unchanged. The better route passes the exit check. The market remains insufficient because its oracle template is unsupported.
 
 On-screen exact values, without reading every digit aloud:
 
@@ -85,9 +85,9 @@ The primary reference is the same direct-pool TWAP, approximately 3104.787691 US
 
 > Our second existing project is revert.pro. MIRAGE calls its actual open-source bytecode extractor: seventy features, with the source commit and license preserved. These are structural diagnostics. Address-shaped constants remain investigation candidates, and unsupported behavior stays explicit. The extractor does not certify an oracle as safe.
 
-## 2:45–3:00 — inspectable evidence
+## 2:45–3:15 — reusable MCP tools
 
-**Screen:** Open **Reproduce the evidence** and **Copy JSON**. Show target, calldata, numeric block, raw return and block hash. End with the workbench and the README's BEFORE/AFTER link visible. Optional terminal variant within this same 15-second slot: use the already initialized MCP client to call `get_saved_report` and `preview_saved_allocation`, showing the saved block and original/gated decisions in structured results. This replaces the final JSON-click sequence and adds no section or narration.
+**Screen:** Briefly show one call in **Reproduce the evidence**, including its block and raw return. Then show the real terminal command `python scripts/mirage_mcp_demo.py` and its completed output: all three discovered tools, saved block `25938082`, PAXG original `switch` versus gated `hold`, and WETH's amount-sensitive previews. This MCP segment is required for the Graph version of the video. Use actual command output, not a fabricated terminal transcript. If startup is slow, cut only the waiting interval and label it, preserving the command and its own completed result. End with the workbench and the README's BEFORE/AFTER link visible.
 
 **Say:**
 
