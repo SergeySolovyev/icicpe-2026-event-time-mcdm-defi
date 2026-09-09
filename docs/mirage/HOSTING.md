@@ -11,11 +11,11 @@ and the public browser loaded the four-market saved-evidence workbench.
 |---|---|
 | Service URL | https://mirage-workbench.onrender.com |
 | Platform | Render Docker web service, free plan, Frankfurt |
-| Release commit | `2212062662245a0c02d6d93b6d6e195d45371681` |
-| Deployment ID | `dep-daghgg942hec73ccdi10` |
-| Dashboard timestamp | 9 September 2026, 11:26:41 Moscow |
-| Runtime live log | 9 September 2026, 11:27:53 Moscow |
-| Build/deploy duration | 1 minute 12 seconds |
+| Release commit | `8278c65b6709112ad5d904c7255e6724035bef7b` |
+| Deployment ID | `dep-daghtrou01pc73fv7870` |
+| Dashboard timestamp | 9 September 2026, 11:55:11 Moscow |
+| Runtime live log | 9 September 2026, 11:56:29 Moscow |
+| Build/deploy duration | 1 minute 18 seconds |
 | Service state | Live |
 | Service automatic deploys | Disabled |
 | Blueprint Auto Sync | No; saved and verified |
@@ -43,16 +43,23 @@ the new capture has not been independently reread through two providers. The two
 verification elsewhere in the repository applies to the frozen block `25938082` demo.
 See [public browser verification](RENDER_BROWSER_VERIFICATION_2026-09-09.json).
 
-The follow-up release above corrects a stale preview caption after a new report.
+The earlier `2212062` release corrected a stale preview caption after a new report.
 A second WETH check passed at block `25938561`; the preview used that block,
 both policies proposed entry, and **Load demo** restored block `25938082` with
 the new caption and cleared decisions. Backend detectors and the frozen fixture
 were unchanged. The earlier full HTTP isolation check refers to the initial release.
 
-[Clean Linux CI](https://github.com/SergeySolovyev/icicpe-2026-event-time-mcdm-defi/actions/runs/34329377252)
-at commit `0e3a13f1a01e6f1728c49480343eb0ae395c3f4b` passed 176 tests and separately built
+The current release adds the recorded sale size beside each verdict and the
+allocation amount. The public browser verified the 10000 → 20000 → 10000 WETH
+scenario: an immediate mismatch warning, an actual gate refusal for 20000, and
+entry allowed again for the checked 10000. deUSD correctly shows that no completed
+sale quote is available. This follow-up used saved evidence; it is not a new live
+chain verification. The backend and frozen observations are unchanged.
+
+[Clean Linux CI](https://github.com/SergeySolovyev/icicpe-2026-event-time-mcdm-defi/actions/runs/34331612128)
+at the same release commit passed 176 tests and separately built
 the same product inputs. The CI image ID was
-`sha256:a7f5e23c335a763849fa383620543f64e15ede288e639d27a3459e141bebc960`;
+`sha256:d1167d5b03614cfe153265cdc36f12fb1db1b52485cfb87617977018b6da160e`;
 it replayed four markets at block `25938082` with `--network=none`. This is the CI
 image ID, not a claimed digest of Render's separately built image.
 

@@ -52,6 +52,35 @@
       "gated": "Evidence required"
     }
   },
+  "quote_scope_release": {
+    "deployed_commit": "8278c65b6709112ad5d904c7255e6724035bef7b",
+    "deployment_id": "dep-daghtrou01pc73fv7870",
+    "dashboard_status": "Deploy succeeded|Live",
+    "dashboard_timestamp": "2026-09-09T11:55:11+03:00",
+    "runtime_live_log_at": "2026-09-09T11:56:29+03:00",
+    "duration": "1m18s",
+    "evidence_mode": "saved",
+    "block_number": 25938082,
+    "browser_checks": [
+      "PAXG, wstETH and WETH rows show Sale checked: 10,000 USDC; deUSD shows Sale quote unavailable",
+      "Changing WETH from 10000 to 20000 immediately shows that 20000 USDC is not checked, before requesting a preview",
+      "WETH preview for 20000: original Allocate to destination; MIRAGE Keep capital unallocated, with a request for matching sale evidence",
+      "Returning WETH to 10000 restores the matching-size label; the next preview permits entry in both policies",
+      "WETH evidence drawer also displays the checked 10000 USDC sale amount",
+      "Selecting deUSD shows that no completed sale quote is recorded and clears the previous preview",
+      "Visual browser screenshot confirms the checked-size labels and mismatch warning are readable"
+    ],
+    "ci": {
+      "url": "https://github.com/SergeySolovyev/icicpe-2026-event-time-mcdm-defi/actions/runs/34331612128",
+      "commit": "8278c65b6709112ad5d904c7255e6724035bef7b",
+      "result": "success",
+      "focused_tests": "176 passed, 2 warnings in 5.80s",
+      "docker_build": "success",
+      "network_disabled_replay": {"block": 25938082, "markets": 4, "gated": "hold"},
+      "ci_image_id": "sha256:d1167d5b03614cfe153265cdc36f12fb1db1b52485cfb87617977018b6da160e"
+    },
+    "scope": "UI-only product change; the existing backend and frozen evidence are unchanged. No new live RPC capture is claimed for this release verification."
+  },
   "limitations": [
     "This is a functional browser integration check, not independent second-provider verification of the fresh capture.",
     "The separate frozen four-market snapshot has 193 distinct raw results checked through each of two providers.",
