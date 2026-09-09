@@ -1,0 +1,7 @@
+# Standalone MIRAGE + the exact revert.pro extractor; no model weights required.
+pyevmasm==0.2.3
+numpy>=1.26,<3
+scipy>=1.13,<2
+pandas>=2.1,<3
+scikit-learn>=1.4,<2
+joblib>=1.3,<2

@@ -1,0 +1,3 @@
+# Preserve the exact upstream bytes and their published SHA-256 on every OS.
+revert_pro/evm_extractor.py -text
+revert_pro/LICENSE -text
