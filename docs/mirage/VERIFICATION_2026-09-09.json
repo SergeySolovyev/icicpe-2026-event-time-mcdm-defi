@@ -1,0 +1,29 @@
+{
+  "snapshot_sha256": "91aa45a2134eb8757ff4dcd9a4e651447067fa55ba20c40f700ac4840c2385fa",
+  "block_number": 25938082,
+  "block_hash": "0x7647a0738f03a46dd0c957cca4664d73f9bcc7c981405a8ccb00e3bd08ede2cb",
+  "unique_eth_calls": 185,
+  "unique_code_reads": 8,
+  "providers": [
+    {
+      "provider_index": 1,
+      "matching_reads": 193,
+      "failures": [],
+      "all_matched": true
+    },
+    {
+      "provider_index": 2,
+      "matching_reads": 193,
+      "failures": [],
+      "all_matched": true
+    }
+  ],
+  "all_matched": true,
+  "recorded_date": "2026-09-09",
+  "provider_labels": {
+    "1": "Tenderly public Ethereum RPC",
+    "2": "dRPC Ethereum RPC"
+  },
+  "snapshot": "mirage/snapshots/mainnet-full-25938082-routes-v2.json.gz",
+  "method": "Single JSON-RPC eth_call and eth_getCode; no batch or Multicall; explicit numeric block; headers checked on both providers."
+}

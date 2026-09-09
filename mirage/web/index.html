@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#172f35">
+  <title>MIRAGE — Evidence before allocation</title>
+  <link rel="stylesheet" href="/style.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#markets">Skip to markets</a>
+  <header class="site-header shell">
+    <a class="brand" href="/" aria-label="MIRAGE home">
+      <svg class="brand-mark" width="35" height="30" viewBox="0 0 35 30" aria-hidden="true"><path d="M1 24 10 5l8 19M17 24 25 5l9 19"/><path d="M5 16h8M22 16h8"/></svg>
+      <span>MIRAGE</span>
+    </a>
+    <span class="header-description">Evidence before allocation</span>
+    <nav class="header-links" aria-label="Main navigation">
+      <button class="text-button" id="method-button" type="button">How it works</button>
+      <a href="https://github.com/SergeySolovyev/icicpe-2026-event-time-mcdm-defi" target="_blank" rel="noopener noreferrer">View source <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 2h7v7M10 2 2 10"/></svg></a>
+    </nav>
+  </header>
+
+  <main class="shell">
+    <section class="intro" aria-labelledby="page-title">
+      <div class="intro-copy">
+        <p class="network-label"><span class="network-dot" aria-hidden="true"></span>Ethereum / Morpho Blue</p>
+        <h1 id="page-title">Before the yield,<br>check the evidence.</h1>
+        <p class="intro-description">A clearer view of lending markets. Inspect liquidity, review the evidence, and see what your allocator would actually admit.</p>
+      </div>
+      <div class="scan-panel">
+        <div class="source-line"><span class="source-icon" aria-hidden="true">◈</span><span id="source-label">Connecting to evidence</span></div>
+        <p id="source-description">Reading the latest available report.</p>
+        <button class="button button-primary" type="button" id="scan-button"><svg width="17" height="17" viewBox="0 0 20 20" aria-hidden="true"><path d="M16.5 7A7 7 0 1 0 17 12M16.5 3v4h-4"/></svg><span>Refresh evidence</span></button>
+        <div class="scan-status" id="scan-status" aria-live="polite">No scan running</div>
+        <progress id="scan-progress" max="100" value="0" aria-label="Market scan progress" hidden></progress>
+      </div>
+    </section>
+
+    <div class="notice" id="notice" role="status" hidden><span id="notice-message"></span><button id="retry-button" class="text-button" type="button">Retry</button></div>
+
+    <section class="evidence-strip" aria-label="Report provenance and coverage">
+      <div class="strip-item"><span class="strip-label">Markets in this report</span><strong id="market-count">—</strong></div>
+      <div class="strip-item"><span class="strip-label">Blocked / insufficient</span><strong id="restricted-count">—</strong></div>
+      <div class="strip-item strip-block"><span class="strip-label">Ethereum block</span><strong id="block-number">—</strong><button class="copy-inline" id="copy-block" type="button" aria-label="Copy full block hash" title="Copy block hash" disabled><svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><rect x="5" y="5" width="8" height="9" rx="1"/><path d="M10 3V2H2v9h1"/></svg></button></div>
+      <div class="strip-item strip-source"><span class="strip-label">Evidence origin</span><strong id="origin-label">—</strong><span class="strip-note" id="origin-note">A block is required for every report</span></div>
+    </section>
+
+    <div class="workspace">
+      <section class="market-section" id="markets" aria-labelledby="market-heading">
+        <div class="section-heading"><div><h2 id="market-heading">Market ledger</h2><p>Available liquidity, before you commit capital.</p></div><div class="ledger-actions"><span class="quiet-badge" id="visible-count">No report</span><button type="button" class="text-button add-market-button" id="add-market-toggle" aria-expanded="false" aria-controls="add-market-form">Check another market</button></div></div>
+        <form class="add-market-form" id="add-market-form" hidden novalidate>
+          <label for="new-market-id">Morpho market ID</label>
+          <div class="add-market-fields"><input id="new-market-id" name="market_id" type="text" placeholder="0x followed by 64 hexadecimal characters" autocomplete="off" spellcheck="false" aria-describedby="new-market-help new-market-message"><button class="button button-primary" id="new-market-submit" type="submit" aria-label="Check supplied market ID">Check ID</button></div>
+          <p id="new-market-help">The Graph must confirm this USDC market before its evidence is inspected. Uses the proposed allocation amount.</p>
+          <p class="new-market-message" id="new-market-message" role="status" hidden></p>
+        </form>
+        <div class="table-controls">
+          <label class="search-field"><svg width="17" height="17" viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5"/><path d="m13 13 4 4"/></svg><span class="sr-only">Search markets by symbol, ID or oracle</span><input id="market-search" type="search" placeholder="Search collateral or market ID" autocomplete="off"></label>
+          <label class="filter-field"><span class="sr-only">Filter by admission verdict</span><select id="risk-filter"><option value="all">All verdicts</option><option value="block">Blocked</option><option value="insufficient">Insufficient</option><option value="warn">Warning</option><option value="pass">Passed</option></select><svg width="10" height="6" viewBox="0 0 10 6" aria-hidden="true"><path d="m1 1 4 4 4-4"/></svg></label>
+        </div>
+        <div class="table-scroll">
+          <table class="market-table"><thead><tr><th scope="col">Market</th><th scope="col">Admission</th><th scope="col" class="number">Available USDC</th><th scope="col" class="number">Share rate</th><th scope="col"><span class="sr-only">Inspect</span></th></tr></thead><tbody id="market-body"></tbody></table>
+          <div class="empty-state" id="table-empty"><span class="empty-symbol" aria-hidden="true">◇</span><h3 id="empty-title">Reading market evidence</h3><p id="empty-description">Verified market observations will appear here.</p></div>
+        </div>
+        <div class="table-footnote"><span class="footnote-mark" aria-hidden="true">i</span><p>Share rate is relative to the initial exchange rate. It is not recovered principal or proof of insolvency.</p></div>
+      </section>
+
+      <aside class="allocator-panel" aria-labelledby="allocator-heading">
+        <div class="allocator-top"><span class="workbench-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 20 20"><path d="M3 5h8M3 15h8M11 5l5 5-5 5M3 10h13"/></svg></span><span class="quiet-badge dark-badge">Decision preview</span></div>
+        <h2 id="allocator-heading">Would you allocate?</h2>
+        <p class="allocator-description">Compare the original policy's first allocation with the MIRAGE admission gate.</p>
+        <label class="field-label" for="allocation-market">Destination</label>
+        <div class="dark-select-wrap"><select id="allocation-market"><option value="">Load a report to choose a market</option></select></div>
+        <label class="field-label amount-label" for="allocation-amount">Proposed allocation</label>
+        <div class="amount-field"><input id="allocation-amount" type="text" inputmode="decimal" value="10000" autocomplete="off" spellcheck="false" aria-describedby="amount-hint"><span>USDC</span></div>
+        <p class="amount-hint" id="amount-hint">An editable scenario. No funds are moved.</p>
+        <p class="preview-context" id="preview-context">Replay at the report's block. No historical profit claim.</p>
+        <button class="button button-aqua" id="evaluate-button" type="button" disabled>Preview allocation <svg width="18" height="18" viewBox="0 0 20 20" aria-hidden="true"><path d="m7 4 6 6-6 6"/></svg></button>
+        <p class="allocator-error" id="allocator-error" role="status" hidden></p>
+        <div class="decision-flow" id="decision-flow">
+          <div class="decision-step"><div class="step-marker" aria-hidden="true">1</div><div><span class="decision-label">Original allocator</span><strong id="original-action">Waiting for a preview</strong><p id="original-rationale">Choose a destination and allocation amount.</p></div></div>
+          <div class="decision-step gated-step"><div class="step-marker" aria-hidden="true">2</div><div><span class="decision-label">With MIRAGE</span><strong id="gated-action">Evidence required</strong><p id="gated-rationale">The gate's actual decision will appear here.</p></div></div>
+        </div>
+        <details class="allocator-raw" id="allocator-raw" hidden><summary>Response details</summary><pre id="allocator-json"></pre></details>
+        <div class="allocator-bottom"><svg width="15" height="17" viewBox="0 0 16 18" aria-hidden="true"><path d="M8 1 2 4v5c0 4 6 8 6 8s6-4 6-8V4L8 1Z"/><path d="m5 9 2 2 4-4"/></svg><span>Incomplete evidence cannot grant admission.</span></div>
+      </aside>
+    </div>
+
+    <section class="method-section" id="method" aria-labelledby="method-heading">
+      <div class="method-heading"><h2 id="method-heading">Three questions.<br>One admission decision.</h2><p>Each check keeps its own evidence. Unfinished checks stay visible.</p></div>
+      <div class="method-item"><span class="method-number">01</span><h3>Is the price credible?</h3><p>Check oracle behavior against an independent reference. Equal samples alone do not prove a frozen price.</p><span class="method-state" id="oracle-coverage">Status comes from market evidence</span></div>
+      <div class="method-item"><span class="method-number">02</span><h3>What is actually liquid?</h3><p>Separate stored supply claims from unborrowed USDC. Inspect the exchange rate without calling shares principal.</p><span class="method-state">Accounting evidence</span></div>
+      <div class="method-item"><span class="method-number">03</span><h3>Can the collateral exit?</h3><p>Check the available route and sale depth before relying on a liquidation to return capital.</p><span class="method-state" id="depth-coverage">Status comes from market evidence</span></div>
+    </section>
+    <footer class="site-footer"><span>MIRAGE <span class="footer-separator">/</span> ETHOnline 2026</span><span>Built on an existing allocator. Every new claim needs evidence.</span><a href="https://github.com/SergeySolovyev/icicpe-2026-defi-vuln-detection" target="_blank" rel="noopener noreferrer">revert.pro foundation</a></footer>
+  </main>
+
+  <dialog id="market-drawer" class="market-drawer" aria-labelledby="drawer-title">
+    <div class="drawer-head"><div><p class="drawer-kicker">Market evidence</p><h2 id="drawer-title">Market</h2></div><button type="button" class="icon-button" id="close-drawer" aria-label="Close market evidence"><svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path d="m5 5 10 10M15 5 5 15"/></svg></button></div>
+    <div class="drawer-scroll"><div class="drawer-meta"><span id="drawer-severity"></span><span id="drawer-block"></span></div><p class="market-address" id="drawer-id"></p><div class="drawer-metrics" id="drawer-metrics"></div><div class="detector-list" id="detector-list"></div><section class="raw-section"><div class="raw-heading"><h3>Reproduce the evidence</h3><button type="button" class="text-button" id="copy-evidence">Copy JSON</button></div><p>Exact calls and returns, each with its own block.</p><pre id="raw-evidence" tabindex="0"></pre></section></div>
+    <div class="drawer-bottom"><button type="button" class="button button-primary" id="use-market">Use this destination</button></div>
+  </dialog>
+  <div class="toast" id="toast" role="status" hidden></div>
+</body>
+</html>

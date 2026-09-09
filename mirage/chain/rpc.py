@@ -59,7 +59,6 @@ class RpcClient:
         last = "unavailable"
         for attempt in range(self.tries):
             endpoint = self.endpoints[self._cursor % len(self.endpoints)]
-            self._cursor += 1
             self._request_id += 1
             try:
                 response = post_json(endpoint, {"jsonrpc": "2.0", "id": self._request_id,
@@ -70,6 +69,9 @@ class RpcClient:
                     raise ValueError("RPC error/missing result")
                 return response["result"]
             except Exception as error:
+                # Keep using a healthy endpoint. Rotate on failure, avoiding
+                # retries against known unavailable free providers every call.
+                self._cursor += 1
                 last = type(error).__name__
                 if attempt + 1 < self.tries:
                     time.sleep(min(0.25 * (attempt + 1), 1))

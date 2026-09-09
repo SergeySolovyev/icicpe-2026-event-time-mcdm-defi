@@ -7,12 +7,19 @@
   "query_url": "https://api.studio.thegraph.com/query/1759002/mirage-morpho-markets/v0.0.1",
   "deployment_succeeded": true,
   "nonempty_entities_verified": true,
-  "full_sync_verified": false,
+  "full_sync_verified": true,
   "observed_meta": {
-    "block_number": 19972938,
-    "block_hash": "0x02312e923f0b274cc5742293ed76306e8d1ae52d25d1bf01e303c0b25acd4ed3",
+    "block_number": 25938215,
+    "block_hash": "0xafdbe5263f7d0f3fb6cd6be09b9e35e519fdaabb6c1f0b5d8ab2c36e7eb769e8",
     "has_indexing_errors": false
   },
   "sample_usdc_market": "0x06f2842602373d247c4934f7656e513955ccc4c377f0febc0d9ca2c3bcc191b1",
-  "note": "Studio deployment is not onchain publication. Initial synchronization is ongoing. prune:auto may remove old query blocks."
+  "note": "Studio deployment is not onchain publication. Live discovery succeeded using finalized block hash. Historical _meta queried by number can return hash:null; query by hash. prune:auto may remove old query blocks.",
+  "rpc_finalized_block_at_check": 25938146,
+  "verified_discovery": {
+    "block_number": 25938082,
+    "block_hash": "0x7647a0738f03a46dd0c957cca4664d73f9bcc7c981405a8ccb00e3bd08ede2cb",
+    "usdc_market_count": 697,
+    "inspected_market_count": 4
+  }
 }

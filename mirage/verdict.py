@@ -34,6 +34,8 @@ class MarketVerdict:
     market_id: str
     block_number: int
     findings: tuple[Finding, ...]
+    display: dict | None = None
+    rate: dict | None = None
 
     @property
     def severity(self) -> Severity:
@@ -52,7 +54,10 @@ class MarketReport:
     def to_dict(self) -> dict:
         result = asdict(self)
         result["schema"] = "mirage-feed/1"
-        result["scope"] = "accounting-checks-only; oracle and exit-depth checks pending"
+        complete = all(not any(f.code == "remaining_checks_pending" for f in m.findings)
+                       for m in self.markets)
+        result["scope"] = ("accounting, oracle reference and specified-size exit checks"
+                           if complete else "partial checks; see each market's insufficient findings")
         for value, verdict in zip(result["markets"], self.markets):
             value["severity"] = verdict.severity.value
         return result

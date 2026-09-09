@@ -13,7 +13,8 @@ class Discovery:
     source: dict
 
 
-def discover_markets(block: int, *, url: str | None = None, page_size: int = 500) -> Discovery:
+def discover_markets(block: int, *, block_hash: str | None = None,
+                     url: str | None = None, page_size: int = 500) -> Discovery:
     endpoint = url or os.environ.get("MIRAGE_SUBGRAPH_URL")
     if not endpoint:
         raise ValueError("Set MIRAGE_SUBGRAPH_URL to the deployed Graph query URL")
@@ -21,6 +22,8 @@ def discover_markets(block: int, *, url: str | None = None, page_size: int = 500
         raise ValueError("page_size must be between 1 and 1000")
     if type(block) is not int or block < 0:
         raise ValueError("Discovery requires a numeric block")
+    if block_hash is not None and len(hex_bytes(block_hash)) != 32:
+        raise ValueError("Invalid discovery block hash")
 
     def query(text: str, variables: dict):
         try:
@@ -51,13 +54,19 @@ def discover_markets(block: int, *, url: str | None = None, page_size: int = 500
       markets(block: {number: $block}, first: $first, orderBy: id, orderDirection: asc,
               where: {id_gt: $cursor, loanToken: $loan}) { id }
     }"""
+    # Graph Node may legitimately return hash:null for historical number queries.
+    # Query by the RPC-resolved finalized hash to bind both pagination and _meta.
+    if block_hash is not None:
+        document = document.replace("$block: Int!", "$block: Bytes!").replace("number: $block", "hash: $block")
     while True:
-        data = query(document, {"block": block, "first": page_size, "cursor": cursor, "loan": USDC})
+        data = query(document, {"block": block_hash or block, "first": page_size, "cursor": cursor, "loan": USDC})
         current = checked_meta(data.get("_meta"))
         if (current["deployment"] != meta["deployment"]
                 or current["block"]["number"] != block):
             raise RuntimeError("Subgraph deployment/block changed during discovery")
         current_hash = current["block"]["hash"].lower()
+        if block_hash is not None and current_hash != block_hash.lower():
+            raise RuntimeError("Subgraph returned a different block hash")
         if query_hash is not None and current_hash != query_hash:
             raise RuntimeError("Subgraph block hash changed during discovery")
         query_hash = current_hash

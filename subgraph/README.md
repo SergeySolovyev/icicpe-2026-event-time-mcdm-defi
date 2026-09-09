@@ -7,7 +7,8 @@ decisions. No asset amounts, TVL, prices, or admission verdicts are stored here.
 Local code generation and compilation passed on 9 September 2026 with Node
 24.11.0, Graph CLI 0.98.1 and graph-ts 0.38.2. This is a build result; a live
 Studio deployment and successful queries are recorded in [DEPLOYMENT.json](DEPLOYMENT.json).
-Full synchronization must still be checked before a current market scan.
+Full synchronization and discovery of 697 USDC market IDs were verified on
+9 September. Four markets were inspected in the committed demo, not all 697.
 
 ## Source contract
 
@@ -111,7 +112,10 @@ Continue with the last returned ID until a page contains fewer than 1,000
 entities. Check `hasIndexingErrors == false`, a plausible indexed block, and
 nonempty market results; a green synchronization indicator alone is insufficient.
 For a reproducible scan, pin all pages to the same indexed block using GraphQL
-`block: {number: ...}` and read the corresponding contract state at that block.
+`block: {hash: ...}` with the finalized hash resolved by RPC, and read the
+corresponding contract state at its numeric block. Historical `_meta` queries
+by number can legitimately return `hash: null`; the hash-based query returns
+the resolved hash and binds every page to the same chain state.
 Compare a returned market ID and parameters with one direct
 `idToMarketParams(bytes32)` call before treating the deployment as verified.
 

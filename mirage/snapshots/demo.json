@@ -1,0 +1,6 @@
+{
+  "snapshot": "mainnet-full-25938082-routes-v2.json.gz",
+  "sha256": "91aa45a2134eb8757ff4dcd9a4e651447067fa55ba20c40f700ac4840c2385fa",
+  "block": 25938082,
+  "scope": "four inspected markets; 697 Graph-discovered IDs; hypothetical 10000 USDC sale; compared exit routes"
+}

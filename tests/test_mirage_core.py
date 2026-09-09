@@ -270,6 +270,22 @@ class GraphTests(unittest.TestCase):
     def setUp(self):
         self.ids = ["0x" + f"{value:064x}" for value in range(1, 4)]
 
+    def test_hash_query_binds_historical_pages_when_number_metadata_has_null_hash(self):
+        responses = [graph_response(number=105), graph_response(self.ids)]
+        with patch("mirage.discovery.subgraph.post_json", side_effect=responses) as transport:
+            found = discover_markets(100, block_hash=BLOCK_HASH, url="https://example.invalid")
+        self.assertEqual(found.source["query_block_hash"], BLOCK_HASH)
+        query = transport.call_args_list[1].args[1]
+        self.assertEqual(query["variables"]["block"], BLOCK_HASH)
+        self.assertIn("hash: $block", query["query"])
+        self.assertNotIn("number: $block", query["query"])
+
+    def test_hash_query_rejects_wrong_canonical_hash(self):
+        responses = [graph_response(number=105), graph_response(self.ids)]
+        with patch("mirage.discovery.subgraph.post_json", side_effect=responses):
+            with self.assertRaisesRegex(RuntimeError, "different block hash"):
+                discover_markets(100, block_hash="0x" + "aa" * 32, url="https://example.invalid")
+
     def test_pagination_is_pinned_sorted_and_requests_only_identifiers(self):
         responses = [graph_response(number=105), graph_response(self.ids[:2]),
                      graph_response(self.ids[2:])]
