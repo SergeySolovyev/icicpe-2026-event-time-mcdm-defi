@@ -11,11 +11,11 @@ and the public browser loaded the four-market saved-evidence workbench.
 |---|---|
 | Service URL | https://mirage-workbench.onrender.com |
 | Platform | Render Docker web service, free plan, Frankfurt |
-| Release commit | `8278c65b6709112ad5d904c7255e6724035bef7b` |
-| Deployment ID | `dep-daghtrou01pc73fv7870` |
-| Dashboard timestamp | 9 September 2026, 11:55:11 Moscow |
-| Runtime live log | 9 September 2026, 11:56:29 Moscow |
-| Build/deploy duration | 1 minute 18 seconds |
+| Release commit | `c2ed7413f3d184d611b476f5fac678a78c98ecee` |
+| Deployment ID | `dep-dagig6v40ujc73fbk330` |
+| Dashboard timestamp | 9 September 2026, 12:34:19 Moscow |
+| Runtime live log | 9 September 2026, 12:35:32 Moscow |
+| Build/deploy duration | 1 minute 13 seconds |
 | Service state | Live |
 | Service automatic deploys | Disabled |
 | Blueprint Auto Sync | No; saved and verified |
@@ -49,17 +49,24 @@ both policies proposed entry, and **Load demo** restored block `25938082` with
 the new caption and cleared decisions. Backend detectors and the frozen fixture
 were unchanged. The earlier full HTTP isolation check refers to the initial release.
 
-The current release adds the recorded sale size beside each verdict and the
+The earlier `8278c65` release added the recorded sale size beside each verdict and the
 allocation amount. The public browser verified the 10000 → 20000 → 10000 WETH
 scenario: an immediate mismatch warning, an actual gate refusal for 20000, and
 entry allowed again for the checked 10000. deUSD correctly shows that no completed
 sale quote is available. This follow-up used saved evidence; it is not a new live
-chain verification. The backend and frozen observations are unchanged.
+chain verification. That release left the backend and frozen observations unchanged.
 
-[Clean Linux CI](https://github.com/SergeySolovyev/icicpe-2026-event-time-mcdm-defi/actions/runs/34331612128)
-at the same release commit passed 176 tests and separately built
+The current `c2ed741` release bounds failed RPC reads to one market. If a shared
+oracle read fails transiently, the next market can retry it; successful reads
+remain reusable at their exact numeric block. The deployed public browser loaded
+all four saved cases and replayed PAXG with original `switch` and gated `hold`.
+This release smoke check used saved evidence, not a new live chain capture.
+The frozen observations and UI are unchanged.
+
+[Clean Linux CI](https://github.com/SergeySolovyev/icicpe-2026-event-time-mcdm-defi/actions/runs/34335127913)
+at the same release commit passed 178 tests, ran the official SDK stdio example, and separately built
 the same product inputs. The CI image ID was
-`sha256:d1167d5b03614cfe153265cdc36f12fb1db1b52485cfb87617977018b6da160e`;
+`sha256:823e6aa069e20cfe808ebde7aea2cc13b0f65b085eec0d78c651bc3ebb4ec9dc`;
 it replayed four markets at block `25938082` with `--network=none`. This is the CI
 image ID, not a claimed digest of Render's separately built image.
 

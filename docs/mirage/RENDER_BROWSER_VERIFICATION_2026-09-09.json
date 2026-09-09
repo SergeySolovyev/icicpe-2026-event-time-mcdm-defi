@@ -81,6 +81,32 @@
     },
     "scope": "UI-only product change; the existing backend and frozen evidence are unchanged. No new live RPC capture is claimed for this release verification."
   },
+  "cache_retry_release": {
+    "deployed_commit": "c2ed7413f3d184d611b476f5fac678a78c98ecee",
+    "deployment_id": "dep-dagig6v40ujc73fbk330",
+    "dashboard_status": "Deploy succeeded|Live",
+    "dashboard_timestamp": "2026-09-09T12:34:19+03:00",
+    "runtime_live_log_at": "2026-09-09T12:35:32+03:00",
+    "duration": "1m13s",
+    "change": "Retry failed shared RPC reads when the next market starts; retain successful numeric-block reads",
+    "cloud_build_replay_log": "Saved evidence and allocator replay validated",
+    "evidence_mode": "saved",
+    "block_number": 25938082,
+    "browser_checks": [
+      "Public HTTPS loaded all four saved cases with the recorded block, Graph provenance and checked sale amounts",
+      "PAXG 10000 USDC preview returned original Allocate to destination and MIRAGE Keep capital unallocated with explicit refusal reasons"
+    ],
+    "ci": {
+      "url": "https://github.com/SergeySolovyev/icicpe-2026-event-time-mcdm-defi/actions/runs/34335127913",
+      "result": "success",
+      "focused_tests": "178 passed, 2 warnings in 5.31s",
+      "sdk_stdio_example": "PAXG 10000 switch/hold; WETH 10000 switch/switch; WETH 20000 switch/hold with exact_size=false",
+      "docker_build": "success",
+      "network_disabled_replay": {"block": 25938082, "markets": 4, "gated": "hold"},
+      "ci_image_id": "sha256:823e6aa069e20cfe808ebde7aea2cc13b0f65b085eec0d78c651bc3ebb4ec9dc"
+    },
+    "scope": "The public saved flow is a deployment smoke check. Transient-failure recovery is covered by deterministic regression tests; no injected provider outage or fresh live capture is claimed here."
+  },
   "limitations": [
     "This is a functional browser integration check, not independent second-provider verification of the fresh capture.",
     "The separate frozen four-market snapshot has 193 distinct raw results checked through each of two providers.",
