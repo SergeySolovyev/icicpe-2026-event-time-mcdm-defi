@@ -1,6 +1,6 @@
 # MIRAGE current corrected engineering specification
 
-Version: `mirage-build-spec/1`, prepared 9 September 2026 against repository revision `e757e91`.
+Version: `mirage-build-spec/2`, updated 9 September 2026 against published implementation and evidence revision `5488350`. The earlier version documented revision `e757e91`.
 
 **This is a post-implementation specification of the current product**, not a backdated original prompt. It consolidates the supplied handoff, later corrections and implemented behavior. Historical source identity and limited prompt excerpts are in [PROMPT_PROVENANCE.md](PROMPT_PROVENANCE.md); AI attribution is in [AI_USE.md](../AI_USE.md).
 
@@ -23,6 +23,7 @@ This release is a read-only evidence workbench and allocation preview. It has no
 | Apply explicit policies | Nonempty markets with no available liquidity block entry; oracle/reference deviation or specified-exit shortfall above the default 500-bps policy can block. Missing required evidence is insufficient. A pass applies only to the supported checks, block and amount. See [policy boundaries](../ARCHITECTURE.md#policy-scope). |
 | Preserve allocator behavior | [`MirageGatedPolicy`](../../../mirage/gate.py) calls the original policy once with the full state, then vetoes prohibited new entries. It does not force liquidation of the current venue. The old `morpho_blue` identity is preserved; [new scenarios](../../../mirage/allocator.py) use explicit market IDs. |
 | Reconstruct saved results | [`report_from_snapshot`](../../../mirage/scan.py) validates/replays raw observations before producing findings, without network fallback. Old snapshots retain their recorded route policy. Raw uints remain exact decimal strings in JSON. |
+| Record a complete discovered universe | [`mirage_capture_universe.py`](../../../scripts/mirage_capture_universe.py) preserves the pinned manifest, scenario and immutable checkpoints, resumes missing markets, and distinguishes full, accounting-only and missing rows. Completion includes unavailable observations; it does not imply that all checks pass. [Published 697-market evidence](../UNIVERSE_FULL_2026-09-09.md) records actual outcomes and the historical coordinator source. |
 | Expose usable evidence | [`web/`](../../../mirage/web/) distinguishes saved evidence from a completed live capture, supports market-ID inspection and original/gated previews. [`MCP`](../MCP.md) provides three tools; compact `mirage-agent-summary/1` follows full validation, and `include_evidence=true` returns the full `mirage-feed/1`. |
 | Support independent operation | [README](../../../README.md), [hosting configuration](../HOSTING.md) and [focused CI](../../../.github/workflows/mirage.yml) support a clean Python 3.12 product environment, Docker build and saved replay without network. Deployment is separate from final hackathon submission. |
 
@@ -47,5 +48,7 @@ Section numbers refer to the hashed `HANDOFF_v2.md` described in [prompt provena
 The default committed evidence at block `25938082` contains four inspected cases, not a full-universe risk assessment: PAXG blocks; deUSD and wstETH remain insufficient; WETH passes the supported scenario. See the [snapshot manifest](../../../mirage/snapshots/demo.json) and [architecture](../ARCHITECTURE.md).
 
 [Linux CI run 34329377252](https://github.com/SergeySolovyev/icicpe-2026-event-time-mcdm-defi/actions/runs/34329377252) recorded 176 focused tests and a Docker build plus replay with `--network=none`. [Public browser verification](../RENDER_BROWSER_VERIFICATION_2026-09-09.json) records a separate live capture. These observations support reproducibility, not an audit, uptime guarantee or future swap execution guarantee.
+
+The later [697-market capture](../UNIVERSE_FULL_2026-09-09.md) publishes all three check groups at block `25938815` for a `10000` USDC scenario: 32 PASS, 3 WARN, 95 BLOCK and 567 INSUFFICIENT. Original/derived replay, independent accounting and Uniswap calculations, and per-market exit comparison are documented there. These offline checks do not extend the four-market demo's separate two-provider rereads to the entire universe. [CI for revision 5488350](https://github.com/SergeySolovyev/icicpe-2026-event-time-mcdm-defi/actions/runs/34358972383) passed 221 tests, the official MCP SDK example and Docker replay without network.
 
 Unsupported oracle templates, bounded route search, RPC trust, historical data availability and one-block quote validity remain material limits. The historical AI/planning archive and owner contribution confirmation are still open disclosure work; this specification does not certify submission compliance.

@@ -1,6 +1,6 @@
 # MIRAGE — submission draft
 
-Prepared on 9 September 2026 from the implemented route-comparison demo and the subsequently verified MCP integration. These are ready-to-paste drafts; preparing them does not save or submit an ETHGlobal form. The current observed form state is recorded in [SUBMISSION_FORM_STATE.md](SUBMISSION_FORM_STATE.md). The [submission readiness checklist](SUBMISSION_READINESS.md) separates implemented evidence from pending human and dashboard steps, including the corrected prize-pool amounts.
+Prepared on 9 September 2026 from the implemented route-comparison demo, verified MCP integration and published 697-market capture. These are ready-to-paste drafts; preparing them does not save or submit an ETHGlobal form. The current observed form state is recorded in [SUBMISSION_FORM_STATE.md](SUBMISSION_FORM_STATE.md). The [submission readiness checklist](SUBMISSION_READINESS.md) separates implemented evidence from pending human and dashboard steps, including the corrected prize-pool amounts.
 
 ## First form fields
 
@@ -24,6 +24,8 @@ The Graph supplies live market discovery. MIRAGE turns those market IDs into a r
 
 The demo includes a refusal and a positive control. PAXG has no pre-existing free USDC at the recorded block, so the gate vetoes entry. WETH passes the implemented checks. A wstETH example shows why route selection matters: the same input quotes about 5,928 USDC directly and 10,008 USDC through WETH. Its exit check passes after comparison; its unsupported oracle remains visible. Every result names its block, amount and coverage.
 
+Beyond the four-case demo, we published all three check groups for all 697 Graph-discovered USDC markets at block 25938815, for a 10000 USDC scenario. The aggregate reports are 32 PASS, 3 WARN, 95 BLOCK and 567 INSUFFICIENT. Complete collection includes unavailable evidence; it is not a claim that every market can be assessed or admitted. The original snapshot, corrected diagnostics and audit records are public and can be replayed offline.
+
 ### How it is made
 
 MIRAGE extends our existing open-source USDC allocator and reuses the MIT-licensed EVM bytecode extractor from our second project, revert.pro. The original T1 decision policy still proposes an allocation. A new admission wrapper evaluates the market evidence and can veto that proposal when checks fail, are incomplete, or do not cover the proposed amount.
@@ -31,6 +33,8 @@ MIRAGE extends our existing open-source USDC allocator and reuses the MIT-licens
 A deployed Subgraph Studio subgraph indexes Morpho Blue CreateMarket events. Python discovers USDC markets at a pinned block hash, then makes individual RPC reads of market state, oracle contracts and interest-rate models. Supported oracle templates use factory membership, configuration getters and sampled historical prices. Unsupported bytecode goes through the existing 70-feature extractor for structural diagnostics.
 
 Uniswap v3 supplies a geometric TWAP and QuoterV2 sale simulations. MIRAGE compares direct and WETH routes with exactly the same collateral input, preserving both results and their raw calls. Offline replay rebuilds derived values from those calls. A Python server exposes the interactive workbench, evidence inspection and original-policy comparison. For the frozen four-market demo, we independently reread 185 distinct contract calls and eight runtime-code reads through each of two RPC providers; all matched.
+
+The separate full-universe capture covers all 697 discovered markets at block 25938815. Independent accounting and Uniswap calculations checked the saved raw observations, and expected exit outcomes matched production for every market. Both original and derived snapshots replayed successfully; the diagnostic migration preserved raw evidence, finding codes, severities and rates. These are offline checks, not a second-provider verification of the full universe.
 
 An optional stdio MCP server uses the official Python SDK to expose three reusable tools: get_saved_report, inspect_market, and preview_saved_allocation. An official SDK client successfully called all three, including a live Graph-to-RPC inspection of PAXG at block 25938274. AI agents can consume the same structured evidence and allocation comparison as the workbench. Findings are computed by explicit rules; no LLM or ML safety score decides admission.
 
@@ -70,6 +74,8 @@ MIRAGE is reusable MCP tooling for allocation agents, demonstrated with our exis
 
 Relevant implementation: [MCP setup and verified run](MCP.md), [MCP server](../../mirage/mcp_server.py), [subgraph](../../subgraph/), [discovery](../../mirage/discovery/subgraph.py), [admission gate](../../mirage/gate.py), and [architecture](ARCHITECTURE.md). Live query endpoint: https://api.studio.thegraph.com/query/1759002/mirage-morpho-markets/v0.0.1
 
+The same discovery-and-evidence pipeline also completed a separate capture of all 697 USDC markets at block 25938815. The [published universe report](UNIVERSE_FULL_2026-09-09.md) includes original observations, offline replay and actual coverage: 32 PASS, 3 WARN, 95 BLOCK and 567 INSUFFICIENT. The default saved MCP demonstration remains four markets at its earlier block; discovery, collection, evidence sufficiency and allocation admission are distinct.
+
 The [official Graph criteria](https://ethglobal.com/events/ethonline2026/prizes/the-graph) require a meaningful agent/application workflow using live Graph data, public documentation, and a two-to-four-minute demonstration. This entry supplies reusable MCP tools and demonstrates their decision effect in the existing allocator. It does not claim an integrated LLM or eligibility for the separate composable-products prize on the strength of this one subgraph.
 
 ## Uniswap Foundation — sponsor answer
@@ -80,12 +86,15 @@ MIRAGE uses the Uniswap v3 factory, pool observations and QuoterV2 as a reusable
 
 Relevant source: [collector and replay](../../mirage/chain/uniswap.py), [reference-price check](../../mirage/detectors/reference_price.py), [exit check](../../mirage/detectors/exit_depth.py). Contract addresses, reproduction commands and source references are in [UNISWAP.md](UNISWAP.md). Developer feedback is in [FEEDBACK.md](../../FEEDBACK.md).
 
+The [full-universe evidence](UNIVERSE_FULL_2026-09-09.md) also records exit checks for 697 markets at block 25938815: 79 PASS, 34 BLOCK and 584 INSUFFICIENT. Separate ABI and numerical calculations over the saved observations matched production exit outcomes for every market. Missing reference or quote evidence stays insufficient; bounded Uniswap route search does not establish liquidity across all venues or future execution.
+
 The [official sponsor criteria](https://ethglobal.com/events/ethonline2026/prizes) require an open-source repository, repository feedback, and the external developer feedback form. Sergey must submit that external form and record its completion before the final prize submission. A prepared feedback file alone does not complete that requirement.
 
 ## Evidence for reviewers
 
 - [Frozen demo manifest](../../mirage/snapshots/demo.json): four inspected markets at Ethereum block `25938082`, with a hash of the compressed evidence file.
 - [Verification record](VERIFICATION_2026-09-09.json): repeated reads through two independent provider configurations.
+- [Full 697-market capture](UNIVERSE_FULL_2026-09-09.md): separate block `25938815`, original and derived snapshots, exact coverage and independent offline accounting/exit audits.
 - [Architecture and trust boundaries](ARCHITECTURE.md): data path, replay, decision wrapper and supported coverage.
 - [MCP verification](MCP.md): official SDK stdio calls, saved decision replay and a dated live Graph-to-RPC inspection.
 - [Public deployment](HOSTING.md): stable Render URL, exact deployed commit, release status and hosting limits.

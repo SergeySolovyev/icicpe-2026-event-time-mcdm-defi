@@ -1,8 +1,10 @@
 # MIRAGE — three-minute demo
 
-Target: about three minutes and fifteen seconds of human narration with normal-speed screen recording. Record at 1080p so the block, amount and evidence remain legible. The [Graph prize](https://ethglobal.com/events/ethonline2026/prizes/the-graph) asks for two to four minutes; the [observed project form](SUBMISSION_FORM_STATE.md) caps the video at four minutes and rejects accelerated video.
+Target: about three minutes and twenty-five seconds of human narration with normal-speed screen recording. Record at 1080p so the block, amount and evidence remain legible. The [Graph prize](https://ethglobal.com/events/ethonline2026/prizes/the-graph) asks for two to four minutes; the [observed project form](SUBMISSION_FORM_STATE.md) caps the video at four minutes and rejects accelerated video.
 
 For the follow-up discussion, use [the judging questions and evidence links](JUDGE_QA.md).
+
+For questions about scale, open the separate [697-market capture and audit report](UNIVERSE_FULL_2026-09-09.md). It records all three check groups at block `25938815`, with 32 PASS, 3 WARN, 95 BLOCK and 567 INSUFFICIENT. This is additional published evidence; the timed walkthrough below uses four selected cases at block `25938082`. Do not attribute the demo's two-provider verification to the full universe or describe complete collection as complete admission coverage.
 
 ## Prepare before recording
 
@@ -93,10 +95,18 @@ The primary reference is the same direct-pool TWAP, approximately 3104.787691 US
 
 > Agents can reuse this evidence through three verified MCP tools: saved reports, live inspection, and allocation previews. Exact calls explain the decisions. MIRAGE gives an existing allocator a clear boundary: evidence first, allocation second.
 
+## 3:15–3:25 — published coverage beyond the demo
+
+**Screen:** Open the public [697-market report](https://github.com/SergeySolovyev/icicpe-2026-event-time-mcdm-defi/blob/master/docs/mirage/UNIVERSE_FULL_2026-09-09.md). Show block `25938815` and the aggregate table, including `INSUFFICIENT`. This is a separate saved capture, not the four-market workbench report or a fresh browser scan.
+
+**Say:**
+
+> Beyond these four examples, we published observations for all six hundred and ninety-seven markets. Missing evidence stays visible.
+
 ## Presenter checks
 
 - The first successful check is live; the later exact figures belong to the explicitly loaded block `25938082`. A failed refresh leaves saved evidence visible and must be described that way.
-- The four inspected markets are a selected demo subset of 697 discovered IDs. Do not describe the discovery count as completed market assessments.
+- The four inspected markets at block `25938082` are a selected demo subset of 697 discovered IDs. The later full capture at block `25938815` records all three check groups for all 697, including missing observations; collection is not evidence sufficiency or admission. Keep the two artifacts distinct.
 - The comparison invokes the real T1 policy for the selected explicit market ID at cold start. Do not say the original allocator ranked PAXG by TVL, confuse that ID with its former wstETH adapter, or imply a historical backtest result.
 - Free liquidity is recorded supply assets minus borrow assets. Do not call supply assets TVL or label supply shares as recovered principal. A proposed new deposit does not prove pre-existing withdrawal liquidity.
 - For AdaptiveCurve IRMs, the annualized displayed rate uses the accrual-rate indication averaged since the stored last update, rather than an instantaneous rate or a future return.

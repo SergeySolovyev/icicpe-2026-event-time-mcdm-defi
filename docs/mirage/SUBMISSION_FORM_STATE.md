@@ -10,13 +10,19 @@ submit button has been pressed; reloading can discard these local field values.
   shield emoji. Showcase slug remains vega-allocator-vbqty.
 - Discord: dashboard explicitly says event Discord is not connected.
 - Demonstration URL: https://mirage-workbench.onrender.com, filled and required.
-- Short description: filled from SUBMISSION_DRAFT.md, 90 characters.
-- Description: filled from SUBMISSION_DRAFT.md, 1059 characters.
-- How it is made: filled from SUBMISSION_DRAFT.md, 2276 characters, including MCP
-  and explicit AI-use disclosure. Owner attribution confirmation remains pending.
+- Short description: filled from SUBMISSION_DRAFT.md.
+- Description: updated from SUBMISSION_DRAFT.md after publication of the full
+  697-market capture. It now includes block 25938815, all four aggregate verdict
+  counts, and the distinction between complete collection and sufficient evidence.
+- How it is made: updated from SUBMISSION_DRAFT.md with the independent offline
+  accounting/exit audits, preserving the separate scope of the four-market demo's
+  two-provider rereads, MCP integration and explicit AI-use disclosure. Both updated
+  fields were read back from the rendered form. Owner attribution remains pending.
 - Public GitHub repositories: required. Account picker and repository selector
   shown; no repository selected. Opening the account selector showed only
   "Add GitHub Account". GitHub account linking remains an owner action.
+  This was rechecked after the full-universe publication; no connected account
+  appeared and Select Repository remained disabled.
 - First-step action: Save & Continue. It remains blocked by the required GitHub
   repository selection. No later pages were accessed. Saving an editable draft
   is distinct from the owner's reserved final submission.
