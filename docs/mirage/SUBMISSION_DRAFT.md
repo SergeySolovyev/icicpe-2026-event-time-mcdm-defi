@@ -50,7 +50,7 @@ https://github.com/SergeySolovyev/icicpe-2026-defi-vuln-detection
 
 https://mirage-workbench.onrender.com
 
-The Render release, public four-market saved-evidence interface, and a fresh WETH inspection were verified on 9 September 2026. That live browser check discovered 697 Graph market IDs, inspected one market for 10000 USDC, and returned PASS at Ethereum block `25938497`. Both the original T1 and gated preview allowed entry. This new capture has not received the frozen demo's separate two-provider verification. Release details and free-instance behavior are documented in [HOSTING.md](HOSTING.md). The free service may sleep when idle; allow time for it to wake before recording or judging.
+The current Render release, `9aeb01c`, was verified on 9 September 2026 with one fresh public inspection at block `25939677`, followed by restoration of the saved four-market demo. The inspected zero-token case returned `INSUFFICIENT` with the specific exit reason `zero_token_address`; see the [release verification](QUOTE_REASON_V2_VERIFICATION_2026-09-09.json). An earlier release's WETH inspection at block `25938497` returned PASS for 10000 USDC, with both original T1 and gated previews allowing entry. These live captures have not received the frozen demo's separate two-provider verification. Release details and free-instance behavior are documented in [HOSTING.md](HOSTING.md). The free service may sleep when idle; allow time for it to wake before recording or judging.
 
 ## Continuity disclosure
 

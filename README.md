@@ -38,12 +38,13 @@ Node build, or model weights are needed to run the workbench.
 6. **Load demo** restores the four committed cases and their saved-evidence label.
 
 [Open the public workbench](https://mirage-workbench.onrender.com).
-The Render deployment was checked through a browser on 9 September, including
-fresh Graph discovery, a WETH inspection and its allocation preview. Its address
+The current Render release was checked through a browser on 9 September with
+a fresh Graph-to-RPC market inspection, then restored to the saved four-market
+demonstration. Its address
 survives local computer shutdown. The free instance sleeps when idle, so the
 first request after a pause can take about a minute.
 See [hosting details](docs/mirage/HOSTING.md) and the
-[public browser check](docs/mirage/RENDER_BROWSER_VERIFICATION_2026-09-09.json).
+[current release verification](docs/mirage/QUOTE_REASON_V2_VERIFICATION_2026-09-09.json).
 
 The server binds to localhost. A failed refresh leaves the saved evidence visible
 and reports the failure. It does not relabel saved evidence as a successful live
@@ -286,8 +287,10 @@ Default reports omit raw blobs and are 93.1%
 smaller on the frozen four-market fixture; full evidence remains available
 with `include_evidence=true`.
 
-Each finding retains the target address, calldata, numeric block, raw return,
-block hash and method. Runtime bytecode lives in the snapshot; public findings
+Full reports retain available contract-call evidence with target, calldata,
+numeric block, raw return, block hash and method. Findings caused by missing
+evidence may have no successful call attached; compact MCP responses explicitly
+describe omitted evidence. Runtime bytecode lives in the snapshot; public findings
 use its hash and bounded diagnostics. Replay makes no network calls and
 recomputes values from those returns instead of trusting editable display fields.
 This proves internal consistency; it does not cryptographically authenticate
@@ -295,7 +298,27 @@ an arbitrary file fabricated by a third party as Ethereum truth.
 
 ```console
 python -m pip install -r requirements-mirage.txt -r requirements-mirage-mcp.txt "pytest==8.3.5" "anyio==4.10.0" "eth-abi==5.2.0" "eth-hash[pycryptodome]==0.7.1"
+```
+
+Run the focused suite with plugin autoload disabled, as in CI. This loads AnyIO
+exactly once and avoids unrelated plugins from the research environment.
+
+PowerShell:
+
+```powershell
+$env:PYTEST_DISABLE_PLUGIN_AUTOLOAD = "1"
+$env:OPENBLAS_NUM_THREADS = "1"
+$env:OMP_NUM_THREADS = "1"
+$env:MKL_NUM_THREADS = "1"
+$env:NUMEXPR_NUM_THREADS = "1"
 python -m pytest --noconftest -p anyio.pytest_plugin -m "not network" -q tests/test_mirage_core.py tests/test_mirage_gate.py tests/test_mirage_oracle.py tests/test_mirage_uniswap.py tests/test_mirage_workbench.py tests/test_mirage_mcp.py tests/test_mirage_quote_reason.py tests/test_mirage_bytecode_metadata.py tests/test_mirage_universe.py tests/test_mirage_rederive.py tests/test_t1_threshold.py
+```
+
+Linux/macOS shells:
+
+```sh
+export PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1
+python -m pytest --noconftest -p anyio.pytest_plugin -m "not network" -q tests/test_mirage_*.py tests/test_t1_threshold.py
 ```
 
 The tests cover ABI bounds and sign handling, pagination, accounting formulas,
@@ -305,7 +328,7 @@ Offline tests and historical recorded mainnet fixtures are separate from a fresh
 live refresh. No historical P&L, state-changing transaction, universal oracle
 safety, complete liquidation capacity, or v2/v4/Pendle/Curve integration is claimed.
 
-On 9 September, clean Ubuntu/Python 3.12 [CI passed all 218 tests](https://github.com/SergeySolovyev/icicpe-2026-event-time-mcdm-defi/actions/runs/34340178487)
+On 9 September, clean Ubuntu/Python 3.12 [CI passed all 221 tests](https://github.com/SergeySolovyev/icicpe-2026-event-time-mcdm-defi/actions/runs/34349726175)
 with these dependencies and without research packages. `--noconftest` skips the
 repository's Windows research-DLL preload; test fixtures remain in the focused
 test files. CI also built the product Docker image and replayed the saved report
