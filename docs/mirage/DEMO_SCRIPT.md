@@ -15,7 +15,7 @@ python -m mirage serve
 
 Open `http://127.0.0.1:8765`, or the verified public Python application URL. Keep the public README, `mirage/bytecode.py`, and `mirage/vendor/revert_pro/PROVENANCE.md` in nearby tabs. Close account or deploy-key pages before recording.
 
-The **Load demo** control restores the frozen four-market evidence at block `25938082` from `mainnet-full-25938082-routes-v2.json.gz`. Expected final verdicts: PAXG `BLOCK`; deUSD `INSUFFICIENT`; wstETH `INSUFFICIENT` because of its unsupported oracle, with its exit check `PASS`; WETH `PASS`. The saved amount is `10000` USDC.
+The **Load demo** control restores the frozen four-market evidence selected by `mirage/snapshots/demo.json`. The current repository default is `mainnet-full-25938082-diagnostics-v2.json.gz`: an offline diagnostic derivation of the same recorded block `25938082`, not a new capture. See [diagnostic replay and parent provenance](DIAGNOSTIC_REPLAY.md). Verify the deployed release in [HOSTING.md](HOSTING.md) before recording. Expected final verdicts: PAXG `BLOCK`; deUSD `INSUFFICIENT`; wstETH `INSUFFICIENT` because of its unsupported oracle, with its exit check `PASS`; WETH `PASS`. The saved amount is `10000` USDC.
 
 Rehearse a fresh WETH check once to establish realistic RPC latency. During recording, show its live source and new block only after it finishes. The later numerical comparison deliberately uses **Load demo**, so those exact historical values remain reproducible. The [event's video rules](https://ethglobal.com/events/ethonline2026/info/details) allow editing out unnecessary waiting. If the real request is slow, cut only the waiting interval, retain the request and completed result for the same market/amount, and label the cut as waiting removed. Do not speed up footage, alter the result, or describe an unfinished request as a result. Human narration, 720p or higher, and a final duration of 2–4 minutes remain required; AI voiceover and filming the screen with a phone are prohibited.
 
@@ -43,7 +43,7 @@ including the amount mismatch. It does not run an LLM or collect live observatio
 
 ## 1:00–1:35 — the same-size route counterexample
 
-**Screen:** Inspect wstETH → **Collateral exit depth** → **Inspect measurements**. Show `candidate routes`, their common `amount_in_raw`, both outputs and the selected WETH path. Keep the exit `PASS` and overall `INSUFFICIENT` distinguishable.
+**Screen:** Inspect wstETH → **Collateral exit depth**. Show the **Recorded route comparison** table: the exact common collateral input, Direct and Via WETH outputs, and **Selected in report**. Open **Inspect measurements** only if the underlying raw amounts or route addresses are needed. Keep the exit `PASS` and overall `INSUFFICIENT` distinguishable.
 
 **Say:**
 

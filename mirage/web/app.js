@@ -184,6 +184,101 @@
     if (/oracle|frozen|price|reference/.test(code)) return "oracle";
     return "other";
   }
+  function rawTokenAmount(value) {
+    // Raw JSON amounts must remain strings; an already rounded Number cannot be recovered.
+    if (typeof value !== "string" && typeof value !== "bigint") return null;
+    const text = String(value);
+    if (!/^\d{1,78}$/.test(text)) return null;
+    const amount = BigInt(text);
+    return amount < (1n << 256n) ? amount : null;
+  }
+  function exactTokenUnits(raw, decimals) {
+    const amount = rawTokenAmount(raw);
+    if (amount === null || !Number.isInteger(decimals) || decimals < 0 || decimals > 255) return null;
+    const digits = String(amount).padStart(decimals + 1, "0");
+    const whole = decimals ? digits.slice(0, -decimals) : digits;
+    const fraction = decimals ? digits.slice(-decimals).replace(/0+$/, "") : "";
+    return grouped(whole) + (fraction ? "." + fraction : "");
+  }
+  function routeIdentity(route) {
+    return Array.isArray(route) && route.length && route.every((pool) => typeof pool === "string" && /^0x[0-9a-fA-F]{40}$/.test(pool))
+      ? route.map((pool) => pool.toLowerCase()).join("/") : null;
+  }
+  function routeAmountCell(raw, decimals) {
+    const cell = node("td", "route-value"), amount = rawTokenAmount(raw), units = exactTokenUnits(raw, decimals);
+    if (units !== null) {
+      const value = node("span", "route-amount", units);
+      value.title = `${amount} base units`;
+      cell.append(value);
+    } else if (amount !== null) {
+      cell.append(node("span", "route-unavailable", "Token units unavailable"), node("small", "route-base-units", `${amount} base units`));
+    } else cell.append(node("span", "route-unavailable", "Not recorded"));
+    return cell;
+  }
+  function routeComparison(finding) {
+    const metrics = finding.metrics;
+    if (!metrics || !Array.isArray(metrics.candidate_routes) || !metrics.candidate_routes.length) return null;
+    const candidates = metrics.candidate_routes;
+    if (candidates.some((candidate) => !candidate || typeof candidate !== "object" || Array.isArray(candidate))) return null;
+    const comparison = node("div", "route-comparison");
+    comparison.append(node("h4", "route-comparison-title", "Recorded route comparison"));
+    const selectedInput = rawTokenAmount(metrics.amount_in_raw), selectedOutput = rawTokenAmount(metrics.amount_out_raw);
+    const selectedRoute = routeIdentity(metrics.route);
+    const matching = candidates.map((candidate, index) => (
+      metrics.quote_status === "ok" && candidate.status === "ok" && selectedRoute !== null
+      && selectedRoute === routeIdentity(candidate.route) && metrics.route_kind === candidate.route_kind
+      && selectedInput !== null && selectedInput === rawTokenAmount(candidate.amount_in_raw)
+      && selectedOutput !== null && selectedOutput === rawTokenAmount(candidate.amount_out_raw)
+    ) ? index : -1).filter((index) => index >= 0);
+    const selectedIndex = matching.length === 1 ? matching[0] : -1;
+    const completeList = Number.isSafeInteger(metrics.candidate_count) && metrics.candidate_count === candidates.length;
+    const declaredSameInput = metrics.routing_policy === "compare-direct-weth/1"
+      && metrics.route_selection === "greatest quoted loan output for the same collateral input; gas excluded";
+    const amountsMatch = selectedInput !== null && selectedInput > 0n
+      && candidates.every((candidate) => rawTokenAmount(candidate.amount_in_raw) === selectedInput);
+    let comparisonNote = "Comparison of the same input is not established in these metrics.";
+    if (candidates.length === 1) comparisonNote = "One recorded candidate; no comparison with another route.";
+    else if (completeList && declaredSameInput && amountsMatch) comparisonNote = candidates.every((candidate) => candidate.status === "ok")
+      ? "Same collateral input in every recorded candidate. Amounts below are exact."
+      : "Same collateral input was requested for every recorded candidate; some quotes are unavailable.";
+    else if (candidates.some((candidate) => rawTokenAmount(candidate.amount_in_raw) === null)) comparisonNote = "Some collateral inputs are missing. Comparison of the same sale is unavailable.";
+    else if (!amountsMatch) comparisonNote = "Recorded collateral inputs differ or the selected input is missing. These outputs do not establish a comparison of the same sale.";
+    comparison.append(node("p", "route-comparison-note", comparisonNote));
+    const table = node("table", "route-table"), head = node("thead"), heading = node("tr"), body = node("tbody");
+    table.append(node("caption", "sr-only", "Recorded Uniswap v3 quote simulations at the report block, in token units"));
+    for (const label of ["Route", "Collateral input", "USDC output"]) {
+      const column = node("th", null, label); column.scope = "col"; heading.append(column);
+    }
+    head.append(heading); table.append(head, body);
+    candidates.forEach((candidate, index) => {
+      const row = node("tr", index === selectedIndex ? "is-recorded-selection" : "");
+      const route = node("th", "route-name"); route.scope = "row";
+      const name = node("span", null, candidate.route_kind === "direct" ? "Direct" : candidate.route_kind === "weth" ? "Via WETH" : "Unspecified route");
+      if (routeIdentity(candidate.route) !== null) name.title = candidate.route.join(" → ");
+      route.append(name);
+      if (index === selectedIndex) route.append(node("small", "route-selected", "Selected in report"));
+      row.append(route, routeAmountCell(candidate.amount_in_raw, metrics.collateral_decimals));
+      if (candidate.status === "ok") row.append(routeAmountCell(candidate.amount_out_raw, metrics.loan_decimals));
+      else {
+        const unavailable = node("td", "route-value");
+        unavailable.append(node("span", "route-unavailable", "Quote unavailable"));
+        if (typeof candidate.reason === "string" && candidate.reason) unavailable.append(node("small", "route-reason", candidate.reason.replaceAll("_", " ")));
+        row.append(unavailable);
+      }
+      body.append(row);
+    });
+    comparison.append(table);
+    const notes = [];
+    if (!completeList) notes.push("Candidate coverage is not fully declared in these metrics.");
+    if (selectedIndex < 0) notes.push("The selected quote cannot be matched unambiguously to a recorded candidate.");
+    if (![metrics.collateral_decimals, metrics.loan_decimals].every((value) => Number.isInteger(value) && value >= 0 && value <= 255)) notes.push("Missing token decimals prevent some conversions to token units.");
+    const scope = typeof metrics.scope === "string" ? metrics.scope : "";
+    notes.push(scope.includes("fees included") && scope.includes("gas excluded")
+      ? "Quote outputs include pool fees and exclude gas. Recorded candidates only."
+      : "Fee and gas treatment is not declared. Recorded candidates only.");
+    comparison.append(node("p", "route-comparison-scope", notes.join(" ")));
+    return comparison;
+  }
   function detectorCard(title, findings, missing) {
     const card = node("section", "detector-card"), head = node("div", "detector-heading");
     const worst = findings.reduce((value, f) => (ORDER[safeSeverity(f.severity)] > ORDER[value] ? safeSeverity(f.severity) : value), "unknown");
@@ -194,6 +289,10 @@
       const item = node("div", "detector-finding");
       item.append(node("strong", null, finding.summary || finding.code || "Finding"));
       if (finding.code) item.append(node("p", null, finding.code));
+      if (detectorType(finding) === "depth") {
+        const comparison = routeComparison(finding);
+        if (comparison) item.append(comparison);
+      }
       const metrics = Object.entries(finding.metrics || {}).filter(([key]) => !["unit", "principal"].includes(key));
       if (metrics.length) {
         const details = node("details", "measurement-details"), values = node("dl", "detector-metrics");
