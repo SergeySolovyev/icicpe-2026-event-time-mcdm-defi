@@ -37,11 +37,13 @@ Node build, or model weights are needed to run the workbench.
    confirm it is a USDC market at the selected block before collection proceeds.
 6. **Load demo** restores the four committed cases and their saved-evidence label.
 
-[Temporary public demo](https://cologne-casting-layout-hill.trycloudflare.com)
-was checked through a browser on 9 September, including fresh Graph discovery,
-a WETH inspection and its allocation preview. This development tunnel requires
-the host computer and both processes to remain running; it is not permanent hosting.
-See [hosting configuration](docs/mirage/HOSTING.md) for the prepared Render deployment.
+[Open the public workbench](https://mirage-workbench.onrender.com).
+The Render deployment was checked through a browser on 9 September, including
+fresh Graph discovery, a WETH inspection and its allocation preview. Its address
+survives local computer shutdown. The free instance sleeps when idle, so the
+first request after a pause can take about a minute.
+See [hosting details](docs/mirage/HOSTING.md) and the
+[public browser check](docs/mirage/RENDER_BROWSER_VERIFICATION_2026-09-09.json).
 
 The server binds to localhost. A failed refresh leaves the saved evidence visible
 and reports the failure. It does not relabel saved evidence as a successful live

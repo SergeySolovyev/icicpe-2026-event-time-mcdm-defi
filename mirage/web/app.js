@@ -220,6 +220,7 @@
   function setDestination(id) { state.selected = id; $("allocation-market").value = id; resetPreview(); renderMarkets(); if (!state.scanning) $("scan-button").querySelector("span").textContent = id ? "Check market" : "Refresh evidence"; }
   function resetPreview() {
     state.previewToken += 1;
+    $("preview-context").textContent = reportBlock() != null ? `Preview will use report block ${grouped(reportBlock())}. No transactions.` : "Replay at the report's block. No historical profit claim.";
     $("original-action").textContent = "Waiting for a preview";
     $("original-rationale").textContent = "Run the original policy for this destination and amount.";
     $("gated-action").textContent = "Evidence required";

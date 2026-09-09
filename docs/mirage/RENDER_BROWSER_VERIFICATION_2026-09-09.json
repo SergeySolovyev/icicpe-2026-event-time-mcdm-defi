@@ -1,0 +1,41 @@
+{
+  "checked_on": "2026-09-09",
+  "public_url": "https://mirage-workbench.onrender.com",
+  "hosting": "Render free Docker web service; stable address, idle sleep and ephemeral captures",
+  "service_id": "srv-dagh6om7bikc73b6gs2g",
+  "deployment_id": "dep-dagh6pe7bikc73b6gv80",
+  "deployed_commit": "d06723ead6b0727f28526033cb8ffbfdc5465fc7",
+  "dashboard_status": "Live",
+  "dashboard_deployed_at": "2026-09-09T11:05:57+03:00",
+  "dashboard_deploy_duration": "1m34s",
+  "runtime_live_log_at": "2026-09-09T11:07:31+03:00",
+  "cloud_build_replay_log": "Saved evidence and allocator replay validated",
+  "blueprint_auto_sync": false,
+  "service_auto_deploy": false,
+  "browser_flow": [
+    "Saved four-market report rendered over public HTTPS at block 25938082",
+    "PAXG saved preview: original switch, MIRAGE hold, readable refusal reasons",
+    "Selected WETH and pressed Check market in the actual browser",
+    "Live Graph discovery: 697 discovered, 1 inspected",
+    "Live WETH report: PASS for amount 10000 USDC",
+    "Live preview: original and gated T1 both switch at block 25938497",
+    "Load demo restored four saved cases and the saved-evidence label"
+  ],
+  "live_anchor": {
+    "chain_id": 1,
+    "hash": "0x958420107c3cedc4adbfc1761ac367746156530b056bac903824147f46c3ab14",
+    "number": 25938497,
+    "displayed_timestamp_utc": "2026-09-09 08:03 UTC"
+  },
+  "live_market_id": "0x94b823e6bd8ea533b4e33fbc307faea0b307301bc48763acc4d4aa4def7636cd",
+  "scenario_amount_usdc": "10000",
+  "http_verification": "RENDER_HTTP_VERIFICATION_2026-09-09.json",
+  "limitations": [
+    "This is a functional browser integration check, not independent second-provider verification of the fresh capture.",
+    "The separate frozen four-market snapshot has 193 distinct raw results checked through each of two providers.",
+    "Exact live-request latency and peak container memory were not measured in this browser check.",
+    "The free instance can sleep; successful verification is not an uptime guarantee.",
+    "Final event submissions and human demo video are not completed by this record.",
+    "This release retained an old preview block caption after resetting a report; decisions reset correctly. A subsequent UI correction clears that caption and requires deployment verification."
+  ]
+}

@@ -46,7 +46,9 @@ https://github.com/SergeySolovyev/icicpe-2026-defi-vuln-detection
 
 ### Demonstration URL
 
-Pending: insert the externally reachable Python application URL after an independent browser check. The local application is available with `python -m mirage serve`; `http://127.0.0.1:8765` is a local rehearsal address and cannot be submitted as a public demo URL.
+https://mirage-workbench.onrender.com
+
+The Render release, public four-market saved-evidence interface, and a fresh WETH inspection were verified on 9 September 2026. That live browser check discovered 697 Graph market IDs, inspected one market for 10000 USDC, and returned PASS at Ethereum block `25938497`. Both the original T1 and gated preview allowed entry. This new capture has not received the frozen demo's separate two-provider verification. Release details and free-instance behavior are documented in [HOSTING.md](HOSTING.md). The free service may sleep when idle; allow time for it to wake before recording or judging.
 
 ## Continuity disclosure
 
@@ -84,13 +86,14 @@ The [official sponsor criteria](https://ethglobal.com/events/ethonline2026/prize
 - [Verification record](VERIFICATION_2026-09-09.json): repeated reads through two independent provider configurations.
 - [Architecture and trust boundaries](ARCHITECTURE.md): data path, replay, decision wrapper and supported coverage.
 - [MCP verification](MCP.md): official SDK stdio calls, saved decision replay and a dated live Graph-to-RPC inspection.
+- [Public deployment](HOSTING.md): stable Render URL, exact deployed commit, release status and hosting limits.
 - [Demo script](DEMO_SCRIPT.md): three-minute walkthrough with a fresh Graph check and clearly labeled historical evidence.
 
 The [ETHGlobal rules](https://ethglobal.com/rules) make the disclosure of existing work and credible development history material to Continuity eligibility. Keep the README's BEFORE/AFTER sections and the actual commit history accessible to reviewers.
 
 ## Sergey — final actions
 
-1. Save the project name as MIRAGE, paste the first-step fields, select the public repository, and insert the verified public demo URL. The dashboard currently has the old Vega Allocator name; Continuity is already selected.
+1. Review the MIRAGE project fields, use `https://mirage-workbench.onrender.com` as the demo URL, connect GitHub in ETHGlobal and select the public repository. Sergey makes the final form save; Continuity is already selected.
 2. Record and upload the human-narrated demo using [DEMO_SCRIPT.md](DEMO_SCRIPT.md). Confirm that a signed-out viewer can open the video and application.
 3. Complete the Uniswap developer feedback form linked from `FEEDBACK.md`; record completion without exposing private account data.
 4. Review sponsor selections and the later form steps, then make the final project and prize submissions yourself. No submission is performed by this document.

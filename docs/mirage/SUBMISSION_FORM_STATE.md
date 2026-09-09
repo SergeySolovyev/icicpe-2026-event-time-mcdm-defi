@@ -1,7 +1,7 @@
 # ETHOnline form state — observed 9 September 2026
 
 Read in the root task's internal Codex browser from rendered DOM. The name and
-three description fields have now been filled as an UNSAVED draft. No save or
+three description fields and demonstration URL have been filled as an UNSAVED draft. No save or
 submit button has been pressed; reloading can discard these local field values.
 
 - Signed in: dashboard welcomes Sergei and says attendance is fully confirmed.
@@ -9,7 +9,7 @@ submit button has been pressed; reloading can discard these local field values.
 - Saved project: Vega Allocator; unsaved name field: MIRAGE. Category DeFi and
   shield emoji. Showcase slug remains vega-allocator-vbqty.
 - Discord: dashboard explicitly says event Discord is not connected.
-- Demonstration URL: empty, required.
+- Demonstration URL: https://mirage-workbench.onrender.com, filled and required.
 - Short description: filled from SUBMISSION_DRAFT.md, 90 characters.
 - Description: filled from SUBMISSION_DRAFT.md, 1059 characters.
 - How it is made: filled from SUBMISSION_DRAFT.md, 1753 characters, including MCP.

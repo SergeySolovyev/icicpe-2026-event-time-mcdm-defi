@@ -1,0 +1,380 @@
+{
+  "schema": "mirage-public-http-verification/1",
+  "base_url": "https://mirage-workbench.onrender.com",
+  "started_at_utc": "2026-09-09T08:22:33.209428+00:00",
+  "completed_at_utc": "2026-09-09T08:22:38.776748+00:00",
+  "deployment_reference": {
+    "deploy_id": "dep-dagh6pe7bikc73b6gv80",
+    "commit": "d06723e",
+    "source": "Supplied by root from the Render dashboard; these HTTP endpoints do not expose deployment identity."
+  },
+  "result": "pass",
+  "checks": {
+    "A_html_product": true,
+    "A_initial_idle_saved": true,
+    "A_saved_report": true,
+    "B_html_product": true,
+    "B_initial_idle_saved": true,
+    "B_saved_report": true,
+    "distinct_sessions_issued": true,
+    "own_reset_accepted": true,
+    "A_reset_status_isolated": true,
+    "A_saved_report_preserved": true,
+    "B_reset_status_isolated": true,
+    "B_saved_report_preserved": true,
+    "hostile_origin_rejected": true,
+    "rejected_origin_did_not_reset_B": true,
+    "all_responses_no_store": true,
+    "all_responses_nosniff": true
+  },
+  "observations": {
+    "A_initial_status": {
+      "state": "idle",
+      "mode": "saved",
+      "message": "Saved chain evidence; refresh for live checks"
+    },
+    "A_initial_report": {
+      "chain_id": 1,
+      "block_number": 25938082,
+      "block_hash": "0x7647a0738f03a46dd0c957cca4664d73f9bcc7c981405a8ccb00e3bd08ede2cb",
+      "block_timestamp": 1788936023,
+      "capture_mode": "saved",
+      "scenario_notional_loan": "10000",
+      "market_count": 4,
+      "source_kind": "the-graph",
+      "discovery_market_count": 697,
+      "markets": [
+        {
+          "market_id": "0x8eaf7b29f02ba8d8c1d7aeb587403dcb16e2e943e4e2f5f94b0963c2386406c9",
+          "collateral_symbol": "PAXG",
+          "severity": "block"
+        },
+        {
+          "market_id": "0xbd1ad3b968f5f0552dbd8cf1989a62881407c5cccf9e49fb3657c8731caf0c1f",
+          "collateral_symbol": "deUSD",
+          "severity": "insufficient"
+        },
+        {
+          "market_id": "0xb323495f7e4148be5643a4ea4a8221eef163e4bccfdedc2a6f4696baacbc86cc",
+          "collateral_symbol": "wstETH",
+          "severity": "insufficient"
+        },
+        {
+          "market_id": "0x94b823e6bd8ea533b4e33fbc307faea0b307301bc48763acc4d4aa4def7636cd",
+          "collateral_symbol": "WETH",
+          "severity": "pass"
+        }
+      ]
+    },
+    "A_initial_report_sha256": "94dfbd3713854a0c53f84d9ef85df60bee3079fedaa522b6f65bcf7577122160",
+    "B_initial_status": {
+      "state": "idle",
+      "mode": "saved",
+      "message": "Saved chain evidence; refresh for live checks"
+    },
+    "B_initial_report": {
+      "chain_id": 1,
+      "block_number": 25938082,
+      "block_hash": "0x7647a0738f03a46dd0c957cca4664d73f9bcc7c981405a8ccb00e3bd08ede2cb",
+      "block_timestamp": 1788936023,
+      "capture_mode": "saved",
+      "scenario_notional_loan": "10000",
+      "market_count": 4,
+      "source_kind": "the-graph",
+      "discovery_market_count": 697,
+      "markets": [
+        {
+          "market_id": "0x8eaf7b29f02ba8d8c1d7aeb587403dcb16e2e943e4e2f5f94b0963c2386406c9",
+          "collateral_symbol": "PAXG",
+          "severity": "block"
+        },
+        {
+          "market_id": "0xbd1ad3b968f5f0552dbd8cf1989a62881407c5cccf9e49fb3657c8731caf0c1f",
+          "collateral_symbol": "deUSD",
+          "severity": "insufficient"
+        },
+        {
+          "market_id": "0xb323495f7e4148be5643a4ea4a8221eef163e4bccfdedc2a6f4696baacbc86cc",
+          "collateral_symbol": "wstETH",
+          "severity": "insufficient"
+        },
+        {
+          "market_id": "0x94b823e6bd8ea533b4e33fbc307faea0b307301bc48763acc4d4aa4def7636cd",
+          "collateral_symbol": "WETH",
+          "severity": "pass"
+        }
+      ]
+    },
+    "B_initial_report_sha256": "94dfbd3713854a0c53f84d9ef85df60bee3079fedaa522b6f65bcf7577122160",
+    "A_reset_response": {
+      "state": "idle",
+      "mode": "saved",
+      "message": "Saved demo evidence loaded"
+    },
+    "A_status_after_A_reset": {
+      "state": "idle",
+      "mode": "saved",
+      "message": "Saved demo evidence loaded"
+    },
+    "A_report_after_A_reset": {
+      "chain_id": 1,
+      "block_number": 25938082,
+      "block_hash": "0x7647a0738f03a46dd0c957cca4664d73f9bcc7c981405a8ccb00e3bd08ede2cb",
+      "block_timestamp": 1788936023,
+      "capture_mode": "saved",
+      "scenario_notional_loan": "10000",
+      "market_count": 4,
+      "source_kind": "the-graph",
+      "discovery_market_count": 697,
+      "markets": [
+        {
+          "market_id": "0x8eaf7b29f02ba8d8c1d7aeb587403dcb16e2e943e4e2f5f94b0963c2386406c9",
+          "collateral_symbol": "PAXG",
+          "severity": "block"
+        },
+        {
+          "market_id": "0xbd1ad3b968f5f0552dbd8cf1989a62881407c5cccf9e49fb3657c8731caf0c1f",
+          "collateral_symbol": "deUSD",
+          "severity": "insufficient"
+        },
+        {
+          "market_id": "0xb323495f7e4148be5643a4ea4a8221eef163e4bccfdedc2a6f4696baacbc86cc",
+          "collateral_symbol": "wstETH",
+          "severity": "insufficient"
+        },
+        {
+          "market_id": "0x94b823e6bd8ea533b4e33fbc307faea0b307301bc48763acc4d4aa4def7636cd",
+          "collateral_symbol": "WETH",
+          "severity": "pass"
+        }
+      ]
+    },
+    "B_status_after_A_reset": {
+      "state": "idle",
+      "mode": "saved",
+      "message": "Saved chain evidence; refresh for live checks"
+    },
+    "B_report_after_A_reset": {
+      "chain_id": 1,
+      "block_number": 25938082,
+      "block_hash": "0x7647a0738f03a46dd0c957cca4664d73f9bcc7c981405a8ccb00e3bd08ede2cb",
+      "block_timestamp": 1788936023,
+      "capture_mode": "saved",
+      "scenario_notional_loan": "10000",
+      "market_count": 4,
+      "source_kind": "the-graph",
+      "discovery_market_count": 697,
+      "markets": [
+        {
+          "market_id": "0x8eaf7b29f02ba8d8c1d7aeb587403dcb16e2e943e4e2f5f94b0963c2386406c9",
+          "collateral_symbol": "PAXG",
+          "severity": "block"
+        },
+        {
+          "market_id": "0xbd1ad3b968f5f0552dbd8cf1989a62881407c5cccf9e49fb3657c8731caf0c1f",
+          "collateral_symbol": "deUSD",
+          "severity": "insufficient"
+        },
+        {
+          "market_id": "0xb323495f7e4148be5643a4ea4a8221eef163e4bccfdedc2a6f4696baacbc86cc",
+          "collateral_symbol": "wstETH",
+          "severity": "insufficient"
+        },
+        {
+          "market_id": "0x94b823e6bd8ea533b4e33fbc307faea0b307301bc48763acc4d4aa4def7636cd",
+          "collateral_symbol": "WETH",
+          "severity": "pass"
+        }
+      ]
+    },
+    "hostile_origin_response": {
+      "error": "Same-origin request required"
+    },
+    "B_status_after_rejected_request": {
+      "state": "idle",
+      "mode": "saved",
+      "message": "Saved chain evidence; refresh for live checks"
+    }
+  },
+  "requests": [
+    {
+      "session": "A",
+      "method": "GET",
+      "path": "/",
+      "started_at_utc": "2026-09-09T08:22:33.417720+00:00",
+      "elapsed_seconds": 0.488,
+      "status": 200,
+      "bytes": 11915,
+      "body_sha256": "28b6262e4390831cd46e30230122666a66aae9b4852659e2726601439758e005",
+      "content_type": "text/html; charset=utf-8",
+      "cache_control": "no-store",
+      "x_content_type_options": "nosniff"
+    },
+    {
+      "session": "A",
+      "method": "GET",
+      "path": "/api/status",
+      "started_at_utc": "2026-09-09T08:22:33.905474+00:00",
+      "elapsed_seconds": 0.267,
+      "status": 200,
+      "bytes": 94,
+      "body_sha256": "09fbd6be7c999acae71e7fbf7347d0b6ab5be775cc1a3a523542ad7eeb005ecf",
+      "content_type": "application/json; charset=utf-8",
+      "cache_control": "no-store",
+      "x_content_type_options": "nosniff"
+    },
+    {
+      "session": "A",
+      "method": "GET",
+      "path": "/api/report",
+      "started_at_utc": "2026-09-09T08:22:34.172653+00:00",
+      "elapsed_seconds": 0.601,
+      "status": 200,
+      "bytes": 253018,
+      "body_sha256": "94dfbd3713854a0c53f84d9ef85df60bee3079fedaa522b6f65bcf7577122160",
+      "content_type": "application/json; charset=utf-8",
+      "cache_control": "no-store",
+      "x_content_type_options": "nosniff"
+    },
+    {
+      "session": "B",
+      "method": "GET",
+      "path": "/",
+      "started_at_utc": "2026-09-09T08:22:34.785997+00:00",
+      "elapsed_seconds": 0.409,
+      "status": 200,
+      "bytes": 11915,
+      "body_sha256": "28b6262e4390831cd46e30230122666a66aae9b4852659e2726601439758e005",
+      "content_type": "text/html; charset=utf-8",
+      "cache_control": "no-store",
+      "x_content_type_options": "nosniff"
+    },
+    {
+      "session": "B",
+      "method": "GET",
+      "path": "/api/status",
+      "started_at_utc": "2026-09-09T08:22:35.195651+00:00",
+      "elapsed_seconds": 0.25,
+      "status": 200,
+      "bytes": 94,
+      "body_sha256": "09fbd6be7c999acae71e7fbf7347d0b6ab5be775cc1a3a523542ad7eeb005ecf",
+      "content_type": "application/json; charset=utf-8",
+      "cache_control": "no-store",
+      "x_content_type_options": "nosniff"
+    },
+    {
+      "session": "B",
+      "method": "GET",
+      "path": "/api/report",
+      "started_at_utc": "2026-09-09T08:22:35.445900+00:00",
+      "elapsed_seconds": 0.717,
+      "status": 200,
+      "bytes": 253018,
+      "body_sha256": "94dfbd3713854a0c53f84d9ef85df60bee3079fedaa522b6f65bcf7577122160",
+      "content_type": "application/json; charset=utf-8",
+      "cache_control": "no-store",
+      "x_content_type_options": "nosniff"
+    },
+    {
+      "session": "A",
+      "method": "POST",
+      "path": "/api/demo",
+      "started_at_utc": "2026-09-09T08:22:36.171865+00:00",
+      "elapsed_seconds": 0.31,
+      "status": 200,
+      "bytes": 75,
+      "body_sha256": "c7baae08c72e7f1df5721b545fd96b716cb71f47ba6fe527555302dbdea87277",
+      "content_type": "application/json; charset=utf-8",
+      "cache_control": "no-store",
+      "x_content_type_options": "nosniff",
+      "origin_policy_case": "exact_public_origin"
+    },
+    {
+      "session": "A",
+      "method": "GET",
+      "path": "/api/status",
+      "started_at_utc": "2026-09-09T08:22:36.482458+00:00",
+      "elapsed_seconds": 0.244,
+      "status": 200,
+      "bytes": 75,
+      "body_sha256": "c7baae08c72e7f1df5721b545fd96b716cb71f47ba6fe527555302dbdea87277",
+      "content_type": "application/json; charset=utf-8",
+      "cache_control": "no-store",
+      "x_content_type_options": "nosniff"
+    },
+    {
+      "session": "A",
+      "method": "GET",
+      "path": "/api/report",
+      "started_at_utc": "2026-09-09T08:22:36.726573+00:00",
+      "elapsed_seconds": 0.646,
+      "status": 200,
+      "bytes": 253018,
+      "body_sha256": "94dfbd3713854a0c53f84d9ef85df60bee3079fedaa522b6f65bcf7577122160",
+      "content_type": "application/json; charset=utf-8",
+      "cache_control": "no-store",
+      "x_content_type_options": "nosniff"
+    },
+    {
+      "session": "B",
+      "method": "GET",
+      "path": "/api/status",
+      "started_at_utc": "2026-09-09T08:22:37.379385+00:00",
+      "elapsed_seconds": 0.254,
+      "status": 200,
+      "bytes": 94,
+      "body_sha256": "09fbd6be7c999acae71e7fbf7347d0b6ab5be775cc1a3a523542ad7eeb005ecf",
+      "content_type": "application/json; charset=utf-8",
+      "cache_control": "no-store",
+      "x_content_type_options": "nosniff"
+    },
+    {
+      "session": "B",
+      "method": "GET",
+      "path": "/api/report",
+      "started_at_utc": "2026-09-09T08:22:37.633129+00:00",
+      "elapsed_seconds": 0.645,
+      "status": 200,
+      "bytes": 253018,
+      "body_sha256": "94dfbd3713854a0c53f84d9ef85df60bee3079fedaa522b6f65bcf7577122160",
+      "content_type": "application/json; charset=utf-8",
+      "cache_control": "no-store",
+      "x_content_type_options": "nosniff"
+    },
+    {
+      "session": "B",
+      "method": "POST",
+      "path": "/api/demo",
+      "started_at_utc": "2026-09-09T08:22:38.282991+00:00",
+      "elapsed_seconds": 0.257,
+      "status": 403,
+      "bytes": 41,
+      "body_sha256": "cb7d76769a7eea1ecc671fd9938045fb164d84faa49a22049efc363cdf42f899",
+      "content_type": "application/json; charset=utf-8",
+      "cache_control": "no-store",
+      "x_content_type_options": "nosniff",
+      "origin_policy_case": "hostile_origin"
+    },
+    {
+      "session": "B",
+      "method": "GET",
+      "path": "/api/status",
+      "started_at_utc": "2026-09-09T08:22:38.540600+00:00",
+      "elapsed_seconds": 0.236,
+      "status": 200,
+      "bytes": 94,
+      "body_sha256": "09fbd6be7c999acae71e7fbf7347d0b6ab5be775cc1a3a523542ad7eeb005ecf",
+      "content_type": "application/json; charset=utf-8",
+      "cache_control": "no-store",
+      "x_content_type_options": "nosniff"
+    }
+  ],
+  "limits": [
+    "Two independent in-memory cookie jars on one Windows machine and network; not separate machines.",
+    "No browser rendering or SameSite enforcement test: urllib is an HTTP client.",
+    "No POST /api/scan, live RPC check, load test, or other visitor session was used.",
+    "Reset isolation was demonstrated with the session-local status marker; both sessions intentionally retain the same frozen seed report.",
+    "These requests do not establish uptime, cold-start latency, or performance under load.",
+    "No cookie values or Set-Cookie/Cookie headers are recorded."
+  ]
+}

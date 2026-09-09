@@ -1,33 +1,69 @@
 # Hosting the MIRAGE workbench
 
-The hosted product is the real Python workbench: saved mainnet evidence, allocator replay,
-and user-triggered read-only Graph/RPC checks. `Dockerfile.mirage` and `render.yaml` prepare
-deployment; their presence does not mean that a public service has been deployed or verified.
+The real Python workbench is deployed at **https://mirage-workbench.onrender.com**.
+It serves saved mainnet evidence and allocator replay, with user-triggered read-only
+Graph/RPC checks. On 9 September 2026, the Render dashboard reported the release live,
+and the public browser loaded the four-market saved-evidence workbench.
+
+## Confirmed release
+
+| Item | Observed value |
+|---|---|
+| Service URL | https://mirage-workbench.onrender.com |
+| Platform | Render Docker web service, free plan, Frankfurt |
+| Release commit | `d06723ead6b0727f28526033cb8ffbfdc5465fc7` |
+| Deployment ID | `dep-dagh6pe7bikc73b6gv80` |
+| Dashboard timestamp | 9 September 2026, 11:05:57 Moscow |
+| Build/deploy duration | 1 minute 34 seconds |
+| Service state | Live |
+| Service automatic deploys | Disabled |
+| Blueprint Auto Sync | No; saved and verified |
+
+The cloud Docker build completed its saved-evidence and allocator replay checks. The public
+browser displayed the committed four-market demo and then completed a fresh Graph/RPC
+inspection through the hosted service. The live WETH check below passed the implemented
+checks, and both original T1 and the gated preview returned `switch` at its evidence block.
+Subsequent release records should distinguish the deployed commit from later documentation
+commits in the repository.
+
+| Public browser live check | Observed value |
+|---|---|
+| Market | WETH/USDC, `0x94b823e6bd8ea533b4e33fbc307faea0b307301bc48763acc4d4aa4def7636cd` |
+| Scenario | 10000 USDC |
+| Discovery and assessment | 697 Graph-discovered IDs; one market inspected |
+| Verdict | PASS |
+| Ethereum block | `25938497` |
+| Block hash | `0x958420107c3cedc4adbfc1761ac367746156530b056bac903824147f46c3ab14` |
+| Displayed evidence timestamp | 9 September 2026, 08:03 UTC |
+| Request observation | Started approximately 08:21 UTC; complete by 08:22 UTC |
+
+Exact request latency was not measured. This browser check verifies the deployed live path;
+the new capture has not been independently reread through two providers. The two-provider
+verification elsewhere in the repository applies to the frozen block `25938082` demo.
+See [public browser verification](RENDER_BROWSER_VERIFICATION_2026-09-09.json).
 
 ## Render: stable service address, free instance
 
-Use the repository's `render.yaml` as a Render Blueprint. It defines one Docker web service,
+The deployment uses the repository's `render.yaml` as a Render Blueprint. It defines one Docker web service,
 explicitly on the `free` plan, in Frankfurt, with deploys on ordinary code commits disabled.
 There is no database or persistent disk. Render uses
 the repository containing the Blueprint and its default branch unless configured otherwise.
 See the [official Blueprint fields](https://render.com/docs/blueprint-spec).
 
-After the intended commit is available in the repository, the account owner can select
-**New > Blueprint**, connect that repository, review the one free service, and apply it.
-Existing GitHub login can be used with Render; account creation, GitHub authorization, and
-applying the Blueprint are separate actions that this preparation does not perform.
+The repository connection and initial Blueprint application are complete for this service.
+To reproduce it in another Render account, the account owner can select **New > Blueprint**,
+connect the public repository, review the free service, and apply it. Account access and
+repository authorization belong to that account owner.
 See [Render login settings](https://render.com/docs/login-settings) and
 [Blueprint setup](https://render.com/docs/infrastructure-as-code).
 
-Blueprint **Auto Sync is a separate setting**: Render enables it by default, so later changes
-to `render.yaml` can still update resources. To keep all subsequent updates manual, set the
-Blueprint's **Settings > Auto Sync > No**, then use **Manual Sync** for configuration changes
-and the service's manual deploy action for application releases.
+Blueprint **Auto Sync is a separate setting** from service automatic deploys. Both are
+disabled on the confirmed service. Use **Manual Sync** for intentional Blueprint
+configuration changes and the service's manual deploy action for application releases.
 See [disabling automatic Blueprint sync](https://render.com/docs/infrastructure-as-code#disabling-automatic-sync).
 
-Render supplies `RENDER_EXTERNAL_URL`, for example `https://mirage-workbench.onrender.com`.
-The actual assigned hostname must be read from the service dashboard; the example is not a
-claimed deployment. `scripts/mirage_host.py` uses that exact origin and binds to `0.0.0.0`
+Render supplies `RENDER_EXTERNAL_URL`; the confirmed assigned origin is
+`https://mirage-workbench.onrender.com`. `scripts/mirage_host.py` uses that exact origin and binds to `0.0.0.0`
 on `PORT` (default `10000`). `MIRAGE_PUBLIC_ORIGIN`, if set, overrides the Render URL and must
 be one canonical HTTPS origin with no trailing slash, path, credentials, query, fragment,
 wildcard, or explicit default port. Missing or invalid configuration stops startup.
@@ -62,9 +98,11 @@ retain the built image digest when recording a release. The Docker build runs a 
 and allocator replay without network calls; incompatible decoder or numerical dependencies
 fail that build before an image is deployed.
 
-Preparation check on 9 September 2026: 23 helper configuration cases passed. Docker CLI is
-installed locally, but its Linux engine pipe was unavailable; no image build or container
-smoke test has been completed in this preparation. No Render deployment was performed.
+The preparation check on 9 September 2026 passed 23 helper configuration cases. Docker CLI
+is installed locally, but its Linux engine pipe was unavailable, so the local Docker image
+build and container smoke test could not run. Render subsequently built and deployed the
+image successfully in the cloud, including the Dockerfile's saved-evidence replay step.
+The successful cloud build does not change the status of that failed local-engine attempt.
 
 `Dockerfile.mirage.dockerignore` also limits the build context to the product's
 source, dependencies and saved evidence; unrelated research, Git history and local
@@ -84,11 +122,12 @@ curl.exe --fail -H "Host: mirage.example" http://127.0.0.1:18767/api/report
 ```
 
 Expect CSS and a JSON report with the committed block/hash and `capture_mode: saved`.
-An attacker Origin on an otherwise valid Host must return 403. A public browser smoke check
-must then confirm that two independent cookie jars retain separate reports, an exact-size
-live check completes, and **Load demo** restores the saved evidence. The free instance's
-live RPC response times and memory use must be measured on the deployed service; a successful
-local test does not establish those properties. Stop only the named test container when done.
+An attacker Origin on an otherwise valid Host must return 403. The public page, saved-demo
+load, exact-size live capture and **Load demo** restoration were verified in the browser.
+Separate [HTTP checks](RENDER_HTTP_VERIFICATION_2026-09-09.json) passed for two independent
+cookie jars: resetting one visitor preserved the other's report and status; a hostile Origin
+received 403. Those 13 requests took 0.236–0.717 seconds each. They do not measure live-scan
+latency or peak memory, and are not a load test. Stop only the named local test container when done.
 
 ## Quick Tunnel: temporary access to a running local workbench
 
