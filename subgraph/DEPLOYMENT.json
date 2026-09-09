@@ -1,0 +1,18 @@
+{
+  "recorded_date": "2026-09-09",
+  "slug": "mirage-morpho-markets",
+  "version": "v0.0.1",
+  "deployment_id": "QmYkbwLirDouGqfRapedCcQ8YCbM8dzKA13agskDwGzJ6K",
+  "studio_url": "https://thegraph.com/studio/subgraph/mirage-morpho-markets/",
+  "query_url": "https://api.studio.thegraph.com/query/1759002/mirage-morpho-markets/v0.0.1",
+  "deployment_succeeded": true,
+  "nonempty_entities_verified": true,
+  "full_sync_verified": false,
+  "observed_meta": {
+    "block_number": 19972938,
+    "block_hash": "0x02312e923f0b274cc5742293ed76306e8d1ae52d25d1bf01e303c0b25acd4ed3",
+    "has_indexing_errors": false
+  },
+  "sample_usdc_market": "0x06f2842602373d247c4934f7656e513955ccc4c377f0febc0d9ca2c3bcc191b1",
+  "note": "Studio deployment is not onchain publication. Initial synchronization is ongoing. prune:auto may remove old query blocks."
+}
