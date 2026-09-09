@@ -18,6 +18,7 @@ on:
       - "Dockerfile.mirage.dockerignore"
       - ".dockerignore"
       - "scripts/mirage_host.py"
+      - "scripts/mirage_mcp_demo.py"
       - "LICENSE"
   workflow_dispatch:
 
@@ -98,6 +99,9 @@ jobs:
           python -m pytest --noconftest -p anyio.pytest_plugin \
             -m 'not network' -q \
             tests/test_mirage_*.py tests/test_t1_threshold.py
+
+      - name: Run the official SDK stdio client example
+        run: python scripts/mirage_mcp_demo.py
 
   docker-build:
     name: Build product image and replay without network

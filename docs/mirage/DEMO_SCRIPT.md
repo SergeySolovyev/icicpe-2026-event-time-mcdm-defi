@@ -2,6 +2,8 @@
 
 Target: three minutes of human narration with normal-speed screen recording. Record at 1080p so the block, amount and evidence remain legible. The [Graph prize](https://ethglobal.com/events/ethonline2026/prizes/the-graph) asks for two to four minutes; the [observed project form](SUBMISSION_FORM_STATE.md) caps the video at four minutes and rejects accelerated video.
 
+For the follow-up discussion, use [the judging questions and evidence links](JUDGE_QA.md).
+
 ## Prepare before recording
 
 Run the application from the repository root:
@@ -18,6 +20,10 @@ The **Load demo** control restores the frozen four-market evidence at block `259
 Rehearse a fresh WETH check once to establish realistic RPC latency. During recording, show its live source and new block only after it finishes. The later numerical comparison deliberately uses **Load demo**, so those exact historical values remain reproducible. The [event's video rules](https://ethglobal.com/events/ethonline2026/info/details) allow editing out unnecessary waiting. If the real request is slow, cut only the waiting interval, retain the request and completed result for the same market/amount, and label the cut as waiting removed. Do not speed up footage, alter the result, or describe an unfinished request as a result. Human narration, 720p or higher, and a final duration of 2–4 minutes remain required; AI voiceover and filming the screen with a phone are prohibited.
 
 Optional MCP preparation: install `requirements-mirage-mcp.txt`, then configure a stdio MCP client to launch `python -m mirage.mcp_server` with this repository as its working directory. Follow [MCP.md](MCP.md). Initialize before recording and rehearse `get_saved_report` and `preview_saved_allocation` with the PAXG market ID and `amount_usdc: "10000"`. The former returns four saved markets; the latter shows original T1 `switch` and gated `hold`. These tools run without a new network capture. The separate verified live `inspect_market` call took 54.36 seconds at block `25938274`; allow real latency for any new live call. Do not paste ordinary text into the server's JSON-RPC stdin.
+
+For a ready-to-run terminal demonstration, use `python scripts/mirage_mcp_demo.py`.
+It launches the official SDK client and prints actual saved PAXG/WETH decisions,
+including the amount mismatch. It does not run an LLM or collect live observations.
 
 ## 0:00–0:35 — live Graph discovery
 

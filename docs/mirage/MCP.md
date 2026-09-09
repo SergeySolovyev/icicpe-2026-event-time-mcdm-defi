@@ -11,6 +11,30 @@ python -m mirage.mcp_server
 
 An MCP client should launch `python` with arguments `["-m", "mirage.mcp_server"]` and set its working directory to this repository. Use the full interpreter path when the client does not inherit your virtual environment. Add `--snapshot` and an absolute snapshot path to select another saved artifact. The default follows `mirage/snapshots/demo.json`. Do not type ordinary text into its stdin: this transport expects MCP JSON-RPC messages.
 
+## Run the client demonstration
+
+After installing the two requirements files above, run this single command from the repository root:
+
+```powershell
+python scripts/mirage_mcp_demo.py
+```
+
+The script launches the actual stdio server with the same Python interpreter and the repository as its working directory. Through the [official SDK client](https://github.com/modelcontextprotocol/python-sdk/blob/v1.x/docs/client.md), it initializes the session, discovers tools, calls `get_saved_report`, then calls `preview_saved_allocation` for PAXG at 10000 USDC and WETH at 10000 and 20000 USDC. Each line prints values returned by the server: saved mode, block, original/gated actions, admission and whether the sale size matches recorded evidence. The report's full block hash is printed once. There are no hard-coded expected decisions.
+
+This demonstrates working MCP discovery, saved evidence replay and access to the existing allocator/gate, including the size-mismatch case. It uses no network and does not run an LLM or submit a transaction. The default snapshot follows `mirage/snapshots/demo.json`; its results can change if that artifact changes. SDK context managers shut down the local stdio child on completion or failure. The example prints safe tool error codes/stages, suppresses raw exception text and child logs, and returns a nonzero exit code on failure. It intentionally has no live option; use an explicitly invoked `inspect_market` call in a configured client for live evidence.
+
+The script completed with exit code 0 on 9 September 2026 using the pinned SDK environment. The real stdio server negotiated protocol `2025-11-25`, listed all three tools and returned four markets at saved block `25938082`, hash `0x7647a0738f03a46dd0c957cca4664d73f9bcc7c981405a8ccb00e3bd08ede2cb`. Its observed previews were:
+
+| Saved preview | Original T1 | MIRAGE-gated T1 | Exact sale size | Admission |
+| --- | --- | --- | --- | --- |
+| PAXG, 10000 USDC | `switch` | `hold` | `true` | `block` |
+| WETH, 10000 USDC | `switch` | `switch` | `true` | `pass` |
+| WETH, 20000 USDC | `switch` | `hold` | `false` | `insufficient` |
+
+The last result included `exit_scenario_not_checked`; the saved 10000-USDC sale quote did not authorize the 20000-USDC scenario. The client printed its completion message only after leaving both SDK session/transport contexts.
+
+## Available tools
+
 | Tool | Inputs | Result and network use |
 | --- | --- | --- |
 | `get_saved_report` | `include_evidence` (default `false`) | Replays the configured local evidence; compact `mirage-agent-summary/1` by default or full `mirage-feed/1` when requested. `mode: saved`, exact block/hash. No network. |
