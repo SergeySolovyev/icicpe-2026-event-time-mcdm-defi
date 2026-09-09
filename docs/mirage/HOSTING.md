@@ -11,10 +11,11 @@ and the public browser loaded the four-market saved-evidence workbench.
 |---|---|
 | Service URL | https://mirage-workbench.onrender.com |
 | Platform | Render Docker web service, free plan, Frankfurt |
-| Release commit | `d06723ead6b0727f28526033cb8ffbfdc5465fc7` |
-| Deployment ID | `dep-dagh6pe7bikc73b6gv80` |
-| Dashboard timestamp | 9 September 2026, 11:05:57 Moscow |
-| Build/deploy duration | 1 minute 34 seconds |
+| Release commit | `2212062662245a0c02d6d93b6d6e195d45371681` |
+| Deployment ID | `dep-daghgg942hec73ccdi10` |
+| Dashboard timestamp | 9 September 2026, 11:26:41 Moscow |
+| Runtime live log | 9 September 2026, 11:27:53 Moscow |
+| Build/deploy duration | 1 minute 12 seconds |
 | Service state | Live |
 | Service automatic deploys | Disabled |
 | Blueprint Auto Sync | No; saved and verified |
@@ -41,6 +42,19 @@ Exact request latency was not measured. This browser check verifies the deployed
 the new capture has not been independently reread through two providers. The two-provider
 verification elsewhere in the repository applies to the frozen block `25938082` demo.
 See [public browser verification](RENDER_BROWSER_VERIFICATION_2026-09-09.json).
+
+The follow-up release above corrects a stale preview caption after a new report.
+A second WETH check passed at block `25938561`; the preview used that block,
+both policies proposed entry, and **Load demo** restored block `25938082` with
+the new caption and cleared decisions. Backend detectors and the frozen fixture
+were unchanged. The earlier full HTTP isolation check refers to the initial release.
+
+[Clean Linux CI](https://github.com/SergeySolovyev/icicpe-2026-event-time-mcdm-defi/actions/runs/34329377252)
+at commit `0e3a13f1a01e6f1728c49480343eb0ae395c3f4b` passed 176 tests and separately built
+the same product inputs. The CI image ID was
+`sha256:a7f5e23c335a763849fa383620543f64e15ede288e639d27a3459e141bebc960`;
+it replayed four markets at block `25938082` with `--network=none`. This is the CI
+image ID, not a claimed digest of Render's separately built image.
 
 ## Render: stable service address, free instance
 

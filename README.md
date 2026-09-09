@@ -264,8 +264,8 @@ This proves internal consistency; it does not cryptographically authenticate
 an arbitrary file fabricated by a third party as Ethereum truth.
 
 ```console
-python -m pip install pytest eth-abi
-python -m pytest -q tests/test_mirage_core.py tests/test_mirage_gate.py tests/test_mirage_oracle.py tests/test_mirage_uniswap.py tests/test_mirage_workbench.py tests/test_t1_threshold.py
+python -m pip install -r requirements-mirage.txt -r requirements-mirage-mcp.txt "pytest==8.3.5" "anyio==4.10.0" "eth-abi==5.2.0" "eth-hash[pycryptodome]==0.7.1"
+python -m pytest --noconftest -p anyio.pytest_plugin -q tests/test_mirage_core.py tests/test_mirage_gate.py tests/test_mirage_oracle.py tests/test_mirage_uniswap.py tests/test_mirage_workbench.py tests/test_mirage_mcp.py tests/test_t1_threshold.py
 ```
 
 The tests cover ABI bounds and sign handling, pagination, accounting formulas,
@@ -275,7 +275,11 @@ Offline tests and historical recorded mainnet fixtures are separate from a fresh
 live refresh. No historical P&L, state-changing transaction, universal oracle
 safety, complete liquidation capacity, or v2/v4/Pendle/Curve integration is claimed.
 
-On 9 September, the command above passed **154 tests**. The default four-market
+On 9 September, clean Ubuntu/Python 3.12 [CI passed all 176 tests](https://github.com/SergeySolovyev/icicpe-2026-event-time-mcdm-defi/actions/runs/34329377252)
+with these dependencies and without research packages. `--noconftest` skips the
+repository's Windows research-DLL preload; test fixtures remain in the focused
+test files. CI also built the product Docker image and replayed the saved report
+and allocator with container networking disabled. The default four-market
 snapshot was independently reread through Tenderly and dRPC: **185 eth_call
 returns and eight runtime-code reads matched on each provider**, with no JSON-RPC
 batching. See [the verification record](docs/mirage/VERIFICATION_2026-09-09.json).

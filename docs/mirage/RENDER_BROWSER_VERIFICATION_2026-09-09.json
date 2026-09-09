@@ -30,12 +30,34 @@
   "live_market_id": "0x94b823e6bd8ea533b4e33fbc307faea0b307301bc48763acc4d4aa4def7636cd",
   "scenario_amount_usdc": "10000",
   "http_verification": "RENDER_HTTP_VERIFICATION_2026-09-09.json",
+  "followup_release": {
+    "deployed_commit": "2212062662245a0c02d6d93b6d6e195d45371681",
+    "deployment_id": "dep-daghgg942hec73ccdi10",
+    "dashboard_status": "Deploy succeeded|Live",
+    "dashboard_timestamp": "2026-09-09T11:26:41+03:00",
+    "runtime_live_log_at": "2026-09-09T11:27:53+03:00",
+    "duration": "1m12s",
+    "change": "Clear the previous preview block caption when the report, market or amount changes",
+    "live_weth_verdict": "pass",
+    "live_block_number": 25938561,
+    "live_block_hash": "0x19e7f979c97ef8529b5af60684d5fce900eff50e8b031f61382d1a8e84c332c1",
+    "amount_usdc": "10000",
+    "original_action": "switch",
+    "gated_action": "switch",
+    "reset_verified": {
+      "status": "Saved evidence",
+      "markets": 4,
+      "caption": "Preview will use report block 25,938,082. No transactions.",
+      "original": "Waiting for a preview",
+      "gated": "Evidence required"
+    }
+  },
   "limitations": [
     "This is a functional browser integration check, not independent second-provider verification of the fresh capture.",
     "The separate frozen four-market snapshot has 193 distinct raw results checked through each of two providers.",
     "Exact live-request latency and peak container memory were not measured in this browser check.",
     "The free instance can sleep; successful verification is not an uptime guarantee.",
     "Final event submissions and human demo video are not completed by this record.",
-    "This release retained an old preview block caption after resetting a report; decisions reset correctly. A subsequent UI correction clears that caption and requires deployment verification."
+    "The initial release retained an old preview block caption after reset. The followup_release field records the deployed correction and actual browser verification."
   ]
 }
