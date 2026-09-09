@@ -3,9 +3,10 @@ from .rpc import RpcClient
 
 
 class CachingRpcClient(RpcClient):
-    """Reuse reads within one capture. Failed reads remain failures, not zeros.
+    """Reuse successful reads at fixed blocks; bound failures to one market.
 
-    Each instance belongs to one worker; caches are discarded after the capture.
+    Each instance belongs to one worker. Begin each market before collecting it
+    so a transient failure does not suppress a later market's read retry.
     Pinning and final block-hash verification remain the caller's responsibility.
     """
 
@@ -14,12 +15,16 @@ class CachingRpcClient(RpcClient):
         self._read_cache = {}
         self._failed_reads = set()
 
+    def begin_market(self):
+        """Allow failed reads to retry for a new market; retain successful reads."""
+        self._failed_reads.clear()
+
     def _read(self, kind, to, data, block):
         if type(block) is not int or block < 0:
             raise ValueError("Cache requires numeric blocks")
         key = kind, to.lower(), data.lower(), block
         if key in self._failed_reads:
-            raise RuntimeError("Read unavailable earlier in this capture")
+            raise RuntimeError("Read unavailable earlier in this market capture")
         if key not in self._read_cache:
             try:
                 self._read_cache[key] = (super().call(to, data, block) if kind == "call"

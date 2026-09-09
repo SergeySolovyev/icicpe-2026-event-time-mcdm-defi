@@ -4,6 +4,7 @@ Optional eth_abi comparisons independently verify the handwritten ABI subset.
 All RPC and Graph interactions below use deterministic fake transports.
 """
 import copy
+from collections import Counter
 import importlib.util
 import json
 from pathlib import Path
@@ -11,6 +12,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
+from mirage.chain.cache import CachingRpcClient
 from mirage.chain.codec import decode_aggregate3, encode_aggregate3, uint_word
 from mirage.chain.morpho import MarketParams, MarketState
 from mirage.chain.rpc import BlockAnchor, RpcClient
@@ -346,6 +348,83 @@ class GraphTests(unittest.TestCase):
             with patch("mirage.discovery.subgraph.post_json", return_value={"data": {"_meta": meta}}):
                 with self.assertRaises(RuntimeError):
                     discover_markets(100, url="https://example.invalid")
+
+
+class RpcCacheTests(unittest.TestCase):
+    def test_new_market_retries_shared_failure_without_discarding_successes(self):
+        other_market = "0x" + "22" * 32
+        stable_data, transient_data = "0x12345678", "0xaabbccdd"
+        raw = valid_snapshot()["rows"][0]["evidence"]
+        for read_kind in ("call", "code"):
+            for separate_captures in (False, True):
+                with self.subTest(read_kind=read_kind, separate_captures=separate_captures):
+                    client = CachingRpcClient(["https://example.invalid"], tries=1)
+                    calls = Counter()
+
+                    def transport(method, params):
+                        self.assertEqual(params[-1], hex(ANCHOR.number))
+                        if method == "eth_call":
+                            address, data = params[0]["to"], params[0]["data"]
+                            if address == MORPHO:
+                                return raw[0 if data.startswith(MARKET_PARAMS) else 1]["result"]
+                            self.assertEqual(address, USDC)
+                            key = data
+                        else:
+                            self.assertEqual((method, params[0]), ("eth_getCode", USDC))
+                            key = "code"
+                        calls[key] += 1
+                        if key != stable_data and calls[key] == 1:
+                            raise RuntimeError("Transient provider failure")
+                        return "0x60016000"
+
+                    def reference(reader, collateral, loan, anchor, **kwargs):
+                        # Independent detector steps can need the same read.
+                        for _ in range(2):
+                            self.assertEqual(reader.call(USDC, stable_data, anchor.number), "0x60016000")
+                        attempts = []
+                        for _ in range(2):
+                            try:
+                                result = (reader.call(USDC, transient_data, anchor.number)
+                                          if read_kind == "call" else reader.code(USDC, anchor.number))
+                            except RuntimeError:
+                                result = None
+                            attempts.append(result)
+                        self.assertEqual(attempts[0], attempts[1])
+                        return {"status": "ok" if attempts[0] is not None else "insufficient"}
+
+                    with patch.object(client, "rpc", side_effect=transport), \
+                         patch.object(client, "anchor", return_value=ANCHOR), \
+                         patch("mirage.chain.uniswap.collect_reference", side_effect=reference), \
+                         patch("mirage.chain.oracle.collect_oracle", return_value={}), \
+                         patch("mirage.chain.rates.collect_rate", return_value={}), \
+                         patch("mirage.chain.token.symbol", return_value="TEST"):
+                        source = {"kind": "explicit-market"}
+                        if separate_captures:
+                            rows = [capture(client, ANCHOR, [market], source, full_checks=True)["rows"][0]
+                                    for market in (MARKET_ID, other_market)]
+                        else:
+                            rows = capture(client, ANCHOR, [MARKET_ID, other_market], source,
+                                           full_checks=True)["rows"]
+                    self.assertEqual([row["reference"]["status"] for row in rows], ["insufficient", "ok"])
+                    self.assertEqual(calls[stable_data], 1)
+                    self.assertEqual(calls[transient_data if read_kind == "call" else "code"], 2)
+
+    def test_successes_keep_their_numeric_block_identity_across_markets(self):
+        for read_kind in ("call", "code"):
+            with self.subTest(read_kind=read_kind):
+                client = CachingRpcClient(["https://example.invalid"], tries=1)
+                read = (lambda block: client.call(USDC, "0x1234", block)) if read_kind == "call" else (
+                    lambda block: client.code(USDC, block))
+                with patch.object(client, "rpc", side_effect=["0x11", "0x22"]) as transport:
+                    self.assertEqual(read(100), "0x11")
+                    client.begin_market()
+                    self.assertEqual(read(100), "0x11")
+                    self.assertEqual(read(101), "0x22")
+                    self.assertEqual(read(100), "0x11")
+                    for invalid in ("latest", True, -1):
+                        with self.assertRaises(ValueError):
+                            read(invalid)
+                self.assertEqual(transport.call_count, 2)
 
 
 class RpcAnchorTests(unittest.TestCase):

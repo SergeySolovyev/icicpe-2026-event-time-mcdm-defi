@@ -4,6 +4,7 @@ import json
 from dataclasses import asdict
 from pathlib import Path
 
+from .chain.cache import CachingRpcClient
 from .chain.codec import enc_b32
 from .chain.morpho import MarketParams, MarketState, read_market
 from .chain.rpc import BlockAnchor, RpcClient
@@ -95,6 +96,8 @@ def capture(client: RpcClient, anchor: BlockAnchor, market_ids, source: dict, *,
     rows = []
     market_ids = tuple(market_ids)
     for index, market_id in enumerate(market_ids):
+        if isinstance(client, CachingRpcClient):
+            client.begin_market()
         if progress:
             progress(index, len(market_ids), market_id)
         params, state, evidence = read_market(client, market_id, anchor)
