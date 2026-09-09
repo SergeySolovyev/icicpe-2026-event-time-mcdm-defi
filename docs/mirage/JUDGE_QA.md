@@ -96,8 +96,11 @@ with identical raw inputs; it has a new file hash and records its parent hash.
 
 **Show:** [original verification record](VERIFICATION_2026-09-09.json),
 [derivation record](DIAGNOSTIC_REPLAY.md), and the current snapshot hash
-in [the demo manifest](../../mirage/snapshots/demo.json). The 697 discovered IDs are
-not 697 completed inspections. Later live checks have their own block and scope.
+in [the demo manifest](../../mirage/snapshots/demo.json). That earlier snapshot
+inspects four of its 697 discovered IDs. The separate [full-universe capture](UNIVERSE_FULL_2026-09-09.md)
+records all three check groups for all 697 markets at block `25938815`, including
+unavailable observations. Its offline audits do not extend the demo's two-provider
+rereads to the full universe. Later live checks have their own block and scope.
 
 ## Is it an AI agent making an investment decision?
 
