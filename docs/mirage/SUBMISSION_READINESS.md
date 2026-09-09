@@ -25,6 +25,7 @@ targets. No third sponsor submission or unmarked Graph category is assumed eligi
 | Inspectable routing effect | [Public route comparison and previews](ROUTE_UI_VERIFICATION_2026-09-09.json): exact common wstETH input, both quotes, separate exit and market verdicts. |
 | Public application | [Hosting proof](HOSTING.md): deployed commit, CI and actual browser observations. A free instance may sleep; wake it before judging. |
 | Repository feedback | [FEEDBACK.md](../../FEEDBACK.md) describes actual integration experience. This is distinct from sending the external feedback form. |
+| Full discovery universe | [697-market capture and audits](UNIVERSE_FULL_2026-09-09.md): all three check groups recorded and replayed at block 25938815, with independent accounting and exit checks. Overall 32 PASS, 3 WARN, 95 BLOCK and 567 INSUFFICIENT; these are report verdicts, not allocation admissions. |
 
 The Graph's AI Tooling route accommodates reusable MCP infrastructure; an integrated
 LLM is not a prerequisite. Uniswap's nomination permits v3 integrations and tooling;
@@ -48,10 +49,12 @@ contribution. A spec-driven build must disclose its specs, prompts and planning.
 The deadline is **13 September 2026, 12:00 EDT / 19:00 Moscow**. The script follows
 the human-voice, normal-speed, minimum-720p rules; writing it does not complete them.
 
-## Full-universe capture remains separate
+## Full-universe capture and default demo
 
-The published [697-market accounting capture](UNIVERSE_ACCOUNTING_2026-09-09.md)
-does not establish complete oracle and exit coverage. The default demonstration
-contains four inspected markets. The all-detector universe capture is still in
-progress and must be reconciled, replayed and published with its actual coverage.
-It is not represented as finished merely because all IDs were discovered.
+The [completed 697-market capture](UNIVERSE_FULL_2026-09-09.md) publishes the
+original snapshot, derived diagnostics and verification records. No rows remain
+missing or accounting-only. Missing oracle and exit evidence remains explicit:
+625 markets have at least one insufficient finding, including 58 whose aggregate
+verdict is BLOCK. The default demonstration still contains four inspected markets
+at its earlier block; its separate two-provider verification is not attributed to
+the full-universe capture.

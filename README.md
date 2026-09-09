@@ -50,10 +50,13 @@ The server binds to localhost. A failed refresh leaves the saved evidence visibl
 and reports the failure. It does not relabel saved evidence as a successful live
 check. The default demo is selected by [`mirage/snapshots/demo.json`](mirage/snapshots/demo.json).
 
-An additional [697-market accounting capture](docs/mirage/UNIVERSE_ACCOUNTING_2026-09-09.md)
-records every Graph-discovered USDC market at block `25938815`, with raw calls and
-offline replay. It is explicitly accounting-only; its unfinished oracle and exit
-checks cannot grant admission. The four-case demo remains separate.
+An additional [complete 697-market capture](docs/mirage/UNIVERSE_FULL_2026-09-09.md)
+records all three check groups for every Graph-discovered USDC market at block
+`25938815`, with original raw evidence, offline replay and independent accounting
+and exit audits. The reports contain **32 PASS, 3 WARN, 95 BLOCK and 567
+INSUFFICIENT** results; complete collection does not imply complete evidence or
+admission. The earlier [accounting-only capture](docs/mirage/UNIVERSE_ACCOUNTING_2026-09-09.md)
+and the four-case default demo remain separately reproducible.
 
 ## BEFORE — the two existing foundations
 

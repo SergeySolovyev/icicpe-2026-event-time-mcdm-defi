@@ -1,0 +1,30 @@
+{
+  "amount_usdc": "10000",
+  "attempted": 697,
+  "block": 25938815,
+  "block_hash": "0x6151b63f20f0f5fa115ccd736cf42d08759914eb60748c9b102d38a7ad9ffe00",
+  "completed": 697,
+  "counts": {
+    "accounting_only": 0,
+    "discovered": 697,
+    "failed_this_phase": 0,
+    "full_checked": 697,
+    "included": 697,
+    "missing": 0
+  },
+  "elapsed_seconds": 180.66,
+  "failed": 0,
+  "failed_market_ids": [],
+  "market_id": null,
+  "new_attempts": 1,
+  "phase": "full",
+  "position": 185,
+  "report": "D:\\DeFi\\ETHOnline_2026\\work\\runs\\mainnet-20260909-01\\full-merged-85f88148bb9c4dad99a6aa1efec34d3e.feed.json",
+  "resumed": 696,
+  "snapshot": "D:\\DeFi\\ETHOnline_2026\\work\\runs\\mainnet-20260909-01\\full-merged-85f88148bb9c4dad99a6aa1efec34d3e.json.gz",
+  "source": "the-graph",
+  "stage": "finished",
+  "state": "complete",
+  "total": 697,
+  "updated_at": "2026-09-09T13:18:36.897585+00:00"
+}

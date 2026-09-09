@@ -1,0 +1,2198 @@
+{
+  "accounting": {
+    "basis": "Sums of decoded stored market() fields at the pinned block; no additional interest accrual is simulated.",
+    "labels": "Supply and borrow are accounting asset amounts, not recovered principal or a dollar TVL valuation. Supply minus borrow is the stored free-liquidity balance, not a guaranteed withdrawal amount.",
+    "loan_token": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+    "loan_token_decimals": 6,
+    "markets_in_sums": 697,
+    "negative_supply_minus_borrow_markets": 0,
+    "stored_borrow_assets": {
+      "raw_base_units": "11650901635717876",
+      "usdc_units": "11650901635.717876"
+    },
+    "stored_supply_assets": {
+      "raw_base_units": "11750194544266864",
+      "usdc_units": "11750194544.266864"
+    },
+    "stored_supply_minus_borrow": {
+      "raw_base_units": "99292908548988",
+      "usdc_units": "99292908.548988"
+    }
+  },
+  "anchor": {
+    "chain_id": 1,
+    "hash": "0x6151b63f20f0f5fa115ccd736cf42d08759914eb60748c9b102d38a7ad9ffe00",
+    "number": 25938815,
+    "timestamp": 1788944843
+  },
+  "coverage": {
+    "accounting_checked": 697,
+    "accounting_only": 0,
+    "all_discovered_markets_have_three_checks": true,
+    "all_discovered_markets_included": true,
+    "all_three_checks_recorded": 697,
+    "all_three_with_insufficient_findings": 625,
+    "all_three_without_insufficient_findings": 72,
+    "discovered_markets_reported_by_source": 697,
+    "discovery_count_basis": "Snapshot source metadata; not independently queried by this offline summary.",
+    "included_unique_markets": 697,
+    "meaning": "Recorded means supplied observations were replayed; it includes BLOCK, WARN and INSUFFICIENT outcomes. Missing rows are not assumed to be failed attempts.",
+    "missing_from_snapshot": 0,
+    "rate_observations_replayed": 697
+  },
+  "finding_counts": {
+    "accounting_observed": {
+      "pass": 602
+    },
+    "elevated_share_exchange_rate": {
+      "warn": 59
+    },
+    "exit_depth_unavailable": {
+      "insufficient": 584
+    },
+    "exit_size_exceeds_policy": {
+      "block": 34
+    },
+    "exit_size_quoted": {
+      "pass": 79
+    },
+    "no_free_liquidity": {
+      "block": 36
+    },
+    "oracle_changed_samples": {
+      "pass": 176
+    },
+    "oracle_code_unavailable": {
+      "insufficient": 2
+    },
+    "oracle_constant_configuration": {
+      "warn": 20
+    },
+    "oracle_equal_samples": {
+      "warn": 55
+    },
+    "oracle_feed_round_invalid": {
+      "insufficient": 80
+    },
+    "oracle_history_unavailable": {
+      "insufficient": 86
+    },
+    "oracle_price_unavailable": {
+      "insufficient": 51
+    },
+    "oracle_reference_agreement": {
+      "pass": 64
+    },
+    "oracle_reference_deviation": {
+      "block": 16
+    },
+    "oracle_reference_divergence": {
+      "block": 32
+    },
+    "oracle_template_unsupported": {
+      "insufficient": 145
+    },
+    "oracle_zero_price": {
+      "block": 2
+    },
+    "reference_observed": {
+      "pass": 96
+    },
+    "reference_unavailable": {
+      "insufficient": 569
+    }
+  },
+  "finding_examples": {
+    "accounting_observed": [
+      "0x64d65c9a2d91c36d56fbc42d69e979335320169b3df63bf92789e2c8883fcc64",
+      "0x3a85e619751152991742810df6ec69ce473daef99e28a64ab2340d7b7ccfee49",
+      "0x1e9d614631a7df0ec07fb05b2c8cb2491575fd1a63a33bf187a6afb295a4fc64"
+    ],
+    "elevated_share_exchange_rate": [
+      "0xd9e34b1eed46d123ac1b69b224de1881dbc88798bc7b70f504920f62f58f28cc",
+      "0x1cfdc0154ae6b9f1887a8250f2582d55606e1a2008e65108fb83dd50a928593e",
+      "0xbd1ad3b968f5f0552dbd8cf1989a62881407c5cccf9e49fb3657c8731caf0c1f"
+    ],
+    "exit_depth_unavailable": [
+      "0x0f9563442d64ab3bd3bcb27058db0b0d4046a4c46f0acd811dacae9551d2b129",
+      "0x23a7d0ff682b323363fb8ba58327ed87001f6306e09b7fd7413bbe4698e749c8",
+      "0x1e9d614631a7df0ec07fb05b2c8cb2491575fd1a63a33bf187a6afb295a4fc64"
+    ],
+    "exit_size_exceeds_policy": [
+      "0x8e7cc042d739a365c43d0a52d5f24160fa7ae9b7e7c9a479bd02a56041d4cf77",
+      "0x6d95bf5fad1b0427205ee2b595f80b52e22394173de0832efa79fde88abb8525",
+      "0x973e9dd45799efe8775417bcc420a3ab84a583587b2108985746e2fe201d0c83"
+    ],
+    "exit_size_quoted": [
+      "0x8eaf7b29f02ba8d8c1d7aeb587403dcb16e2e943e4e2f5f94b0963c2386406c9",
+      "0x64d65c9a2d91c36d56fbc42d69e979335320169b3df63bf92789e2c8883fcc64",
+      "0x3a85e619751152991742810df6ec69ce473daef99e28a64ab2340d7b7ccfee49"
+    ],
+    "no_free_liquidity": [
+      "0x8eaf7b29f02ba8d8c1d7aeb587403dcb16e2e943e4e2f5f94b0963c2386406c9",
+      "0x0f9563442d64ab3bd3bcb27058db0b0d4046a4c46f0acd811dacae9551d2b129",
+      "0x23a7d0ff682b323363fb8ba58327ed87001f6306e09b7fd7413bbe4698e749c8"
+    ],
+    "oracle_changed_samples": [
+      "0xef2c308b5abecf5c8750a1aa82b47c558005feb7a03f4f8e1ad682d71ac8d0ba",
+      "0xe3df58f9d3011b7481ff36b939fa5f8da642f34ea5792d25d3958dbf1efa26d7",
+      "0x9c28c8fa039a8df548a7f27adf062d751b0f2e9b9131931810535543adb23291"
+    ],
+    "oracle_code_unavailable": [
+      "0x54efdee08e272e929034a8f26f7ca34b1ebe364b275391169b28c6d7db24dbc8",
+      "0x89f95c4e891ba644ab44a924cbb478ffa86f3b7a2e928320718ecbbbe02df02f"
+    ],
+    "oracle_constant_configuration": [
+      "0xfd0d72a4f0469598b566b1bc5fe64835f828f90b1fb7d746148c086164cd4cc2",
+      "0x9bd88295d990d547adbc2a423d2fa7ced972e6c062226a009cc102dcb5d74eb2",
+      "0xbd1ad3b968f5f0552dbd8cf1989a62881407c5cccf9e49fb3657c8731caf0c1f"
+    ],
+    "oracle_equal_samples": [
+      "0xd9e34b1eed46d123ac1b69b224de1881dbc88798bc7b70f504920f62f58f28cc",
+      "0xe1b65304edd8ceaea9b629df4c3c926a37d1216e27900505c04f14b2ed279f33",
+      "0x1cfdc0154ae6b9f1887a8250f2582d55606e1a2008e65108fb83dd50a928593e"
+    ],
+    "oracle_feed_round_invalid": [
+      "0xe83d72fa5b00dcd46d9e0e860d95aa540d5ec106da5833108a9f826f21f36f52",
+      "0x2a0b893471c785a1f0fda00df7fca578b703eef7ae7186d2429c2824b5212467",
+      "0x17f7ae1b52670010976b3fe41324cbb2b1eb7dd8f492e51764b2828371b86b84"
+    ],
+    "oracle_history_unavailable": [
+      "0x1e9d614631a7df0ec07fb05b2c8cb2491575fd1a63a33bf187a6afb295a4fc64",
+      "0x002278ea242ec722813b4fe3c8eeaa07dbc331c731cc0b4248a1bf0771f933ea",
+      "0xf8c5aa31ea6b2a068a9eddb46dd110cae57bf0f12be9583a3f9a818effecba89"
+    ],
+    "oracle_price_unavailable": [
+      "0x0f9563442d64ab3bd3bcb27058db0b0d4046a4c46f0acd811dacae9551d2b129",
+      "0x23a7d0ff682b323363fb8ba58327ed87001f6306e09b7fd7413bbe4698e749c8",
+      "0xb317d11c2bc2c0c8e6ea3c6517731cf667c86f2c716624be50319a6d32a97e8d"
+    ],
+    "oracle_reference_agreement": [
+      "0x64d65c9a2d91c36d56fbc42d69e979335320169b3df63bf92789e2c8883fcc64",
+      "0x7e585a933ffe8443c371b4f8cfeb4430f5f6a14c2f32a898c26662c67a1cb8b8",
+      "0x94b823e6bd8ea533b4e33fbc307faea0b307301bc48763acc4d4aa4def7636cd"
+    ],
+    "oracle_reference_deviation": [
+      "0x8e7cc042d739a365c43d0a52d5f24160fa7ae9b7e7c9a479bd02a56041d4cf77",
+      "0xbd33e0ae076c82cfd0fa8d759ea83a296190f9f98d9f79b74a0eb4a294d8bf42",
+      "0x718af3af39b183758849486340b69466e3e89b84b7884188323416621ee91cb7"
+    ],
+    "oracle_reference_divergence": [
+      "0x8eaf7b29f02ba8d8c1d7aeb587403dcb16e2e943e4e2f5f94b0963c2386406c9",
+      "0x8e7cc042d739a365c43d0a52d5f24160fa7ae9b7e7c9a479bd02a56041d4cf77",
+      "0x9e0551b676d0e1d4ba7f896c9ffb02d461afa18452e8f4e121065ce1d3e38055"
+    ],
+    "oracle_template_unsupported": [
+      "0x8eaf7b29f02ba8d8c1d7aeb587403dcb16e2e943e4e2f5f94b0963c2386406c9",
+      "0x3a85e619751152991742810df6ec69ce473daef99e28a64ab2340d7b7ccfee49",
+      "0xb323495f7e4148be5643a4ea4a8221eef163e4bccfdedc2a6f4696baacbc86cc"
+    ],
+    "oracle_zero_price": [
+      "0x83b7ad16905809ea36482f4fbf6cfee9c9f316d128de9a5da1952607d5e4df5e",
+      "0xd86f7cdb5ed3cf87b69524056c7a9e239243b42ff67381611a366f99236fb5c5"
+    ],
+    "reference_observed": [
+      "0x64d65c9a2d91c36d56fbc42d69e979335320169b3df63bf92789e2c8883fcc64",
+      "0x3a85e619751152991742810df6ec69ce473daef99e28a64ab2340d7b7ccfee49",
+      "0xb323495f7e4148be5643a4ea4a8221eef163e4bccfdedc2a6f4696baacbc86cc"
+    ],
+    "reference_unavailable": [
+      "0x0f9563442d64ab3bd3bcb27058db0b0d4046a4c46f0acd811dacae9551d2b129",
+      "0x23a7d0ff682b323363fb8ba58327ed87001f6306e09b7fd7413bbe4698e749c8",
+      "0x1e9d614631a7df0ec07fb05b2c8cb2491575fd1a63a33bf187a6afb295a4fc64"
+    ]
+  },
+  "schema": "mirage-universe-summary/1",
+  "snapshot": "D:\\DeFi\\ETHOnline_2026\\work\\audits\\mainnet-full-25938815-diagnostics-v2.json.gz",
+  "snapshot_sha256": "270bae6cb656a0ed1d87ede25ea04c296acc7c1101d81356365d17a6343c2585",
+  "source": {
+    "coverage_counts": {
+      "accounting_only": 0,
+      "discovered": 697,
+      "failed_this_phase": 0,
+      "full_checked": 697,
+      "included": 697,
+      "missing": 0
+    },
+    "deployment": "QmYkbwLirDouGqfRapedCcQ8YCbM8dzKA13agskDwGzJ6K",
+    "discovery_market_count": 697,
+    "failed_market_ids": [],
+    "indexed_block": 25938902,
+    "inspected_market_count": 697,
+    "kind": "the-graph",
+    "market_count": 697,
+    "query_block": 25938815,
+    "query_block_hash": "0x6151b63f20f0f5fa115ccd736cf42d08759914eb60748c9b102d38a7ad9ffe00",
+    "scope": "Full-checked means collection and replay completed, not all findings passed"
+  },
+  "status_counts": {
+    "block": 95,
+    "insufficient": 567,
+    "pass": 32,
+    "warn": 3
+  },
+  "top_cases": {
+    "blocked_by_stored_supply": [
+      {
+        "check_scope": "all_three_recorded",
+        "collateral_token": "0x45804880de22913dafe09f4980848ece6ecbaf78",
+        "findings": [
+          {
+            "code": "no_free_liquidity",
+            "severity": "block"
+          },
+          {
+            "code": "oracle_template_unsupported",
+            "severity": "insufficient"
+          },
+          {
+            "code": "oracle_reference_divergence",
+            "severity": "block"
+          },
+          {
+            "code": "exit_size_quoted",
+            "severity": "pass"
+          }
+        ],
+        "has_insufficient_finding": true,
+        "market_id": "0x8eaf7b29f02ba8d8c1d7aeb587403dcb16e2e943e4e2f5f94b0963c2386406c9",
+        "oracle": "0xdd1778f71a4a1c6a0efebd8ae9f8848634ce1101",
+        "share_exchange_rate_multiple_vs_initial": "66215.818313636001",
+        "status": "block",
+        "stored_borrow_assets": {
+          "raw_base_units": "6212914536395500",
+          "usdc_units": "6212914536.395500"
+        },
+        "stored_supply_assets": {
+          "raw_base_units": "6212914536395500",
+          "usdc_units": "6212914536.395500"
+        },
+        "stored_supply_minus_borrow": {
+          "raw_base_units": "0",
+          "usdc_units": "0.000000"
+        }
+      },
+      {
+        "check_scope": "all_three_recorded",
+        "collateral_token": "0x5c5b196abe0d54485975d1ec29617d42d9198326",
+        "findings": [
+          {
+            "code": "no_free_liquidity",
+            "severity": "block"
+          },
+          {
+            "code": "oracle_price_unavailable",
+            "severity": "insufficient"
+          },
+          {
+            "code": "reference_unavailable",
+            "severity": "insufficient"
+          },
+          {
+            "code": "exit_depth_unavailable",
+            "severity": "insufficient"
+          }
+        ],
+        "has_insufficient_finding": true,
+        "market_id": "0x0f9563442d64ab3bd3bcb27058db0b0d4046a4c46f0acd811dacae9551d2b129",
+        "oracle": "0x65f9f6d537c2d628d1c2663896436817440edb72",
+        "share_exchange_rate_multiple_vs_initial": "527.948836524514",
+        "status": "block",
+        "stored_borrow_assets": {
+          "raw_base_units": "4339128990972897",
+          "usdc_units": "4339128990.972897"
+        },
+        "stored_supply_assets": {
+          "raw_base_units": "4339128990972897",
+          "usdc_units": "4339128990.972897"
+        },
+        "stored_supply_minus_borrow": {
+          "raw_base_units": "0",
+          "usdc_units": "0.000000"
+        }
+      },
+      {
+        "check_scope": "all_three_recorded",
+        "collateral_token": "0x890a5122aa1da30fec4286de7904ff808f0bd74a",
+        "findings": [
+          {
+            "code": "no_free_liquidity",
+            "severity": "block"
+          },
+          {
+            "code": "oracle_price_unavailable",
+            "severity": "insufficient"
+          },
+          {
+            "code": "reference_unavailable",
+            "severity": "insufficient"
+          },
+          {
+            "code": "exit_depth_unavailable",
+            "severity": "insufficient"
+          }
+        ],
+        "has_insufficient_finding": true,
+        "market_id": "0x23a7d0ff682b323363fb8ba58327ed87001f6306e09b7fd7413bbe4698e749c8",
+        "oracle": "0xb0b6fc449ccf81ff4129a86ddc814412e3cd9aa4",
+        "share_exchange_rate_multiple_vs_initial": "4.696779328155",
+        "status": "block",
+        "stored_borrow_assets": {
+          "raw_base_units": "95315650905060",
+          "usdc_units": "95315650.905060"
+        },
+        "stored_supply_assets": {
+          "raw_base_units": "95315650905060",
+          "usdc_units": "95315650.905060"
+        },
+        "stored_supply_minus_borrow": {
+          "raw_base_units": "0",
+          "usdc_units": "0.000000"
+        }
+      },
+      {
+        "check_scope": "all_three_recorded",
+        "collateral_token": "0x4956b52ae2ff65d74ca2d61207523288e4528f96",
+        "findings": [
+          {
+            "code": "no_free_liquidity",
+            "severity": "block"
+          },
+          {
+            "code": "oracle_equal_samples",
+            "severity": "warn"
+          },
+          {
+            "code": "reference_unavailable",
+            "severity": "insufficient"
+          },
+          {
+            "code": "exit_depth_unavailable",
+            "severity": "insufficient"
+          }
+        ],
+        "has_insufficient_finding": true,
+        "market_id": "0xe1b65304edd8ceaea9b629df4c3c926a37d1216e27900505c04f14b2ed279f33",
+        "oracle": "0x19018450a02bc5c1994ead517498311f64b2626a",
+        "share_exchange_rate_multiple_vs_initial": "23.051113575371",
+        "status": "block",
+        "stored_borrow_assets": {
+          "raw_base_units": "47057945504147",
+          "usdc_units": "47057945.504147"
+        },
+        "stored_supply_assets": {
+          "raw_base_units": "47057945504147",
+          "usdc_units": "47057945.504147"
+        },
+        "stored_supply_minus_borrow": {
+          "raw_base_units": "0",
+          "usdc_units": "0.000000"
+        }
+      },
+      {
+        "check_scope": "all_three_recorded",
+        "collateral_token": "0x52c66b5e7f8fde20843de900c5c8b4b0f23708a0",
+        "findings": [
+          {
+            "code": "no_free_liquidity",
+            "severity": "block"
+          },
+          {
+            "code": "oracle_constant_configuration",
+            "severity": "warn"
+          },
+          {
+            "code": "reference_unavailable",
+            "severity": "insufficient"
+          },
+          {
+            "code": "exit_depth_unavailable",
+            "severity": "insufficient"
+          }
+        ],
+        "has_insufficient_finding": true,
+        "market_id": "0xfd0d72a4f0469598b566b1bc5fe64835f828f90b1fb7d746148c086164cd4cc2",
+        "oracle": "0x270b2bd4cc6d935aa08b70eac518e2907eb5588b",
+        "share_exchange_rate_multiple_vs_initial": "1.383075382318",
+        "status": "block",
+        "stored_borrow_assets": {
+          "raw_base_units": "10040110143961",
+          "usdc_units": "10040110.143961"
+        },
+        "stored_supply_assets": {
+          "raw_base_units": "10040110143961",
+          "usdc_units": "10040110.143961"
+        },
+        "stored_supply_minus_borrow": {
+          "raw_base_units": "0",
+          "usdc_units": "0.000000"
+        }
+      },
+      {
+        "check_scope": "all_three_recorded",
+        "collateral_token": "0x66a1e37c9b0eaddca17d3662d6c05f4decf3e110",
+        "findings": [
+          {
+            "code": "no_free_liquidity",
+            "severity": "block"
+          },
+          {
+            "code": "oracle_reference_deviation",
+            "severity": "block"
+          },
+          {
+            "code": "oracle_reference_divergence",
+            "severity": "block"
+          },
+          {
+            "code": "exit_size_exceeds_policy",
+            "severity": "block"
+          }
+        ],
+        "has_insufficient_finding": false,
+        "market_id": "0x8e7cc042d739a365c43d0a52d5f24160fa7ae9b7e7c9a479bd02a56041d4cf77",
+        "oracle": "0x8875ceb24e656fca062759bdcf870f59a2b0187b",
+        "share_exchange_rate_multiple_vs_initial": "26.138405842935",
+        "status": "block",
+        "stored_borrow_assets": {
+          "raw_base_units": "6740993276294",
+          "usdc_units": "6740993.276294"
+        },
+        "stored_supply_assets": {
+          "raw_base_units": "6740993276294",
+          "usdc_units": "6740993.276294"
+        },
+        "stored_supply_minus_borrow": {
+          "raw_base_units": "0",
+          "usdc_units": "0.000000"
+        }
+      },
+      {
+        "check_scope": "all_three_recorded",
+        "collateral_token": "0x890a5122aa1da30fec4286de7904ff808f0bd74a",
+        "findings": [
+          {
+            "code": "no_free_liquidity",
+            "severity": "block"
+          },
+          {
+            "code": "oracle_price_unavailable",
+            "severity": "insufficient"
+          },
+          {
+            "code": "reference_unavailable",
+            "severity": "insufficient"
+          },
+          {
+            "code": "exit_depth_unavailable",
+            "severity": "insufficient"
+          }
+        ],
+        "has_insufficient_finding": true,
+        "market_id": "0xb317d11c2bc2c0c8e6ea3c6517731cf667c86f2c716624be50319a6d32a97e8d",
+        "oracle": "0xb0b6fc449ccf81ff4129a86ddc814412e3cd9aa4",
+        "share_exchange_rate_multiple_vs_initial": "1.031559736972",
+        "status": "block",
+        "stored_borrow_assets": {
+          "raw_base_units": "3964813178039",
+          "usdc_units": "3964813.178039"
+        },
+        "stored_supply_assets": {
+          "raw_base_units": "3964813178039",
+          "usdc_units": "3964813.178039"
+        },
+        "stored_supply_minus_borrow": {
+          "raw_base_units": "0",
+          "usdc_units": "0.000000"
+        }
+      },
+      {
+        "check_scope": "all_three_recorded",
+        "collateral_token": "0x64688b6e895a64c3584ff1420d4119342558a504",
+        "findings": [
+          {
+            "code": "no_free_liquidity",
+            "severity": "block"
+          },
+          {
+            "code": "oracle_template_unsupported",
+            "severity": "insufficient"
+          },
+          {
+            "code": "reference_unavailable",
+            "severity": "insufficient"
+          },
+          {
+            "code": "exit_depth_unavailable",
+            "severity": "insufficient"
+          }
+        ],
+        "has_insufficient_finding": true,
+        "market_id": "0x78e99fb97b709b77bf76ac955212bbaab9e19ee44799c8fe4826bb129cabae09",
+        "oracle": "0xd4f41c6df780bb143ec5b4b02ffc5fac73d764b1",
+        "share_exchange_rate_multiple_vs_initial": "1.000000000000",
+        "status": "block",
+        "stored_borrow_assets": {
+          "raw_base_units": "584549848736",
+          "usdc_units": "584549.848736"
+        },
+        "stored_supply_assets": {
+          "raw_base_units": "584549848736",
+          "usdc_units": "584549.848736"
+        },
+        "stored_supply_minus_borrow": {
+          "raw_base_units": "0",
+          "usdc_units": "0.000000"
+        }
+      },
+      {
+        "check_scope": "all_three_recorded",
+        "collateral_token": "0x58d97b57bb95320f9a05dc918aef65434969c2b2",
+        "findings": [
+          {
+            "code": "accounting_observed",
+            "severity": "pass"
+          },
+          {
+            "code": "oracle_reference_agreement",
+            "severity": "pass"
+          },
+          {
+            "code": "reference_observed",
+            "severity": "pass"
+          },
+          {
+            "code": "exit_size_exceeds_policy",
+            "severity": "block"
+          }
+        ],
+        "has_insufficient_finding": false,
+        "market_id": "0x6d95bf5fad1b0427205ee2b595f80b52e22394173de0832efa79fde88abb8525",
+        "oracle": "0xeecd66e6c723c1506532a5f646cc8a502c026a2e",
+        "share_exchange_rate_multiple_vs_initial": "1.032813972095",
+        "status": "block",
+        "stored_borrow_assets": {
+          "raw_base_units": "437881329348",
+          "usdc_units": "437881.329348"
+        },
+        "stored_supply_assets": {
+          "raw_base_units": "486260363645",
+          "usdc_units": "486260.363645"
+        },
+        "stored_supply_minus_borrow": {
+          "raw_base_units": "48379034297",
+          "usdc_units": "48379.034297"
+        }
+      },
+      {
+        "check_scope": "all_three_recorded",
+        "collateral_token": "0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e",
+        "findings": [
+          {
+            "code": "accounting_observed",
+            "severity": "pass"
+          },
+          {
+            "code": "oracle_reference_agreement",
+            "severity": "pass"
+          },
+          {
+            "code": "reference_observed",
+            "severity": "pass"
+          },
+          {
+            "code": "exit_size_exceeds_policy",
+            "severity": "block"
+          }
+        ],
+        "has_insufficient_finding": false,
+        "market_id": "0x973e9dd45799efe8775417bcc420a3ab84a583587b2108985746e2fe201d0c83",
+        "oracle": "0x637060c43e0bf6ab68ab59e7ad72cee45ce84ad5",
+        "share_exchange_rate_multiple_vs_initial": "1.069178306630",
+        "status": "block",
+        "stored_borrow_assets": {
+          "raw_base_units": "304255613455",
+          "usdc_units": "304255.613455"
+        },
+        "stored_supply_assets": {
+          "raw_base_units": "341573023754",
+          "usdc_units": "341573.023754"
+        },
+        "stored_supply_minus_borrow": {
+          "raw_base_units": "37317410299",
+          "usdc_units": "37317.410299"
+        }
+      }
+    ],
+    "insufficient_by_stored_supply": [
+      {
+        "check_scope": "all_three_recorded",
+        "collateral_token": "0x45804880de22913dafe09f4980848ece6ecbaf78",
+        "findings": [
+          {
+            "code": "no_free_liquidity",
+            "severity": "block"
+          },
+          {
+            "code": "oracle_template_unsupported",
+            "severity": "insufficient"
+          },
+          {
+            "code": "oracle_reference_divergence",
+            "severity": "block"
+          },
+          {
+            "code": "exit_size_quoted",
+            "severity": "pass"
+          }
+        ],
+        "has_insufficient_finding": true,
+        "market_id": "0x8eaf7b29f02ba8d8c1d7aeb587403dcb16e2e943e4e2f5f94b0963c2386406c9",
+        "oracle": "0xdd1778f71a4a1c6a0efebd8ae9f8848634ce1101",
+        "share_exchange_rate_multiple_vs_initial": "66215.818313636001",
+        "status": "block",
+        "stored_borrow_assets": {
+          "raw_base_units": "6212914536395500",
+          "usdc_units": "6212914536.395500"
+        },
+        "stored_supply_assets": {
+          "raw_base_units": "6212914536395500",
+          "usdc_units": "6212914536.395500"
+        },
+        "stored_supply_minus_borrow": {
+          "raw_base_units": "0",
+          "usdc_units": "0.000000"
+        }
+      },
+      {
+        "check_scope": "all_three_recorded",
+        "collateral_token": "0x5c5b196abe0d54485975d1ec29617d42d9198326",
+        "findings": [
+          {
+            "code": "no_free_liquidity",
+            "severity": "block"
+          },
+          {
+            "code": "oracle_price_unavailable",
+            "severity": "insufficient"
+          },
+          {
+            "code": "reference_unavailable",
+            "severity": "insufficient"
+          },
+          {
+            "code": "exit_depth_unavailable",
+            "severity": "insufficient"
+          }
+        ],
+        "has_insufficient_finding": true,
+        "market_id": "0x0f9563442d64ab3bd3bcb27058db0b0d4046a4c46f0acd811dacae9551d2b129",
+        "oracle": "0x65f9f6d537c2d628d1c2663896436817440edb72",
+        "share_exchange_rate_multiple_vs_initial": "527.948836524514",
+        "status": "block",
+        "stored_borrow_assets": {
+          "raw_base_units": "4339128990972897",
+          "usdc_units": "4339128990.972897"
+        },
+        "stored_supply_assets": {
+          "raw_base_units": "4339128990972897",
+          "usdc_units": "4339128990.972897"
+        },
+        "stored_supply_minus_borrow": {
+          "raw_base_units": "0",
+          "usdc_units": "0.000000"
+        }
+      },
+      {
+        "check_scope": "all_three_recorded",
+        "collateral_token": "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+        "findings": [
+          {
+            "code": "accounting_observed",
+            "severity": "pass"
+          },
+          {
+            "code": "oracle_template_unsupported",
+            "severity": "insufficient"
+          },
+          {
+            "code": "reference_observed",
+            "severity": "pass"
+          },
+          {
+            "code": "exit_size_quoted",
+            "severity": "pass"
+          }
+        ],
+        "has_insufficient_finding": true,
+        "market_id": "0x3a85e619751152991742810df6ec69ce473daef99e28a64ab2340d7b7ccfee49",
+        "oracle": "0xdddd770badd886df3864029e4b377b5f6a2b6b83",
+        "share_exchange_rate_multiple_vs_initial": "1.142033121604",
+        "status": "insufficient",
+        "stored_borrow_assets": {
+          "raw_base_units": "112047633479637",
+          "usdc_units": "112047633.479637"
+        },
+        "stored_supply_assets": {
+          "raw_base_units": "124251628881274",
+          "usdc_units": "124251628.881274"
+        },
+        "stored_supply_minus_borrow": {
+          "raw_base_units": "12203995401637",
+          "usdc_units": "12203995.401637"
+        }
+      },
+      {
+        "check_scope": "all_three_recorded",
+        "collateral_token": "0x890a5122aa1da30fec4286de7904ff808f0bd74a",
+        "findings": [
+          {
+            "code": "no_free_liquidity",
+            "severity": "block"
+          },
+          {
+            "code": "oracle_price_unavailable",
+            "severity": "insufficient"
+          },
+          {
+            "code": "reference_unavailable",
+            "severity": "insufficient"
+          },
+          {
+            "code": "exit_depth_unavailable",
+            "severity": "insufficient"
+          }
+        ],
+        "has_insufficient_finding": true,
+        "market_id": "0x23a7d0ff682b323363fb8ba58327ed87001f6306e09b7fd7413bbe4698e749c8",
+        "oracle": "0xb0b6fc449ccf81ff4129a86ddc814412e3cd9aa4",
+        "share_exchange_rate_multiple_vs_initial": "4.696779328155",
+        "status": "block",
+        "stored_borrow_assets": {
+          "raw_base_units": "95315650905060",
+          "usdc_units": "95315650.905060"
+        },
+        "stored_supply_assets": {
+          "raw_base_units": "95315650905060",
+          "usdc_units": "95315650.905060"
+        },
+        "stored_supply_minus_borrow": {
+          "raw_base_units": "0",
+          "usdc_units": "0.000000"
+        }
+      },
+      {
+        "check_scope": "all_three_recorded",
+        "collateral_token": "0xecfafdc7741323a945a163ed068b5a3c43483957",
+        "findings": [
+          {
+            "code": "accounting_observed",
+            "severity": "pass"
+          },
+          {
+            "code": "oracle_history_unavailable",
+            "severity": "insufficient"
+          },
+          {
+            "code": "reference_unavailable",
+            "severity": "insufficient"
+          },
+          {
+            "code": "exit_depth_unavailable",
+            "severity": "insufficient"
+          }
+        ],
+        "has_insufficient_finding": true,
+        "market_id": "0x1e9d614631a7df0ec07fb05b2c8cb2491575fd1a63a33bf187a6afb295a4fc64",
+        "oracle": "0x217d6ddcdb95112c51657f6270e8c079cfdb51f0",
+        "share_exchange_rate_multiple_vs_initial": "1.017874093373",
+        "status": "insufficient",
+        "stored_borrow_assets": {
+          "raw_base_units": "79494172254232",
+          "usdc_units": "79494172.254232"
+        },
+        "stored_supply_assets": {
+          "raw_base_units": "89839619902652",
+          "usdc_units": "89839619.902652"
+        },
+        "stored_supply_minus_borrow": {
+          "raw_base_units": "10345447648420",
+          "usdc_units": "10345447.648420"
+        }
+      },
+      {
+        "check_scope": "all_three_recorded",
+        "collateral_token": "0x1202f5c7b4b9e47a1a484e8b270be34dbbc75055",
+        "findings": [
+          {
+            "code": "elevated_share_exchange_rate",
+            "severity": "warn"
+          },
+          {
+            "code": "oracle_equal_samples",
+            "severity": "warn"
+          },
+          {
+            "code": "reference_unavailable",
+            "severity": "insufficient"
+          },
+          {
+            "code": "exit_depth_unavailable",
+            "severity": "insufficient"
+          }
+        ],
+        "has_insufficient_finding": true,
+        "market_id": "0xd9e34b1eed46d123ac1b69b224de1881dbc88798bc7b70f504920f62f58f28cc",
+        "oracle": "0xda850a72080024e17c1590fbf6ea7a826db90760",
+        "share_exchange_rate_multiple_vs_initial": "12.043933570548",
+        "status": "insufficient",
+        "stored_borrow_assets": {
+          "raw_base_units": "69334355379680",
+          "usdc_units": "69334355.379680"
+        },
+        "stored_supply_assets": {
+          "raw_base_units": "69334355379681",
+          "usdc_units": "69334355.379681"
+        },
+        "stored_supply_minus_borrow": {
+          "raw_base_units": "1",
+          "usdc_units": "0.000001"
+        }
+      },
+      {
+        "check_scope": "all_three_recorded",
+        "collateral_token": "0x4956b52ae2ff65d74ca2d61207523288e4528f96",
+        "findings": [
+          {
+            "code": "no_free_liquidity",
+            "severity": "block"
+          },
+          {
+            "code": "oracle_equal_samples",
+            "severity": "warn"
+          },
+          {
+            "code": "reference_unavailable",
+            "severity": "insufficient"
+          },
+          {
+            "code": "exit_depth_unavailable",
+            "severity": "insufficient"
+          }
+        ],
+        "has_insufficient_finding": true,
+        "market_id": "0xe1b65304edd8ceaea9b629df4c3c926a37d1216e27900505c04f14b2ed279f33",
+        "oracle": "0x19018450a02bc5c1994ead517498311f64b2626a",
+        "share_exchange_rate_multiple_vs_initial": "23.051113575371",
+        "status": "block",
+        "stored_borrow_assets": {
+          "raw_base_units": "47057945504147",
+          "usdc_units": "47057945.504147"
+        },
+        "stored_supply_assets": {
+          "raw_base_units": "47057945504147",
+          "usdc_units": "47057945.504147"
+        },
+        "stored_supply_minus_borrow": {
+          "raw_base_units": "0",
+          "usdc_units": "0.000000"
+        }
+      },
+      {
+        "check_scope": "all_three_recorded",
+        "collateral_token": "0xc26a6fa2c37b38e549a4a1807543801db684f99c",
+        "findings": [
+          {
+            "code": "accounting_observed",
+            "severity": "pass"
+          },
+          {
+            "code": "oracle_feed_round_invalid",
+            "severity": "insufficient"
+          },
+          {
+            "code": "reference_unavailable",
+            "severity": "insufficient"
+          },
+          {
+            "code": "exit_depth_unavailable",
+            "severity": "insufficient"
+          }
+        ],
+        "has_insufficient_finding": true,
+        "market_id": "0xe83d72fa5b00dcd46d9e0e860d95aa540d5ec106da5833108a9f826f21f36f52",
+        "oracle": "0x52ea2c12734b5bb61e1edf52bb0f01d9206493fc",
+        "share_exchange_rate_multiple_vs_initial": "1.074799892121",
+        "status": "insufficient",
+        "stored_borrow_assets": {
+          "raw_base_units": "33290088963549",
+          "usdc_units": "33290088.963549"
+        },
+        "stored_supply_assets": {
+          "raw_base_units": "36568657858795",
+          "usdc_units": "36568657.858795"
+        },
+        "stored_supply_minus_borrow": {
+          "raw_base_units": "3278568895246",
+          "usdc_units": "3278568.895246"
+        }
+      },
+      {
+        "check_scope": "all_three_recorded",
+        "collateral_token": "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
+        "findings": [
+          {
+            "code": "accounting_observed",
+            "severity": "pass"
+          },
+          {
+            "code": "oracle_template_unsupported",
+            "severity": "insufficient"
+          },
+          {
+            "code": "reference_observed",
+            "severity": "pass"
+          },
+          {
+            "code": "exit_size_quoted",
+            "severity": "pass"
+          }
+        ],
+        "has_insufficient_finding": true,
+        "market_id": "0xb323495f7e4148be5643a4ea4a8221eef163e4bccfdedc2a6f4696baacbc86cc",
+        "oracle": "0x48f7e36eb6b826b2df4b2e630b62cd25e89e40e2",
+        "share_exchange_rate_multiple_vs_initial": "1.142618467565",
+        "status": "insufficient",
+        "stored_borrow_assets": {
+          "raw_base_units": "24978140682004",
+          "usdc_units": "24978140.682004"
+        },
+        "stored_supply_assets": {
+          "raw_base_units": "27686982161825",
+          "usdc_units": "27686982.161825"
+        },
+        "stored_supply_minus_borrow": {
+          "raw_base_units": "2708841479821",
+          "usdc_units": "2708841.479821"
+        }
+      },
+      {
+        "check_scope": "all_three_recorded",
+        "collateral_token": "0x238a700ed6165261cf8b2e544ba797bc11e466ba",
+        "findings": [
+          {
+            "code": "accounting_observed",
+            "severity": "pass"
+          },
+          {
+            "code": "oracle_changed_samples",
+            "severity": "pass"
+          },
+          {
+            "code": "reference_unavailable",
+            "severity": "insufficient"
+          },
+          {
+            "code": "exit_depth_unavailable",
+            "severity": "insufficient"
+          }
+        ],
+        "has_insufficient_finding": true,
+        "market_id": "0xef2c308b5abecf5c8750a1aa82b47c558005feb7a03f4f8e1ad682d71ac8d0ba",
+        "oracle": "0x0cb1928eca8783f05a07d9ae2afb33f38bfbeb78",
+        "share_exchange_rate_multiple_vs_initial": "1.086875639227",
+        "status": "insufficient",
+        "stored_borrow_assets": {
+          "raw_base_units": "23764641166927",
+          "usdc_units": "23764641.166927"
+        },
+        "stored_supply_assets": {
+          "raw_base_units": "26190833547256",
+          "usdc_units": "26190833.547256"
+        },
+        "stored_supply_minus_borrow": {
+          "raw_base_units": "2426192380329",
+          "usdc_units": "2426192.380329"
+        }
+      }
+    ],
+    "largest_share_exchange_rate_multiple": [
+      {
+        "check_scope": "all_three_recorded",
+        "collateral_token": "0x45804880de22913dafe09f4980848ece6ecbaf78",
+        "findings": [
+          {
+            "code": "no_free_liquidity",
+            "severity": "block"
+          },
+          {
+            "code": "oracle_template_unsupported",
+            "severity": "insufficient"
+          },
+          {
+            "code": "oracle_reference_divergence",
+            "severity": "block"
+          },
+          {
+            "code": "exit_size_quoted",
+            "severity": "pass"
+          }
+        ],
+        "has_insufficient_finding": true,
+        "market_id": "0x8eaf7b29f02ba8d8c1d7aeb587403dcb16e2e943e4e2f5f94b0963c2386406c9",
+        "oracle": "0xdd1778f71a4a1c6a0efebd8ae9f8848634ce1101",
+        "share_exchange_rate_multiple_vs_initial": "66215.818313636001",
+        "status": "block",
+        "stored_borrow_assets": {
+          "raw_base_units": "6212914536395500",
+          "usdc_units": "6212914536.395500"
+        },
+        "stored_supply_assets": {
+          "raw_base_units": "6212914536395500",
+          "usdc_units": "6212914536.395500"
+        },
+        "stored_supply_minus_borrow": {
+          "raw_base_units": "0",
+          "usdc_units": "0.000000"
+        }
+      },
+      {
+        "check_scope": "all_three_recorded",
+        "collateral_token": "0x5c5b196abe0d54485975d1ec29617d42d9198326",
+        "findings": [
+          {
+            "code": "no_free_liquidity",
+            "severity": "block"
+          },
+          {
+            "code": "oracle_price_unavailable",
+            "severity": "insufficient"
+          },
+          {
+            "code": "reference_unavailable",
+            "severity": "insufficient"
+          },
+          {
+            "code": "exit_depth_unavailable",
+            "severity": "insufficient"
+          }
+        ],
+        "has_insufficient_finding": true,
+        "market_id": "0x0f9563442d64ab3bd3bcb27058db0b0d4046a4c46f0acd811dacae9551d2b129",
+        "oracle": "0x65f9f6d537c2d628d1c2663896436817440edb72",
+        "share_exchange_rate_multiple_vs_initial": "527.948836524514",
+        "status": "block",
+        "stored_borrow_assets": {
+          "raw_base_units": "4339128990972897",
+          "usdc_units": "4339128990.972897"
+        },
+        "stored_supply_assets": {
+          "raw_base_units": "4339128990972897",
+          "usdc_units": "4339128990.972897"
+        },
+        "stored_supply_minus_borrow": {
+          "raw_base_units": "0",
+          "usdc_units": "0.000000"
+        }
+      },
+      {
+        "check_scope": "all_three_recorded",
+        "collateral_token": "0x14bdc3a3ae09f5518b923b69489cbcafb238e617",
+        "findings": [
+          {
+            "code": "no_free_liquidity",
+            "severity": "block"
+          },
+          {
+            "code": "oracle_feed_round_invalid",
+            "severity": "insufficient"
+          },
+          {
+            "code": "reference_unavailable",
+            "severity": "insufficient"
+          },
+          {
+            "code": "exit_depth_unavailable",
+            "severity": "insufficient"
+          }
+        ],
+        "has_insufficient_finding": true,
+        "market_id": "0xfae6c3fca4d2fe61c62d29541e84a728b660a0dbc99217750c1080a8fc7d0e45",
+        "oracle": "0x89703c1bedc64b0b740c5af8bf634745b7b5d863",
+        "share_exchange_rate_multiple_vs_initial": "385.761948413514",
+        "status": "block",
+        "stored_borrow_assets": {
+          "raw_base_units": "186058466",
+          "usdc_units": "186.058466"
+        },
+        "stored_supply_assets": {
+          "raw_base_units": "186058466",
+          "usdc_units": "186.058466"
+        },
+        "stored_supply_minus_borrow": {
+          "raw_base_units": "0",
+          "usdc_units": "0.000000"
+        }
+      },
+      {
+        "check_scope": "all_three_recorded",
+        "collateral_token": "0xc8cf6d7991f15525488b2a83df53468d682ba4b0",
+        "findings": [
+          {
+            "code": "elevated_share_exchange_rate",
+            "severity": "warn"
+          },
+          {
+            "code": "oracle_feed_round_invalid",
+            "severity": "insufficient"
+          },
+          {
+            "code": "reference_unavailable",
+            "severity": "insufficient"
+          },
+          {
+            "code": "exit_depth_unavailable",
+            "severity": "insufficient"
+          }
+        ],
+        "has_insufficient_finding": true,
+        "market_id": "0x70e4dd5e58fa6675cab35ac3d65765e39776beb7043476ce9d80cd247fe459a0",
+        "oracle": "0x26cb901f9a107007bd5e912c6c4c028b273f0e5e",
+        "share_exchange_rate_multiple_vs_initial": "118.544036673069",
+        "status": "insufficient",
+        "stored_borrow_assets": {
+          "raw_base_units": "94236",
+          "usdc_units": "0.094236"
+        },
+        "stored_supply_assets": {
+          "raw_base_units": "118662",
+          "usdc_units": "0.118662"
+        },
+        "stored_supply_minus_borrow": {
+          "raw_base_units": "24426",
+          "usdc_units": "0.024426"
+        }
+      },
+      {
+        "check_scope": "all_three_recorded",
+        "collateral_token": "0x15700b564ca08d9439c58ca5053166e8317aa138",
+        "findings": [
+          {
+            "code": "elevated_share_exchange_rate",
+            "severity": "warn"
+          },
+          {
+            "code": "oracle_constant_configuration",
+            "severity": "warn"
+          },
+          {
+            "code": "reference_unavailable",
+            "severity": "insufficient"
+          },
+          {
+            "code": "exit_depth_unavailable",
+            "severity": "insufficient"
+          }
+        ],
+        "has_insufficient_finding": true,
+        "market_id": "0xbd1ad3b968f5f0552dbd8cf1989a62881407c5cccf9e49fb3657c8731caf0c1f",
+        "oracle": "0x1325eb089ac14b437e78d5d481e32611f6907ef8",
+        "share_exchange_rate_multiple_vs_initial": "109.652016023765",
+        "status": "insufficient",
+        "stored_borrow_assets": {
+          "raw_base_units": "348282174849",
+          "usdc_units": "348282.174849"
+        },
+        "stored_supply_assets": {
+          "raw_base_units": "348282184849",
+          "usdc_units": "348282.184849"
+        },
+        "stored_supply_minus_borrow": {
+          "raw_base_units": "10000",
+          "usdc_units": "0.010000"
+        }
+      },
+      {
+        "check_scope": "all_three_recorded",
+        "collateral_token": "0xbeefc011e94f43b8b7b455ebab290c7ab4e216f1",
+        "findings": [
+          {
+            "code": "elevated_share_exchange_rate",
+            "severity": "warn"
+          },
+          {
+            "code": "oracle_zero_price",
+            "severity": "block"
+          },
+          {
+            "code": "reference_unavailable",
+            "severity": "insufficient"
+          },
+          {
+            "code": "exit_depth_unavailable",
+            "severity": "insufficient"
+          }
+        ],
+        "has_insufficient_finding": true,
+        "market_id": "0x83b7ad16905809ea36482f4fbf6cfee9c9f316d128de9a5da1952607d5e4df5e",
+        "oracle": "0xddbcaac63306428d10ff4c6832cae1991244c056",
+        "share_exchange_rate_multiple_vs_initial": "69.919316972495",
+        "status": "block",
+        "stored_borrow_assets": {
+          "raw_base_units": "10784602765",
+          "usdc_units": "10784.602765"
+        },
+        "stored_supply_assets": {
+          "raw_base_units": "10784635701",
+          "usdc_units": "10784.635701"
+        },
+        "stored_supply_minus_borrow": {
+          "raw_base_units": "32936",
+          "usdc_units": "0.032936"
+        }
+      },
+      {
+        "check_scope": "all_three_recorded",
+        "collateral_token": "0x7bafb26a485bf7bb4b0d0b02996c79c5af6493bc",
+        "findings": [
+          {
+            "code": "elevated_share_exchange_rate",
+            "severity": "warn"
+          },
+          {
+            "code": "oracle_changed_samples",
+            "severity": "pass"
+          },
+          {
+            "code": "reference_unavailable",
+            "severity": "insufficient"
+          },
+          {
+            "code": "exit_depth_unavailable",
+            "severity": "insufficient"
+          }
+        ],
+        "has_insufficient_finding": true,
+        "market_id": "0xf3c6624976f69d18911f7c21ea4d2da926a8554963dd347ced9c1a60ac4ff74e",
+        "oracle": "0xf5fc624bc71074524e5960808d10a7eef582e0fe",
+        "share_exchange_rate_multiple_vs_initial": "64.248859890479",
+        "status": "insufficient",
+        "stored_borrow_assets": {
+          "raw_base_units": "64311227",
+          "usdc_units": "64.311227"
+        },
+        "stored_supply_assets": {
+          "raw_base_units": "64313172",
+          "usdc_units": "64.313172"
+        },
+        "stored_supply_minus_borrow": {
+          "raw_base_units": "1945",
+          "usdc_units": "0.001945"
+        }
+      },
+      {
+        "check_scope": "all_three_recorded",
+        "collateral_token": "0x7f01d0fce9bc646389483384c41b4d71c7139f11",
+        "findings": [
+          {
+            "code": "elevated_share_exchange_rate",
+            "severity": "warn"
+          },
+          {
+            "code": "oracle_changed_samples",
+            "severity": "pass"
+          },
+          {
+            "code": "reference_unavailable",
+            "severity": "insufficient"
+          },
+          {
+            "code": "exit_depth_unavailable",
+            "severity": "insufficient"
+          }
+        ],
+        "has_insufficient_finding": true,
+        "market_id": "0x97efa214630ff5ed8f2194e7f173344f3a2f93bf8f5c6653d0509312efc9fae1",
+        "oracle": "0x07ed3029ae401f4b012a257bb0721dee3be695c3",
+        "share_exchange_rate_multiple_vs_initial": "60.844589769388",
+        "status": "insufficient",
+        "stored_borrow_assets": {
+          "raw_base_units": "123819642",
+          "usdc_units": "123.819642"
+        },
+        "stored_supply_assets": {
+          "raw_base_units": "126701825",
+          "usdc_units": "126.701825"
+        },
+        "stored_supply_minus_borrow": {
+          "raw_base_units": "2882183",
+          "usdc_units": "2.882183"
+        }
+      },
+      {
+        "check_scope": "all_three_recorded",
+        "collateral_token": "0xee9085fc268f6727d5d4293dbabccf901ffdcc29",
+        "findings": [
+          {
+            "code": "elevated_share_exchange_rate",
+            "severity": "warn"
+          },
+          {
+            "code": "oracle_feed_round_invalid",
+            "severity": "insufficient"
+          },
+          {
+            "code": "reference_unavailable",
+            "severity": "insufficient"
+          },
+          {
+            "code": "exit_depth_unavailable",
+            "severity": "insufficient"
+          }
+        ],
+        "has_insufficient_finding": true,
+        "market_id": "0xd8cb3574ec8bc5b4dcec68f87dd3a57c4ed73b0f2dc712da212f8198eb93dc1f",
+        "oracle": "0xb35b25adc53157f4b76a0eecc94efe915a0aa968",
+        "share_exchange_rate_multiple_vs_initial": "54.826586706647",
+        "status": "insufficient",
+        "stored_borrow_assets": {
+          "raw_base_units": "54880",
+          "usdc_units": "0.054880"
+        },
+        "stored_supply_assets": {
+          "raw_base_units": "109707",
+          "usdc_units": "0.109707"
+        },
+        "stored_supply_minus_borrow": {
+          "raw_base_units": "54827",
+          "usdc_units": "0.054827"
+        }
+      },
+      {
+        "check_scope": "all_three_recorded",
+        "collateral_token": "0xd0097149aa4cc0d0e1fc99b8bd73fc17dc32c1e9",
+        "findings": [
+          {
+            "code": "elevated_share_exchange_rate",
+            "severity": "warn"
+          },
+          {
+            "code": "oracle_feed_round_invalid",
+            "severity": "insufficient"
+          },
+          {
+            "code": "reference_unavailable",
+            "severity": "insufficient"
+          },
+          {
+            "code": "exit_depth_unavailable",
+            "severity": "insufficient"
+          }
+        ],
+        "has_insufficient_finding": true,
+        "market_id": "0x780ae97d04af2ac851520d332fc61328a2a8131c68f9eee0d99c552c428da7ec",
+        "oracle": "0x4ea91b4ca1aceda9444f4d4b1fd9c28b78062c20",
+        "share_exchange_rate_multiple_vs_initial": "50.354390134790",
+        "status": "insufficient",
+        "stored_borrow_assets": {
+          "raw_base_units": "394962265",
+          "usdc_units": "394.962265"
+        },
+        "stored_supply_assets": {
+          "raw_base_units": "395012620",
+          "usdc_units": "395.012620"
+        },
+        "stored_supply_minus_borrow": {
+          "raw_base_units": "50355",
+          "usdc_units": "0.050355"
+        }
+      }
+    ],
+    "largest_stored_free_liquidity": [
+      {
+        "check_scope": "all_three_recorded",
+        "collateral_token": "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf",
+        "findings": [
+          {
+            "code": "accounting_observed",
+            "severity": "pass"
+          },
+          {
+            "code": "oracle_reference_agreement",
+            "severity": "pass"
+          },
+          {
+            "code": "reference_observed",
+            "severity": "pass"
+          },
+          {
+            "code": "exit_size_quoted",
+            "severity": "pass"
+          }
+        ],
+        "has_insufficient_finding": false,
+        "market_id": "0x64d65c9a2d91c36d56fbc42d69e979335320169b3df63bf92789e2c8883fcc64",
+        "oracle": "0xa6d6950c9f177f1de7f7757fb33539e3ec60182a",
+        "share_exchange_rate_multiple_vs_initial": "1.091349292521",
+        "status": "pass",
+        "stored_borrow_assets": {
+          "raw_base_units": "303446316184438",
+          "usdc_units": "303446316.184438"
+        },
+        "stored_supply_assets": {
+          "raw_base_units": "336380464056318",
+          "usdc_units": "336380464.056318"
+        },
+        "stored_supply_minus_borrow": {
+          "raw_base_units": "32934147871880",
+          "usdc_units": "32934147.871880"
+        }
+      },
+      {
+        "check_scope": "all_three_recorded",
+        "collateral_token": "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+        "findings": [
+          {
+            "code": "accounting_observed",
+            "severity": "pass"
+          },
+          {
+            "code": "oracle_template_unsupported",
+            "severity": "insufficient"
+          },
+          {
+            "code": "reference_observed",
+            "severity": "pass"
+          },
+          {
+            "code": "exit_size_quoted",
+            "severity": "pass"
+          }
+        ],
+        "has_insufficient_finding": true,
+        "market_id": "0x3a85e619751152991742810df6ec69ce473daef99e28a64ab2340d7b7ccfee49",
+        "oracle": "0xdddd770badd886df3864029e4b377b5f6a2b6b83",
+        "share_exchange_rate_multiple_vs_initial": "1.142033121604",
+        "status": "insufficient",
+        "stored_borrow_assets": {
+          "raw_base_units": "112047633479637",
+          "usdc_units": "112047633.479637"
+        },
+        "stored_supply_assets": {
+          "raw_base_units": "124251628881274",
+          "usdc_units": "124251628.881274"
+        },
+        "stored_supply_minus_borrow": {
+          "raw_base_units": "12203995401637",
+          "usdc_units": "12203995.401637"
+        }
+      },
+      {
+        "check_scope": "all_three_recorded",
+        "collateral_token": "0xecfafdc7741323a945a163ed068b5a3c43483957",
+        "findings": [
+          {
+            "code": "accounting_observed",
+            "severity": "pass"
+          },
+          {
+            "code": "oracle_history_unavailable",
+            "severity": "insufficient"
+          },
+          {
+            "code": "reference_unavailable",
+            "severity": "insufficient"
+          },
+          {
+            "code": "exit_depth_unavailable",
+            "severity": "insufficient"
+          }
+        ],
+        "has_insufficient_finding": true,
+        "market_id": "0x1e9d614631a7df0ec07fb05b2c8cb2491575fd1a63a33bf187a6afb295a4fc64",
+        "oracle": "0x217d6ddcdb95112c51657f6270e8c079cfdb51f0",
+        "share_exchange_rate_multiple_vs_initial": "1.017874093373",
+        "status": "insufficient",
+        "stored_borrow_assets": {
+          "raw_base_units": "79494172254232",
+          "usdc_units": "79494172.254232"
+        },
+        "stored_supply_assets": {
+          "raw_base_units": "89839619902652",
+          "usdc_units": "89839619.902652"
+        },
+        "stored_supply_minus_borrow": {
+          "raw_base_units": "10345447648420",
+          "usdc_units": "10345447.648420"
+        }
+      },
+      {
+        "check_scope": "all_three_recorded",
+        "collateral_token": "0x4614f7a56a3eb83b2ff9fa4b4b9575b28fb68644",
+        "findings": [
+          {
+            "code": "accounting_observed",
+            "severity": "pass"
+          },
+          {
+            "code": "oracle_feed_round_invalid",
+            "severity": "insufficient"
+          },
+          {
+            "code": "reference_unavailable",
+            "severity": "insufficient"
+          },
+          {
+            "code": "exit_depth_unavailable",
+            "severity": "insufficient"
+          }
+        ],
+        "has_insufficient_finding": true,
+        "market_id": "0x2a0b893471c785a1f0fda00df7fca578b703eef7ae7186d2429c2824b5212467",
+        "oracle": "0x52ea2c12734b5bb61e1edf52bb0f01d9206493fc",
+        "share_exchange_rate_multiple_vs_initial": "1.014837873902",
+        "status": "insufficient",
+        "stored_borrow_assets": {
+          "raw_base_units": "18471737607929",
+          "usdc_units": "18471737.607929"
+        },
+        "stored_supply_assets": {
+          "raw_base_units": "21854671930920",
+          "usdc_units": "21854671.930920"
+        },
+        "stored_supply_minus_borrow": {
+          "raw_base_units": "3382934322991",
+          "usdc_units": "3382934.322991"
+        }
+      },
+      {
+        "check_scope": "all_three_recorded",
+        "collateral_token": "0xc26a6fa2c37b38e549a4a1807543801db684f99c",
+        "findings": [
+          {
+            "code": "accounting_observed",
+            "severity": "pass"
+          },
+          {
+            "code": "oracle_feed_round_invalid",
+            "severity": "insufficient"
+          },
+          {
+            "code": "reference_unavailable",
+            "severity": "insufficient"
+          },
+          {
+            "code": "exit_depth_unavailable",
+            "severity": "insufficient"
+          }
+        ],
+        "has_insufficient_finding": true,
+        "market_id": "0xe83d72fa5b00dcd46d9e0e860d95aa540d5ec106da5833108a9f826f21f36f52",
+        "oracle": "0x52ea2c12734b5bb61e1edf52bb0f01d9206493fc",
+        "share_exchange_rate_multiple_vs_initial": "1.074799892121",
+        "status": "insufficient",
+        "stored_borrow_assets": {
+          "raw_base_units": "33290088963549",
+          "usdc_units": "33290088.963549"
+        },
+        "stored_supply_assets": {
+          "raw_base_units": "36568657858795",
+          "usdc_units": "36568657.858795"
+        },
+        "stored_supply_minus_borrow": {
+          "raw_base_units": "3278568895246",
+          "usdc_units": "3278568.895246"
+        }
+      },
+      {
+        "check_scope": "all_three_recorded",
+        "collateral_token": "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
+        "findings": [
+          {
+            "code": "accounting_observed",
+            "severity": "pass"
+          },
+          {
+            "code": "oracle_template_unsupported",
+            "severity": "insufficient"
+          },
+          {
+            "code": "reference_observed",
+            "severity": "pass"
+          },
+          {
+            "code": "exit_size_quoted",
+            "severity": "pass"
+          }
+        ],
+        "has_insufficient_finding": true,
+        "market_id": "0xb323495f7e4148be5643a4ea4a8221eef163e4bccfdedc2a6f4696baacbc86cc",
+        "oracle": "0x48f7e36eb6b826b2df4b2e630b62cd25e89e40e2",
+        "share_exchange_rate_multiple_vs_initial": "1.142618467565",
+        "status": "insufficient",
+        "stored_borrow_assets": {
+          "raw_base_units": "24978140682004",
+          "usdc_units": "24978140.682004"
+        },
+        "stored_supply_assets": {
+          "raw_base_units": "27686982161825",
+          "usdc_units": "27686982.161825"
+        },
+        "stored_supply_minus_borrow": {
+          "raw_base_units": "2708841479821",
+          "usdc_units": "2708841.479821"
+        }
+      },
+      {
+        "check_scope": "all_three_recorded",
+        "collateral_token": "0x238a700ed6165261cf8b2e544ba797bc11e466ba",
+        "findings": [
+          {
+            "code": "accounting_observed",
+            "severity": "pass"
+          },
+          {
+            "code": "oracle_changed_samples",
+            "severity": "pass"
+          },
+          {
+            "code": "reference_unavailable",
+            "severity": "insufficient"
+          },
+          {
+            "code": "exit_depth_unavailable",
+            "severity": "insufficient"
+          }
+        ],
+        "has_insufficient_finding": true,
+        "market_id": "0xef2c308b5abecf5c8750a1aa82b47c558005feb7a03f4f8e1ad682d71ac8d0ba",
+        "oracle": "0x0cb1928eca8783f05a07d9ae2afb33f38bfbeb78",
+        "share_exchange_rate_multiple_vs_initial": "1.086875639227",
+        "status": "insufficient",
+        "stored_borrow_assets": {
+          "raw_base_units": "23764641166927",
+          "usdc_units": "23764641.166927"
+        },
+        "stored_supply_assets": {
+          "raw_base_units": "26190833547256",
+          "usdc_units": "26190833.547256"
+        },
+        "stored_supply_minus_borrow": {
+          "raw_base_units": "2426192380329",
+          "usdc_units": "2426192.380329"
+        }
+      },
+      {
+        "check_scope": "all_three_recorded",
+        "collateral_token": "0x99cd4ec3f88a45940936f469e4bb72a2a701eeb9",
+        "findings": [
+          {
+            "code": "accounting_observed",
+            "severity": "pass"
+          },
+          {
+            "code": "oracle_changed_samples",
+            "severity": "pass"
+          },
+          {
+            "code": "reference_unavailable",
+            "severity": "insufficient"
+          },
+          {
+            "code": "exit_depth_unavailable",
+            "severity": "insufficient"
+          }
+        ],
+        "has_insufficient_finding": true,
+        "market_id": "0xd570c19c0dc0fbe4ab7faf4a37c4150e1c141c8aada8ca3e1b4b6c1b712af93d",
+        "oracle": "0xba3d2dc1670763c6729cc923a922c7513c0f9dd0",
+        "share_exchange_rate_multiple_vs_initial": "1.026684121342",
+        "status": "insufficient",
+        "stored_borrow_assets": {
+          "raw_base_units": "11135222365691",
+          "usdc_units": "11135222.365691"
+        },
+        "stored_supply_assets": {
+          "raw_base_units": "13556461990503",
+          "usdc_units": "13556461.990503"
+        },
+        "stored_supply_minus_borrow": {
+          "raw_base_units": "2421239624812",
+          "usdc_units": "2421239.624812"
+        }
+      },
+      {
+        "check_scope": "all_three_recorded",
+        "collateral_token": "0x056b269eb1f75477a8666ae8c7fe01b64dd55ecc",
+        "findings": [
+          {
+            "code": "accounting_observed",
+            "severity": "pass"
+          },
+          {
+            "code": "oracle_changed_samples",
+            "severity": "pass"
+          },
+          {
+            "code": "reference_unavailable",
+            "severity": "insufficient"
+          },
+          {
+            "code": "exit_depth_unavailable",
+            "severity": "insufficient"
+          }
+        ],
+        "has_insufficient_finding": true,
+        "market_id": "0xe3df58f9d3011b7481ff36b939fa5f8da642f34ea5792d25d3958dbf1efa26d7",
+        "oracle": "0x68b4c2b2b2e245ab54a3bd55dfd5a9d84f029c06",
+        "share_exchange_rate_multiple_vs_initial": "1.049784872313",
+        "status": "insufficient",
+        "stored_borrow_assets": {
+          "raw_base_units": "14856816125620",
+          "usdc_units": "14856816.125620"
+        },
+        "stored_supply_assets": {
+          "raw_base_units": "16852954055226",
+          "usdc_units": "16852954.055226"
+        },
+        "stored_supply_minus_borrow": {
+          "raw_base_units": "1996137929606",
+          "usdc_units": "1996137.929606"
+        }
+      },
+      {
+        "check_scope": "all_three_recorded",
+        "collateral_token": "0x22ae3d9a738471f405169af055d31c687087d4c7",
+        "findings": [
+          {
+            "code": "accounting_observed",
+            "severity": "pass"
+          },
+          {
+            "code": "oracle_history_unavailable",
+            "severity": "insufficient"
+          },
+          {
+            "code": "reference_unavailable",
+            "severity": "insufficient"
+          },
+          {
+            "code": "exit_depth_unavailable",
+            "severity": "insufficient"
+          }
+        ],
+        "has_insufficient_finding": true,
+        "market_id": "0x002278ea242ec722813b4fe3c8eeaa07dbc331c731cc0b4248a1bf0771f933ea",
+        "oracle": "0xa5657b406fc4282039861c6fca64452aefec8ac0",
+        "share_exchange_rate_multiple_vs_initial": "1.014269411247",
+        "status": "insufficient",
+        "stored_borrow_assets": {
+          "raw_base_units": "17571045080341",
+          "usdc_units": "17571045.080341"
+        },
+        "stored_supply_assets": {
+          "raw_base_units": "19378158464420",
+          "usdc_units": "19378158.464420"
+        },
+        "stored_supply_minus_borrow": {
+          "raw_base_units": "1807113384079",
+          "usdc_units": "1807113.384079"
+        }
+      }
+    ],
+    "largest_stored_supply": [
+      {
+        "check_scope": "all_three_recorded",
+        "collateral_token": "0x45804880de22913dafe09f4980848ece6ecbaf78",
+        "findings": [
+          {
+            "code": "no_free_liquidity",
+            "severity": "block"
+          },
+          {
+            "code": "oracle_template_unsupported",
+            "severity": "insufficient"
+          },
+          {
+            "code": "oracle_reference_divergence",
+            "severity": "block"
+          },
+          {
+            "code": "exit_size_quoted",
+            "severity": "pass"
+          }
+        ],
+        "has_insufficient_finding": true,
+        "market_id": "0x8eaf7b29f02ba8d8c1d7aeb587403dcb16e2e943e4e2f5f94b0963c2386406c9",
+        "oracle": "0xdd1778f71a4a1c6a0efebd8ae9f8848634ce1101",
+        "share_exchange_rate_multiple_vs_initial": "66215.818313636001",
+        "status": "block",
+        "stored_borrow_assets": {
+          "raw_base_units": "6212914536395500",
+          "usdc_units": "6212914536.395500"
+        },
+        "stored_supply_assets": {
+          "raw_base_units": "6212914536395500",
+          "usdc_units": "6212914536.395500"
+        },
+        "stored_supply_minus_borrow": {
+          "raw_base_units": "0",
+          "usdc_units": "0.000000"
+        }
+      },
+      {
+        "check_scope": "all_three_recorded",
+        "collateral_token": "0x5c5b196abe0d54485975d1ec29617d42d9198326",
+        "findings": [
+          {
+            "code": "no_free_liquidity",
+            "severity": "block"
+          },
+          {
+            "code": "oracle_price_unavailable",
+            "severity": "insufficient"
+          },
+          {
+            "code": "reference_unavailable",
+            "severity": "insufficient"
+          },
+          {
+            "code": "exit_depth_unavailable",
+            "severity": "insufficient"
+          }
+        ],
+        "has_insufficient_finding": true,
+        "market_id": "0x0f9563442d64ab3bd3bcb27058db0b0d4046a4c46f0acd811dacae9551d2b129",
+        "oracle": "0x65f9f6d537c2d628d1c2663896436817440edb72",
+        "share_exchange_rate_multiple_vs_initial": "527.948836524514",
+        "status": "block",
+        "stored_borrow_assets": {
+          "raw_base_units": "4339128990972897",
+          "usdc_units": "4339128990.972897"
+        },
+        "stored_supply_assets": {
+          "raw_base_units": "4339128990972897",
+          "usdc_units": "4339128990.972897"
+        },
+        "stored_supply_minus_borrow": {
+          "raw_base_units": "0",
+          "usdc_units": "0.000000"
+        }
+      },
+      {
+        "check_scope": "all_three_recorded",
+        "collateral_token": "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf",
+        "findings": [
+          {
+            "code": "accounting_observed",
+            "severity": "pass"
+          },
+          {
+            "code": "oracle_reference_agreement",
+            "severity": "pass"
+          },
+          {
+            "code": "reference_observed",
+            "severity": "pass"
+          },
+          {
+            "code": "exit_size_quoted",
+            "severity": "pass"
+          }
+        ],
+        "has_insufficient_finding": false,
+        "market_id": "0x64d65c9a2d91c36d56fbc42d69e979335320169b3df63bf92789e2c8883fcc64",
+        "oracle": "0xa6d6950c9f177f1de7f7757fb33539e3ec60182a",
+        "share_exchange_rate_multiple_vs_initial": "1.091349292521",
+        "status": "pass",
+        "stored_borrow_assets": {
+          "raw_base_units": "303446316184438",
+          "usdc_units": "303446316.184438"
+        },
+        "stored_supply_assets": {
+          "raw_base_units": "336380464056318",
+          "usdc_units": "336380464.056318"
+        },
+        "stored_supply_minus_borrow": {
+          "raw_base_units": "32934147871880",
+          "usdc_units": "32934147.871880"
+        }
+      },
+      {
+        "check_scope": "all_three_recorded",
+        "collateral_token": "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+        "findings": [
+          {
+            "code": "accounting_observed",
+            "severity": "pass"
+          },
+          {
+            "code": "oracle_template_unsupported",
+            "severity": "insufficient"
+          },
+          {
+            "code": "reference_observed",
+            "severity": "pass"
+          },
+          {
+            "code": "exit_size_quoted",
+            "severity": "pass"
+          }
+        ],
+        "has_insufficient_finding": true,
+        "market_id": "0x3a85e619751152991742810df6ec69ce473daef99e28a64ab2340d7b7ccfee49",
+        "oracle": "0xdddd770badd886df3864029e4b377b5f6a2b6b83",
+        "share_exchange_rate_multiple_vs_initial": "1.142033121604",
+        "status": "insufficient",
+        "stored_borrow_assets": {
+          "raw_base_units": "112047633479637",
+          "usdc_units": "112047633.479637"
+        },
+        "stored_supply_assets": {
+          "raw_base_units": "124251628881274",
+          "usdc_units": "124251628.881274"
+        },
+        "stored_supply_minus_borrow": {
+          "raw_base_units": "12203995401637",
+          "usdc_units": "12203995.401637"
+        }
+      },
+      {
+        "check_scope": "all_three_recorded",
+        "collateral_token": "0x890a5122aa1da30fec4286de7904ff808f0bd74a",
+        "findings": [
+          {
+            "code": "no_free_liquidity",
+            "severity": "block"
+          },
+          {
+            "code": "oracle_price_unavailable",
+            "severity": "insufficient"
+          },
+          {
+            "code": "reference_unavailable",
+            "severity": "insufficient"
+          },
+          {
+            "code": "exit_depth_unavailable",
+            "severity": "insufficient"
+          }
+        ],
+        "has_insufficient_finding": true,
+        "market_id": "0x23a7d0ff682b323363fb8ba58327ed87001f6306e09b7fd7413bbe4698e749c8",
+        "oracle": "0xb0b6fc449ccf81ff4129a86ddc814412e3cd9aa4",
+        "share_exchange_rate_multiple_vs_initial": "4.696779328155",
+        "status": "block",
+        "stored_borrow_assets": {
+          "raw_base_units": "95315650905060",
+          "usdc_units": "95315650.905060"
+        },
+        "stored_supply_assets": {
+          "raw_base_units": "95315650905060",
+          "usdc_units": "95315650.905060"
+        },
+        "stored_supply_minus_borrow": {
+          "raw_base_units": "0",
+          "usdc_units": "0.000000"
+        }
+      },
+      {
+        "check_scope": "all_three_recorded",
+        "collateral_token": "0xecfafdc7741323a945a163ed068b5a3c43483957",
+        "findings": [
+          {
+            "code": "accounting_observed",
+            "severity": "pass"
+          },
+          {
+            "code": "oracle_history_unavailable",
+            "severity": "insufficient"
+          },
+          {
+            "code": "reference_unavailable",
+            "severity": "insufficient"
+          },
+          {
+            "code": "exit_depth_unavailable",
+            "severity": "insufficient"
+          }
+        ],
+        "has_insufficient_finding": true,
+        "market_id": "0x1e9d614631a7df0ec07fb05b2c8cb2491575fd1a63a33bf187a6afb295a4fc64",
+        "oracle": "0x217d6ddcdb95112c51657f6270e8c079cfdb51f0",
+        "share_exchange_rate_multiple_vs_initial": "1.017874093373",
+        "status": "insufficient",
+        "stored_borrow_assets": {
+          "raw_base_units": "79494172254232",
+          "usdc_units": "79494172.254232"
+        },
+        "stored_supply_assets": {
+          "raw_base_units": "89839619902652",
+          "usdc_units": "89839619.902652"
+        },
+        "stored_supply_minus_borrow": {
+          "raw_base_units": "10345447648420",
+          "usdc_units": "10345447.648420"
+        }
+      },
+      {
+        "check_scope": "all_three_recorded",
+        "collateral_token": "0x1202f5c7b4b9e47a1a484e8b270be34dbbc75055",
+        "findings": [
+          {
+            "code": "elevated_share_exchange_rate",
+            "severity": "warn"
+          },
+          {
+            "code": "oracle_equal_samples",
+            "severity": "warn"
+          },
+          {
+            "code": "reference_unavailable",
+            "severity": "insufficient"
+          },
+          {
+            "code": "exit_depth_unavailable",
+            "severity": "insufficient"
+          }
+        ],
+        "has_insufficient_finding": true,
+        "market_id": "0xd9e34b1eed46d123ac1b69b224de1881dbc88798bc7b70f504920f62f58f28cc",
+        "oracle": "0xda850a72080024e17c1590fbf6ea7a826db90760",
+        "share_exchange_rate_multiple_vs_initial": "12.043933570548",
+        "status": "insufficient",
+        "stored_borrow_assets": {
+          "raw_base_units": "69334355379680",
+          "usdc_units": "69334355.379680"
+        },
+        "stored_supply_assets": {
+          "raw_base_units": "69334355379681",
+          "usdc_units": "69334355.379681"
+        },
+        "stored_supply_minus_borrow": {
+          "raw_base_units": "1",
+          "usdc_units": "0.000001"
+        }
+      },
+      {
+        "check_scope": "all_three_recorded",
+        "collateral_token": "0x4956b52ae2ff65d74ca2d61207523288e4528f96",
+        "findings": [
+          {
+            "code": "no_free_liquidity",
+            "severity": "block"
+          },
+          {
+            "code": "oracle_equal_samples",
+            "severity": "warn"
+          },
+          {
+            "code": "reference_unavailable",
+            "severity": "insufficient"
+          },
+          {
+            "code": "exit_depth_unavailable",
+            "severity": "insufficient"
+          }
+        ],
+        "has_insufficient_finding": true,
+        "market_id": "0xe1b65304edd8ceaea9b629df4c3c926a37d1216e27900505c04f14b2ed279f33",
+        "oracle": "0x19018450a02bc5c1994ead517498311f64b2626a",
+        "share_exchange_rate_multiple_vs_initial": "23.051113575371",
+        "status": "block",
+        "stored_borrow_assets": {
+          "raw_base_units": "47057945504147",
+          "usdc_units": "47057945.504147"
+        },
+        "stored_supply_assets": {
+          "raw_base_units": "47057945504147",
+          "usdc_units": "47057945.504147"
+        },
+        "stored_supply_minus_borrow": {
+          "raw_base_units": "0",
+          "usdc_units": "0.000000"
+        }
+      },
+      {
+        "check_scope": "all_three_recorded",
+        "collateral_token": "0xc26a6fa2c37b38e549a4a1807543801db684f99c",
+        "findings": [
+          {
+            "code": "accounting_observed",
+            "severity": "pass"
+          },
+          {
+            "code": "oracle_feed_round_invalid",
+            "severity": "insufficient"
+          },
+          {
+            "code": "reference_unavailable",
+            "severity": "insufficient"
+          },
+          {
+            "code": "exit_depth_unavailable",
+            "severity": "insufficient"
+          }
+        ],
+        "has_insufficient_finding": true,
+        "market_id": "0xe83d72fa5b00dcd46d9e0e860d95aa540d5ec106da5833108a9f826f21f36f52",
+        "oracle": "0x52ea2c12734b5bb61e1edf52bb0f01d9206493fc",
+        "share_exchange_rate_multiple_vs_initial": "1.074799892121",
+        "status": "insufficient",
+        "stored_borrow_assets": {
+          "raw_base_units": "33290088963549",
+          "usdc_units": "33290088.963549"
+        },
+        "stored_supply_assets": {
+          "raw_base_units": "36568657858795",
+          "usdc_units": "36568657.858795"
+        },
+        "stored_supply_minus_borrow": {
+          "raw_base_units": "3278568895246",
+          "usdc_units": "3278568.895246"
+        }
+      },
+      {
+        "check_scope": "all_three_recorded",
+        "collateral_token": "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
+        "findings": [
+          {
+            "code": "accounting_observed",
+            "severity": "pass"
+          },
+          {
+            "code": "oracle_template_unsupported",
+            "severity": "insufficient"
+          },
+          {
+            "code": "reference_observed",
+            "severity": "pass"
+          },
+          {
+            "code": "exit_size_quoted",
+            "severity": "pass"
+          }
+        ],
+        "has_insufficient_finding": true,
+        "market_id": "0xb323495f7e4148be5643a4ea4a8221eef163e4bccfdedc2a6f4696baacbc86cc",
+        "oracle": "0x48f7e36eb6b826b2df4b2e630b62cd25e89e40e2",
+        "share_exchange_rate_multiple_vs_initial": "1.142618467565",
+        "status": "insufficient",
+        "stored_borrow_assets": {
+          "raw_base_units": "24978140682004",
+          "usdc_units": "24978140.682004"
+        },
+        "stored_supply_assets": {
+          "raw_base_units": "27686982161825",
+          "usdc_units": "27686982.161825"
+        },
+        "stored_supply_minus_borrow": {
+          "raw_base_units": "2708841479821",
+          "usdc_units": "2708841.479821"
+        }
+      }
+    ],
+    "ranking_basis": "Each list states its ordering; stored balances rank accounting size, not allocator attractiveness or losses."
+  },
+  "validation": "Product report_from_snapshot replayed raw evidence locally; no fresh network verification."
+}

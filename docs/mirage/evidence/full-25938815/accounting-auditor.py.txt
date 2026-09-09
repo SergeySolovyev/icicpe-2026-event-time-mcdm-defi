@@ -1,0 +1,380 @@
+"""Private raw-checkpoint audit of exactly 697 manifest IDs; standard library only.
+No production package/detector import, socket, RPC, merged snapshot or run-state write.
+Keccak/ABI/rational helpers are copied from the prior independent 332 audit.
+"""
+from collections import Counter
+from datetime import datetime, timezone
+import gzip
+import hashlib
+import json
+from pathlib import Path
+import re
+import sys
+
+AUDITS = Path(__file__).resolve().parent
+RUN = AUDITS.parent / 'runs' / 'mainnet-20260909-01'
+MANIFEST = RUN / 'manifest.json'
+MANIFEST_SHA = '432d58c4b90c087f418f3fbbf527ec906d0f95896d0d99f3ccde9afa622920e9'
+STEM = 'accounting-697-independent-20260909-v1'
+INVENTORY = AUDITS / (STEM + '-inventory.json')
+PROOF = AUDITS / (STEM + '-proof.json')
+RESULT = AUDITS / (STEM + '-result.md')
+
+
+USDC = '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48'
+
+
+MORPHO = '0xbbbbbbbbbb9cc5e90e3b3af64bdaf62c37eeffcb'
+
+
+DEPLOYMENT = 'QmYkbwLirDouGqfRapedCcQ8YCbM8dzKA13agskDwGzJ6K'
+
+
+FIELDS = ('total_supply_assets', 'total_supply_shares', 'total_borrow_assets',
+          'total_borrow_shares', 'last_update', 'fee')
+
+
+MASK = (1 << 64) - 1
+
+
+ROTATIONS = (0, 1, 62, 28, 27, 36, 44, 6, 55, 20, 3, 10, 43, 25, 39,
+             41, 45, 15, 21, 8, 18, 2, 61, 56, 14)
+
+
+ROUND_CONSTANTS = (
+    0x0000000000000001, 0x0000000000008082, 0x800000000000808a,
+    0x8000000080008000, 0x000000000000808b, 0x0000000080000001,
+    0x8000000080008081, 0x8000000000008009, 0x000000000000008a,
+    0x0000000000000088, 0x0000000080008009, 0x000000008000000a,
+    0x000000008000808b, 0x800000000000008b, 0x8000000000008089,
+    0x8000000000008003, 0x8000000000008002, 0x8000000000000080,
+    0x000000000000800a, 0x800000008000000a, 0x8000000080008081,
+    0x8000000000008080, 0x0000000080000001, 0x8000000080008008,
+)
+
+
+def sha(data):
+    return hashlib.sha256(data).hexdigest()
+
+
+def canonical(value):
+    return json.dumps(value, sort_keys=True, separators=(',', ':'),
+                      ensure_ascii=True, allow_nan=False).encode()
+
+
+def require(condition, message):
+    if not condition:
+        raise ValueError(message)
+
+
+def rotate(value, count):
+    return ((value << count) | (value >> ((64 - count) % 64))) & MASK
+
+
+def keccak256(message):
+    # Ethereum Keccak padding (0x01), explicitly not FIPS SHA3 padding (0x06).
+    data = bytearray(message)
+    data.append(1)
+    data.extend(b'\0' * ((136 - len(data) % 136) % 136))
+    data[-1] |= 0x80
+    lanes = [0] * 25
+    for start in range(0, len(data), 136):
+        for i in range(17):
+            lanes[i] ^= int.from_bytes(data[start + i * 8:start + i * 8 + 8], 'little')
+        for constant in ROUND_CONSTANTS:
+            columns = [lanes[x] ^ lanes[x + 5] ^ lanes[x + 10] ^ lanes[x + 15]
+                       ^ lanes[x + 20] for x in range(5)]
+            delta = [columns[(x - 1) % 5] ^ rotate(columns[(x + 1) % 5], 1)
+                     for x in range(5)]
+            lanes = [value ^ delta[i % 5] for i, value in enumerate(lanes)]
+            shuffled = [0] * 25
+            for y in range(5):
+                for x in range(5):
+                    shuffled[y + 5 * ((2 * x + 3 * y) % 5)] = rotate(
+                        lanes[x + 5 * y], ROTATIONS[x + 5 * y])
+            for y in range(5):
+                for x in range(5):
+                    lanes[x + 5 * y] = shuffled[x + 5 * y] ^ (
+                        (~shuffled[(x + 1) % 5 + 5 * y]) &
+                        shuffled[(x + 2) % 5 + 5 * y])
+            lanes[0] ^= constant
+    return b''.join(value.to_bytes(8, 'little') for value in lanes)[:32]
+
+
+def words(value, count):
+    require(isinstance(value, str) and re.fullmatch('0x[0-9a-fA-F]*', value)
+            is not None, 'non-canonical hex return')
+    require(len(value) == 2 + 64 * count, f'ABI return is not exactly {count} words')
+    return tuple(int(value[2 + 64 * i:2 + 64 * (i + 1)], 16) for i in range(count))
+
+
+def fixed12(numerator, denominator):
+    # Independently round an exact rational using integer division, half-even.
+    if denominator == 0:
+        return None
+    quotient, remainder = divmod(numerator * 10**12, denominator)
+    if 2 * remainder > denominator or (2 * remainder == denominator and quotient % 2):
+        quotient += 1
+    return f'{quotient // 10**12}.{quotient % 10**12:012d}'
+
+
+def independent_finding(values):
+    supply, shares, borrow, _, updated, _ = values
+    numerator, denominator = (supply + 1) * 10**6, shares + 10**6
+    metrics = {
+        'unit': 'loan-token-base-units', 'stored_supply_assets_raw': str(supply),
+        'stored_borrow_assets_raw': str(borrow), 'supply_shares_raw': str(shares),
+        'available_liquidity_raw': str(supply - borrow),
+        'utilization': fixed12(borrow, supply),
+        'share_price_multiple_vs_initial': fixed12(numerator, denominator),
+        'share_rate_threshold': '2', 'last_update_timestamp': str(updated),
+        'principal': None,
+    }
+    if updated == 0:
+        return 'market_not_created', 'insufficient', {}
+    if borrow > supply:
+        return 'accounting_invariant_broken', 'insufficient', {}
+    if 0 < supply == borrow:
+        return 'no_free_liquidity', 'block', metrics
+    if numerator > 2 * denominator:
+        return 'elevated_share_exchange_rate', 'warn', metrics
+    return 'accounting_observed', 'pass', metrics
+
+
+def snapshot(path, expected_sha=None):
+    raw = path.read_bytes()
+    digest = sha(raw)
+    require(expected_sha is None or digest == expected_sha, 'compressed SHA mismatch')
+    value = json.loads(gzip.decompress(raw))
+    require(value.get('schema') == 'mirage-snapshot/1', 'unexpected snapshot schema')
+    require(len(value.get('rows', [])) == 1, 'checkpoint is not exactly one row')
+    return value, digest
+
+
+def calls(row, market_id, anchor):
+    evidence = row['evidence']
+    require(len(evidence) == 2, 'accounting evidence is not exactly two calls')
+    by_selector = {}
+    for item in evidence:
+        require(item['method'] == 'eth_call', 'wrong accounting RPC method')
+        require(item['to'].lower() == MORPHO, 'wrong Morpho call target')
+        require(item['block'] == anchor['number'] and item['block_hash'] == anchor['hash'],
+                'accounting call anchor mismatch')
+        selector = item['data'][:10]
+        require(selector in ('0x2c3c9157', '0x5c60e39a'), 'unknown accounting selector')
+        require(selector not in by_selector, 'duplicate accounting selector')
+        require(item['data'] == selector + market_id[2:], 'calldata market identity mismatch')
+        by_selector[selector] = item
+    params = words(by_selector['0x2c3c9157']['result'], 5)
+    require(all(word < 2**160 for word in params[:4]), 'noncanonical address ABI padding')
+    require(f'0x{params[0]:040x}' == USDC, 'loan token is not canonical mainnet USDC')
+    derived_id = '0x' + keccak256(bytes.fromhex(by_selector['0x2c3c9157']['result'][2:])).hex()
+    require(derived_id == market_id, 'market ID does not hash from raw parameters')
+    state = words(by_selector['0x5c60e39a']['result'], 6)
+    require(all(word < 2**128 for word in state), 'market state word exceeds uint128')
+    require(state[0] >= state[2], 'negative stored supply-minus-borrow')
+    return by_selector, state
+
+
+def emit_new(path, value):
+    encoded = json.dumps(value, indent=2, sort_keys=True, ensure_ascii=True,
+                         allow_nan=False).encode() + b'\n'
+    with path.open('xb') as handle:
+        handle.write(encoded)
+    return sha(encoded)
+
+
+def units6(value):
+    return f'{value // 10**6}.{value % 10**6:06d}'
+
+
+def main():
+    require(not any(path.exists() for path in (INVENTORY, PROOF, RESULT)),
+            'refusing to replace existing audit artifacts')
+    require(keccak256(b'').hex() == 'c5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470',
+            'Keccak empty-string check failed')
+    for signature, selector in ((b'market(bytes32)', '5c60e39a'),
+                                (b'idToMarketParams(bytes32)', '2c3c9157'),
+                                (b'decimals()', '313ce567')):
+        require(keccak256(signature)[:4].hex() == selector, 'selector check failed')
+    manifest_raw = MANIFEST.read_bytes()
+    require(sha(manifest_raw) == MANIFEST_SHA, 'unexpected manifest bytes')
+    manifest = json.loads(manifest_raw)
+    require(manifest['schema'] == 'mirage-full-scan-run/1', 'unexpected manifest schema')
+    ids = manifest['market_ids']
+    require(len(ids) == len(set(ids)) == 697, 'manifest must contain exactly 697 distinct IDs')
+    require(all(re.fullmatch('0x[0-9a-f]{64}', market_id) for market_id in ids),
+            'noncanonical manifest market ID')
+    anchor, source = manifest['anchor'], manifest['source']
+    require(anchor == {'chain_id': 1, 'number': 25938815, 'timestamp': 1788944843,
+                       'hash': '0x6151b63f20f0f5fa115ccd736cf42d08759914eb60748c9b102d38a7ad9ffe00'},
+            'unexpected manifest anchor')
+    require(source['kind'] == 'the-graph' and source['deployment'] == DEPLOYMENT and
+            source['market_count'] == len(ids) and source['query_block'] == anchor['number'] and
+            source['query_block_hash'] == anchor['hash'], 'inconsistent manifest source')
+    frozen = {'schema': 'mirage-accounting-pair-audit-inventory/1',
+              'created_at_utc': datetime.now(timezone.utc).isoformat(),
+              'scope': 'Exactly all 697 manifest IDs, with full and accounting checkpoint bytes frozen before decoding.',
+              'manifest_path': str(MANIFEST), 'manifest_sha256': MANIFEST_SHA,
+              'anchor': anchor, 'source': source, 'pair_count': len(ids), 'pairs': []}
+    for index, market_id in enumerate(ids, 1):
+        pair = {'market_id': market_id}
+        for kind in ('full', 'accounting'):
+            path = RUN / kind / (market_id + '.json.gz')
+            require(path.resolve().parent == (RUN / kind).resolve(), 'checkpoint resolved outside allowed directory')
+            raw = path.read_bytes()
+            pair[kind] = {'path': str(path), 'sha256': sha(raw), 'bytes': len(raw)}
+        frozen['pairs'].append(pair)
+        if index % 200 == 0 or index == len(ids):
+            print(json.dumps({'phase': 'freeze', 'pairs': index}), flush=True)
+    require(MANIFEST.read_bytes() == manifest_raw, 'manifest changed during inventory capture')
+    inventory_sha = emit_new(INVENTORY, frozen)
+    print(json.dumps({'inventory': str(INVENTORY), 'sha256': inventory_sha}), flush=True)
+    result = {'schema': 'mirage-independent-accounting-checkpoint-audit/1',
+              'started_at_utc': datetime.now(timezone.utc).isoformat(),
+              'scope': '697 frozen raw checkpoint pairs only; not a merged-artifact proof or another RPC-provider verification.',
+              'auditor_path': str(Path(__file__).resolve()),
+              'auditor_sha256': sha(Path(__file__).read_bytes()),
+              'inventory_path': str(INVENTORY), 'inventory_sha256': inventory_sha,
+              'manifest_sha256': MANIFEST_SHA, 'anchor': anchor,
+              'source_canonical_sha256': sha(canonical(source)),
+              'product_imports': [], 'production_detector_executed': False,
+              'network_calls': 0, 'pairs': [], 'errors': []}
+    totals = Counter()
+    labels = Counter()
+    own_decimals = 0
+    missing_decimals = []
+    for index, pair in enumerate(frozen['pairs'], 1):
+        market_id = pair['market_id']
+        record = {'market_id': market_id, 'full_sha256': pair['full']['sha256'],
+                  'accounting_sha256': pair['accounting']['sha256']}
+        result['pairs'].append(record)
+        try:
+            full, _ = snapshot(Path(pair['full']['path']), pair['full']['sha256'])
+            accounting, _ = snapshot(Path(pair['accounting']['path']), pair['accounting']['sha256'])
+            require(canonical(full['anchor']) == canonical(accounting['anchor']) == canonical(anchor),
+                    'checkpoint anchors differ from manifest')
+            require(canonical(full['source']) == canonical(accounting['source']) == canonical(source),
+                    'checkpoint sources differ from manifest')
+            full_row, accounting_row = full['rows'][0], accounting['rows'][0]
+            require(full_row['market_id'] == accounting_row['market_id'] == market_id,
+                    'row IDs differ from manifest/filename')
+            full_calls, state = calls(full_row, market_id, anchor)
+            accounting_calls, accounting_state = calls(accounting_row, market_id, anchor)
+            require(full_calls == accounting_calls and state == accounting_state,
+                    'full/accounting raw calls or decoded values differ')
+            require(canonical(full_row['evidence']) == canonical(accounting_row['evidence']),
+                    'full/accounting accounting evidence objects differ')
+            reference = full_row.get('reference') or {}
+            decimals_calls = [item for item in reference.get('evidence', [])
+                              if item.get('to', '').lower() == USDC and item.get('data') == '0x313ce567']
+            require(reference.get('loan_token') in (None, USDC),
+                    'reference loan address contradicts decoded USDC')
+            require(reference.get('loan_decimals') in (None, 6),
+                    'reference loan decimal value contradicts six')
+            require((full_row.get('oracle') or {}).get('loan_decimals') in (None, 6),
+                    'oracle loan decimal value contradicts six')
+            for call in decimals_calls:
+                require(call.get('method') == 'eth_call' and call['block'] == anchor['number'] and
+                        call['block_hash'] == anchor['hash'], 'decimals call anchor/method mismatch')
+                require(words(call['result'], 1) == (6,), 'captured USDC decimals is not six')
+            if decimals_calls:
+                own_decimals += 1
+                record['usdc_decimals'] = {'status': 'own_response_verified', 'value': 6,
+                                           'call_count': len(decimals_calls)}
+            else:
+                note = {'market_id': market_id, 'status': 'missing_own_response',
+                        'verification': 'insufficient', 'reference_status': reference.get('status'),
+                        'reference_reason': reference.get('reason'),
+                        'scope': 'No decimals response from another checkpoint is attributed to this market.'}
+                missing_decimals.append(note)
+                record['usdc_decimals'] = note
+            code, severity, metrics = independent_finding(state)
+            record.update(accounting_integrity_status='pass',
+                          state_uint128={name: str(value) for name, value in zip(FIELDS, state)},
+                          supply_minus_borrow_raw=str(state[0] - state[2]),
+                          independently_reconstructed_accounting={
+                              'code': code, 'severity': severity, 'metrics': metrics,
+                              'scope': 'Independent arithmetic classification only; no production detector or full market verdict.'})
+            labels[code] += 1
+            totals['stored_supply_assets'] += state[0]
+            totals['stored_borrow_assets'] += state[2]
+            totals['stored_supply_minus_borrow'] += state[0] - state[2]
+        except Exception as error:
+            record.update(accounting_integrity_status='fail', error=str(error))
+            result['errors'].append({'market_id': market_id, 'error': str(error)})
+        if index % 100 == 0 or index == len(ids):
+            print(json.dumps({'phase': 'decode', 'pairs': index,
+                              'errors': len(result['errors']),
+                              'missing_own_decimals': len(missing_decimals)}), flush=True)
+    unchanged = 0
+    for pair in frozen['pairs']:
+        for kind in ('full', 'accounting'):
+            entry = pair[kind]
+            if sha(Path(entry['path']).read_bytes()) != entry['sha256']:
+                result['errors'].append({'market_id': pair['market_id'], 'kind': kind,
+                                         'error': 'checkpoint bytes changed during audit'})
+            else:
+                unchanged += 1
+    require(MANIFEST.read_bytes() == manifest_raw, 'manifest changed during audit')
+    require(sha(INVENTORY.read_bytes()) == inventory_sha, 'frozen inventory changed during audit')
+    result.update(completed_at_utc=datetime.now(timezone.utc).isoformat(),
+                  checkpoint_accounting_status='PASS' if not result['errors'] else 'FAIL',
+                  expected_pairs=697,
+                  passed_pairs=sum(row.get('accounting_integrity_status') == 'pass' for row in result['pairs']),
+                  checkpoint_hashes_rechecked_unchanged=unchanged,
+                  uint128_words_per_copy=6 * len(ids),
+                  compared_raw_call_pairs=2 * len(ids),
+                  exact_totals_raw={key: str(value) for key, value in totals.items()},
+                  exact_totals_usdc_token_units={key: units6(value) for key, value in totals.items()},
+                  own_usdc_decimals_verified_count=own_decimals,
+                  missing_own_usdc_decimals_count=len(missing_decimals),
+                  missing_own_usdc_decimals=missing_decimals,
+                  independently_reconstructed_accounting_counts=dict(labels),
+                  limitations=[
+                      'This is a checkpoint accounting audit, not validation of the completed merged snapshot or final migration.',
+                      'No production decoder or detector, socket or RPC was used. No independent provider or Graph reread was performed.',
+                      'Manifest provenance and all input hashes are internally cross-checked; this does not authenticate a fabricated dataset as Ethereum truth.',
+                      'The per-market decimals response is explicitly insufficient when missing; another market response is not substituted.',
+                      'USDC unit display divides raw amounts by one million for the canonical USDC identity; missing own decimals evidence remains separately disclosed.',
+                      'Stored asset claims and supply-minus-borrow are not principal, dollar TVL, guaranteed withdrawals or losses avoided.',
+                      'No oracle, rate, exit-quote or market-admission verdict is validated by this accounting-only audit.',
+                  ])
+    proof_sha = emit_new(PROOF, result)
+    lines = [
+        '# Independent raw accounting checkpoint audit — 697 manifest IDs', '',
+        f"Accounting integrity: **{result['checkpoint_accounting_status']}**, {result['passed_pairs']}/697 pairs.",
+        'This is not a final merged-artifact proof or a second RPC-provider verification.', '',
+        f"Block: {anchor['number']}; hash `{anchor['hash']}`.",
+        f"Manifest SHA-256: `{MANIFEST_SHA}`.",
+        f"Frozen paired inventory SHA-256: `{inventory_sha}`.",
+        f"Proof SHA-256: `{proof_sha}`.", '',
+        '- Both checkpoint copies match frozen hashes, manifest identities, anchor and source.',
+        '- Independently computed Keccak of raw market parameters matches every market ID.',
+        '- Both copies decode six uint128 words and have exactly equal raw params/state.',
+        '- No stored supply-minus-borrow value is negative; totals use integer arithmetic.',
+        f'- All {unchanged} checkpoint file hashes were unchanged on the final reread.',
+        f'- Own USDC decimals responses: {own_decimals} verified as six; {len(missing_decimals)} missing-own-response / insufficient.',
+        '  No response from another checkpoint is attributed to a missing case.', '',
+        '| Stored accounting quantity | Exact raw units | USDC token units |',
+        '|---|---:|---:|',
+    ]
+    for key, value in totals.items():
+        lines.append(f'| {key} | {value} | {units6(value)} |')
+    lines.extend(['', 'These are stored accounting quantities, not principal, dollar TVL or guaranteed withdrawals.',
+                  'No product decoder/detector or network was invoked; no run/source file was changed.',
+                  f"Integrity errors: {len(result['errors'])}. See `{PROOF.name}` for every pair and the explicit decimals gaps.", ''])
+    with RESULT.open('x', encoding='utf-8', newline='\n') as handle:
+        handle.write('\n'.join(lines))
+    print(json.dumps({key: result[key] for key in ('checkpoint_accounting_status', 'passed_pairs',
+                     'checkpoint_hashes_rechecked_unchanged', 'exact_totals_raw',
+                     'exact_totals_usdc_token_units', 'own_usdc_decimals_verified_count',
+                     'missing_own_usdc_decimals_count', 'independently_reconstructed_accounting_counts')}), flush=True)
+    print(json.dumps({'proof': str(PROOF), 'proof_sha256': proof_sha,
+                      'inventory': str(INVENTORY), 'inventory_sha256': inventory_sha,
+                      'summary': str(RESULT)}), flush=True)
+    return 0 if not result['errors'] else 1
+
+
+if __name__ == '__main__':
+    sys.exit(main())

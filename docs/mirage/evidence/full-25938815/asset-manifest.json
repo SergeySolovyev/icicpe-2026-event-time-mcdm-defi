@@ -1,0 +1,90 @@
+{
+  "schema": "mirage-published-universe-assets/1",
+  "created_at_utc": "2026-09-09T13:33:55.1494611Z",
+  "block": 25938815,
+  "block_hash": "0x6151b63f20f0f5fa115ccd736cf42d08759914eb60748c9b102d38a7ad9ffe00",
+  "amount_usdc": "10000",
+  "scope": "Byte-identical copies of completed raw/derived evidence and local audit records. File paths inside records retain their original audit locations. Individual checkpoints and the large original feed are not separately distributed; merged rows were checked against every full checkpoint.",
+  "assets": [
+    {
+      "path": "mirage/snapshots/full-merged-85f88148bb9c4dad99a6aa1efec34d3e.json.gz",
+      "bytes": 3524821,
+      "sha256": "a0655aaebd29c669321fbabbf5f2bc08b90becf3a62fe3c44c51c135ffd4e6be"
+    },
+    {
+      "path": "mirage/snapshots/mainnet-full-25938815-diagnostics-v2.json.gz",
+      "bytes": 3544539,
+      "sha256": "270bae6cb656a0ed1d87ede25ea04c296acc7c1101d81356365d17a6343c2585"
+    },
+    {
+      "path": "docs/mirage/evidence/full-25938815/manifest.json",
+      "bytes": 52993,
+      "sha256": "432d58c4b90c087f418f3fbbf527ec906d0f95896d0d99f3ccde9afa622920e9"
+    },
+    {
+      "path": "docs/mirage/evidence/full-25938815/capture-final-status.json",
+      "bytes": 931,
+      "sha256": "d52c033ff6d51072bddd411df57fd14a5205c4e750d1800df562ba7d0f60142a"
+    },
+    {
+      "path": "docs/mirage/evidence/full-25938815/summary.json",
+      "bytes": 75874,
+      "sha256": "eb6fecc2843955a87dbceb2c5fce2aab2d24642219d037f8944683cfa63b401f"
+    },
+    {
+      "path": "docs/mirage/evidence/full-25938815/offline-verification.json",
+      "bytes": 404979,
+      "sha256": "98d59d106d9e13a4b9fdbf3e2526a1dae59e9a2ada6eae3fd1854731aae262c0"
+    },
+    {
+      "path": "docs/mirage/evidence/full-25938815/accounting-independent.json",
+      "bytes": 1033938,
+      "sha256": "029374b95870166715235c04878a3aaa63127fd9936755636413b6bf4016f094"
+    },
+    {
+      "path": "docs/mirage/evidence/full-25938815/uniswap-independent.json",
+      "bytes": 555341,
+      "sha256": "8274c897dd687c744c39f855d5293e4bcf2c883ad9037120e7bddab53338312f"
+    },
+    {
+      "path": "docs/mirage/evidence/full-25938815/exit-comparison.json",
+      "bytes": 130037,
+      "sha256": "7314a63b44dbf6d473450ed4733dc6bfe61ab3d587afa76612ddb48ca710270e"
+    },
+    {
+      "path": "docs/mirage/evidence/full-25938815/accounting-inventory.json",
+      "bytes": 486023,
+      "sha256": "b7fa7c26c69b82f9193496bcfb6afc6869f0f2a671a11a8ef31f0939900f617d"
+    },
+    {
+      "path": "docs/mirage/evidence/full-25938815/uniswap-inventory.json",
+      "bytes": 305699,
+      "sha256": "df345e49fa20c0b3134cca6abf6fb7c00efd5184906a1cb72310963738ecbfc6"
+    },
+    {
+      "path": "docs/mirage/evidence/full-25938815/accounting-auditor.py.txt",
+      "bytes": 21055,
+      "sha256": "07fee1134b28fb91fb200fa59635415f16343cad5d43e75e4180fc758ccc5b33"
+    },
+    {
+      "path": "docs/mirage/evidence/full-25938815/uniswap-auditor.py.txt",
+      "bytes": 25994,
+      "sha256": "ec9948b369ceef7a620850f2d6ecd3d01b8229c37e502d0dc6c82a3aebc968e9"
+    },
+    {
+      "path": "docs/mirage/evidence/full-25938815/final-verifier.py.txt",
+      "bytes": 23627,
+      "sha256": "3d31822d94d0b59ee110cefb392df32ab24bd4d547b076556d243977d7a9e4b8"
+    },
+    {
+      "path": "docs/mirage/evidence/full-25938815/compare-exit.py.txt",
+      "bytes": 3537,
+      "sha256": "dfa36fb37bd1a40248a9d10276a5dc036bd6ef8e6b46f0a6e2f55cc2e34ed463"
+    },
+    {
+      "path": "docs/mirage/evidence/full-25938815/capture-coordinator.py.txt",
+      "bytes": 10701,
+      "sha256": "2dc29c2adb9e48c11e4e7fc0be06003c23d43820015d0e6c7cd43434d1184b79"
+    }
+  ]
+}

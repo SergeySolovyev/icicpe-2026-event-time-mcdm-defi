@@ -1,0 +1,433 @@
+"""Offline independent ABI/arithmetic audit of a new frozen 697-checkpoint inventory.
+
+Uses Python stdlib only. Does not import MIRAGE, RPC clients, or production decoders.
+"""
+import sys
+
+NETWORK_ATTEMPTS = []
+
+
+def block_network(event, args):
+    if event in {"socket.connect", "socket.getaddrinfo", "socket.gethostbyname",
+                 "socket.gethostbyaddr", "socket.getnameinfo"}:
+        NETWORK_ATTEMPTS.append(event)
+        raise RuntimeError("Network access forbidden by independent offline audit")
+
+
+sys.addaudithook(block_network)
+
+from collections import Counter
+from datetime import datetime, timezone
+from decimal import Decimal, localcontext
+import gzip
+import hashlib
+import json
+import os
+from pathlib import Path
+import re
+import uuid
+
+BASE = Path(__file__).resolve().parent
+RUN = BASE.parent / "runs" / "mainnet-20260909-01"
+INVENTORY = BASE / "uniswap-697-final-inventory-20260909.json"
+OUTPUT = BASE / "uniswap-697-final-audit-20260909.json"
+EXPECTED_ANCHOR = {"chain_id": 1, "number": 25938815,
+                   "hash": "0x6151b63f20f0f5fa115ccd736cf42d08759914eb60748c9b102d38a7ad9ffe00",
+                   "timestamp": 1788944843}
+for variable in ("OPENBLAS_NUM_THREADS", "OMP_NUM_THREADS", "MKL_NUM_THREADS", "NUMEXPR_NUM_THREADS"):
+    os.environ[variable] = "1"
+FACTORY = "0x1f98431c8ad98523631ae4a59f267346ea31f984"
+QUOTER = "0x61ffe014ba17989e743c5f6cb21bf9697530b21e"
+WETH = "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
+USDC = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
+MIN_SQRT = 4295128739
+MAX_SQRT = 1461446703485210103287273052203988822378723970342
+ZERO = "0x" + "00" * 20
+stats = Counter()
+global_calls = {}
+issues = []
+rows = []
+
+
+def require(condition, description):
+    if not condition:
+        raise ValueError(description)
+
+
+def publish_json(path, value):
+    pending = path.with_name("." + path.name + "." + uuid.uuid4().hex + ".pending")
+    try:
+        with pending.open("x", encoding="utf-8", newline="\n") as stream:
+            json.dump(value, stream, indent=2, allow_nan=False)
+            stream.write("\n")
+        os.link(pending, path)
+    finally:
+        pending.unlink(missing_ok=True)
+
+
+def freeze_inventory():
+    require(not INVENTORY.exists() and not OUTPUT.exists(), "New audit artifacts already exist")
+    manifest_path = RUN / "manifest.json"
+    payload = manifest_path.read_bytes()
+    manifest = json.loads(payload)
+    ids = manifest["market_ids"]
+    require(manifest.get("schema") == "mirage-full-scan-run/1" and manifest["amount_usdc"] == "10000"
+            and manifest["anchor"] == EXPECTED_ANCHOR, "Manifest schema/scenario/anchor mismatch")
+    require(len(ids) == 697 and ids == sorted(set(ids)) and
+            all(isinstance(m, str) and re.fullmatch(r"0x[0-9a-f]{64}", m) for m in ids),
+            "Manifest does not contain exactly 697 canonical sorted unique IDs")
+    source = manifest["source"]
+    require(source["kind"] == "the-graph" and source["market_count"] == 697
+            and source["query_block"] == EXPECTED_ANCHOR["number"]
+            and source["query_block_hash"] == EXPECTED_ANCHOR["hash"], "Manifest source mismatch")
+    folder = (RUN / "full").resolve(strict=True)
+    require(folder.parent == RUN.resolve(strict=True), "Full checkpoint directory escapes run")
+    paths = sorted(folder.glob("*.json.gz"))
+    require([p.name for p in paths] == [market + ".json.gz" for market in ids],
+            "Final checkpoint filenames do not equal all 697 manifest IDs")
+    entries = []
+    for market, path in zip(ids, paths):
+        require(path.resolve(strict=True).parent == folder, "Checkpoint escapes full directory")
+        raw = path.read_bytes()
+        entries.append({"market_id": market, "path": str(path.resolve()), "bytes": len(raw),
+                        "sha256": hashlib.sha256(raw).hexdigest()})
+    require(manifest_path.read_bytes() == payload, "Manifest changed during inventory freeze")
+    inventory = {"schema": "mirage-final-checkpoint-audit-inventory/1",
+                 "created_at_utc": datetime.now(timezone.utc).isoformat(), "run_dir": str(RUN.resolve()),
+                 "manifest_path": str(manifest_path.resolve()), "manifest_sha256": hashlib.sha256(payload).hexdigest(),
+                 "anchor": manifest["anchor"], "source": source, "scenario_notional_loan": "10000",
+                 "selected_count": len(entries), "discovered_count": 697, "market_ids": ids,
+                 "scope": "All 697 immutable per-market full checkpoints; no assertion about merged artifacts, terminal status or capture-process exit",
+                 "checkpoints": entries}
+    publish_json(INVENTORY, inventory)
+    return hashlib.sha256(INVENTORY.read_bytes()).hexdigest()
+
+
+def words(raw, count=None):
+    require(isinstance(raw, str) and raw.startswith("0x"), "ABI result is not hex")
+    data = bytes.fromhex(raw[2:])
+    require(len(data) % 32 == 0, "ABI result is not word aligned")
+    require(count is None or len(data) == count * 32, "ABI word count mismatch")
+    return [int.from_bytes(data[i:i+32], "big") for i in range(0, len(data), 32)]
+
+
+def word(value):
+    return int(value).to_bytes(32, "big").hex()
+
+
+def address(value):
+    require(0 <= value < 2**160, "Noncanonical address padding")
+    return "0x" + format(value, "040x")
+
+
+def signed(value, bits):
+    # Decode via the signed 256-bit word first, then check declared ABI width.
+    decoded = value - 2**256 if value >= 2**255 else value
+    require(-2**(bits-1) <= decoded < 2**(bits-1), "Noncanonical signed ABI word")
+    return decoded
+
+
+def near(actual, expected, description):
+    value = Decimal(str(actual))
+    require(value.is_finite() and expected.is_finite(), description + ": nonfinite")
+    require(abs(value-expected) <= max(Decimal(1), abs(expected)) * Decimal("1e-68"),
+            description + ": derived decimal mismatch")
+    stats["decimal_comparisons"] += 1
+
+
+def product(values):
+    result = Decimal(1)
+    for value in values:
+        result *= value
+    return result
+
+
+def audit_snapshot(snapshot, entry, anchor):
+    require(snapshot["anchor"] == anchor, "Snapshot anchor mismatch")
+    require(len(snapshot["rows"]) == 1, "Checkpoint must contain one market")
+    row = snapshot["rows"][0]
+    market_id = row["market_id"]
+    require(market_id == entry["market_id"], "Checkpoint market differs from frozen inventory")
+    require(Path(entry["path"]).name == market_id + ".json.gz", "Filename/market mismatch")
+    require(Decimal(snapshot["scenario_notional_loan"]) == 10000, "Unexpected top-level scenario")
+    ref = row["reference"]
+    require(ref["block_number"] == anchor["number"] and ref["block_hash"] == anchor["hash"]
+            and ref["chain_id"] == anchor["chain_id"] and ref["block_timestamp"] == anchor["timestamp"],
+            "Reference anchor mismatch")
+    require(ref["routing_policy"] == "compare-direct-weth/1", "Unexpected route policy")
+    loan, collateral = ref["loan_token"], ref["collateral_token"]
+    require(loan == USDC, "Non-USDC loan")
+    require(row["display"]["loan_address"] == loan and row["display"]["collateral_address"] == collateral,
+            "Display/reference token mismatch")
+    params = words(row["evidence"][0]["result"], 5)
+    require(address(params[0]) == loan and address(params[1]) == collateral,
+            "Raw market params/reference token mismatch")
+    require(Decimal(ref["scenario"]["notional_loan"]) == 10000, "Unexpected reference scenario")
+    lookup = {}
+    for item in ref["evidence"]:
+        require(item["method"] == "eth_call" and item["block"] == anchor["number"]
+                and item["block_hash"] == anchor["hash"], "Raw reference evidence anchor mismatch")
+        key = (item["to"].lower(), item["data"].lower())
+        raw = item["result"].lower()
+        require(key not in lookup or lookup[key] == raw, "Conflicting repeated call within market")
+        require(key not in global_calls or global_calls[key] == raw, "Conflicting repeated call across markets")
+        lookup[key] = raw
+        global_calls[key] = raw
+        stats["raw_reference_evidence_records"] += 1
+
+    def get(target, calldata, count):
+        return words(lookup[(target, calldata)], count)
+
+    decimals = {}
+    for token in ref["tokens"]:
+        target = token["address"]
+        actual = get(target, "0x313ce567", 1)[0]
+        require(actual < 256 and actual == token["decimals"], "Raw token decimals mismatch")
+        require(target not in decimals, "Duplicate token metadata")
+        decimals[target] = actual
+        stats["raw_decimals_checked"] += 1
+    for target, field in ((collateral, "collateral_decimals"), (loan, "loan_decimals")):
+        if ref.get(field) is not None:
+            require(decimals.get(target) == ref[field], "Reference decimals mismatch")
+
+    pools = {}
+    pairs = {}
+    window = ref["window_seconds"]
+    require(type(window) is int and 0 < window < 2**32, "Invalid observation window")
+    observe_calldata = "0x883bdbfd" + "".join(word(v) for v in (32, 2, window, 0))
+    for pool in ref["pools"]:
+        stats["pool_records"] += 1
+        stats["pool_status:" + pool["status"]] += 1
+        pin, pout, fee = pool["token_in"], pool["token_out"], pool["fee"]
+        require(fee in (100, 500, 3000, 10000), "Unexpected fee tier")
+        factory_data = "0x1698ee82" + word(int(pin, 16)) + word(int(pout, 16)) + word(fee)
+        if pool["address"] is not None:
+            require(address(get(FACTORY, factory_data, 1)[0]) == pool["address"], "Factory pool address mismatch")
+            stats["factory_bindings_checked"] += 1
+        if pool["status"] != "ok":
+            continue
+        target = pool["address"]
+        require(target != ZERO and pin in decimals and pout in decimals, "Usable pool lacks identities/decimals")
+        token0 = address(get(target, "0x0dfe1681", 1)[0])
+        token1 = address(get(target, "0xd21220a7", 1)[0])
+        require((token0, token1) == tuple(sorted((pin, pout))), "Raw pool token mismatch")
+        require((token0, token1) == (pool["token0"], pool["token1"]), "Stored pool token mismatch")
+        slot = get(target, "0x3850c7bd", 7)
+        sqrt, spot_tick = slot[0], signed(slot[1], 24)
+        active = get(target, "0x1a686502", 1)[0]
+        require(MIN_SQRT <= sqrt < MAX_SQRT and -887272 <= spot_tick <= 887272
+                and all(value < 2**16 for value in slot[2:5]) and slot[5] < 256 and slot[6] == 1,
+                "Invalid usable slot0")
+        require(0 < active < 2**128 and slot[3] > 0, "Usable pool lacks active liquidity/history")
+        require(sqrt == int(pool["sqrt_price_x96"]) and spot_tick == pool["spot_tick"]
+                and active == int(pool["active_liquidity_raw"]) and slot[3] == pool["observation_cardinality"],
+                "Stored slot/liquidity mismatch")
+        observed = get(target, observe_calldata, 8)
+        require(observed[:3] == [64, 160, 2] and observed[5] == 2, "Invalid observe dynamic arrays")
+        old_tick, new_tick = signed(observed[3], 56), signed(observed[4], 56)
+        delta = new_tick - old_tick
+        if delta < -(2**55):
+            delta += 2**56
+        elif delta >= 2**55:
+            delta -= 2**56
+        mean = delta // window
+        require(-887272 <= mean <= 887272, "Mean tick outside range")
+        require(observed[6] < 2**160 and observed[7] < 2**160, "Invalid seconds-per-liquidity ABI width")
+        elapsed_liquidity = observed[7] - observed[6]
+        if elapsed_liquidity < 0:
+            elapsed_liquidity += 2**160
+        require(elapsed_liquidity > 0, "No cumulative liquidity movement")
+        harmonic = (window * (2**160-1)) // (elapsed_liquidity * 2**32)
+        require(0 < harmonic < 2**128 and harmonic == int(pool["harmonic_mean_liquidity_raw"])
+                and mean == pool["mean_tick"], "Observation tick/harmonic mismatch")
+        scale = Decimal(10) ** (decimals[pin] - decimals[pout])
+        twap = (Decimal(10001) / 10000) ** (mean if pin == token0 else -mean) * scale
+        spot = (Decimal(sqrt*sqrt) / Decimal(2**192) if pin == token0
+                else Decimal(2**192) / Decimal(sqrt*sqrt)) * scale
+        near(pool["price_out_per_in"], twap, "Pool human TWAP")
+        near(pool["spot_price_out_per_in"], spot, "Pool human spot")
+        pools[target] = dict(raw=pool, twap=twap, spot=spot, harmonic=harmonic)
+        pairs.setdefault((pin, pout), []).append(target)
+        stats["usable_pool_records_independently_checked"] += 1
+        if delta < 0 and delta % window:
+            stats["negative_tick_nonintegral_floor_cases"] += 1
+
+    def best(pair):
+        choices = pairs.get(pair, [])
+        return max(choices, key=lambda p: (pools[p]["harmonic"], -pools[p]["raw"]["fee"])) if choices else None
+
+    direct = best((collateral, loan))
+    first, second = best((collateral, WETH)), best((WETH, loan))
+    expected_routes = ([[direct]] if direct else [])
+    if WETH not in (collateral, loan) and first and second:
+        expected_routes.append([first, second])
+    expected_reference = [direct] if direct else ([first, second] if first and second else [])
+    quote = ref["quote"]
+    outcome = {"market_id": market_id, "file_sha256": entry["sha256"], "collateral_token": collateral,
+               "collateral_symbol": row["display"].get("collateral_symbol"),
+               "collateral_decimals": ref.get("collateral_decimals"), "loan_decimals": ref.get("loan_decimals"),
+               "reference_status": ref["status"], "reference_reason": ref.get("reason"),
+               "quote_status": quote["status"], "quote_reason": quote.get("reason"),
+               "independent_expected_exit": "insufficient"}
+    if not expected_reference:
+        if collateral == loan and collateral in decimals:
+            require(ref["source"] == "token-identity" and ref["price_loan_per_collateral"] == "1", "Invalid identity reference")
+            stats["token_identity_observations"] += 1
+        else:
+            require(ref["status"] != "ok", "No supported reference but observation claims ok")
+        require(quote["status"] != "ok", "Unknown quote claims ok")
+        if quote.get("reason") == "liquidation_size_not_specified":
+            stats["specified_notional_legacy_size_reason_without_usable_reference"] += 1
+            stats["legacy_size_reason_reference_reason:" + str(ref.get("reason"))] += 1
+        return outcome
+
+    require(ref["status"] == "ok" and ref["route"] == expected_reference, "Primary reference selection mismatch")
+    twap = product(pools[p]["twap"] for p in expected_reference)
+    spot = product(pools[p]["spot"] for p in expected_reference)
+    near(ref["price_loan_per_collateral"], twap, "Primary reference TWAP")
+    near(ref["spot_price_loan_per_collateral"], spot, "Primary reference spot")
+    amount = int(Decimal(10000) * (Decimal(10) ** decimals[collateral]) / twap)
+    if not 0 < amount < 2**255:
+        require(quote["status"] != "ok" and quote.get("reason") == "scenario_raw_amount_out_of_range",
+                "Out-of-range scenario claims usable quote")
+        stats["scenario_raw_amount_out_of_range"] += 1
+        return outcome
+    require(int(quote["amount_in_raw"]) == amount, "Selected raw input does not equal floored scenario/reference")
+    candidates = quote["candidates"]
+    require(quote["candidate_count"] == len(candidates) == len(expected_routes), "Candidate count mismatch")
+    require([candidate["route"] for candidate in candidates] == expected_routes, "Candidate route selection mismatch")
+    complete = []
+    details = []
+    for candidate in candidates:
+        require(int(candidate["amount_in_raw"]) == amount, "Direct/WETH candidates use different input")
+        require(Decimal(candidate["scenario_notional_loan"]) == 10000, "Candidate scenario mismatch")
+        require(candidate["reference_route"] == expected_reference, "Candidate reference changed")
+        near(candidate["reference_price_loan_per_collateral"], twap, "Candidate fixed reference")
+        route = candidate["route"]
+        require(candidate["route_kind"] == ("direct" if len(route) == 1 else "weth"), "Route kind mismatch")
+        route_spot = product(pools[p]["spot"] for p in route)
+        route_twap = product(pools[p]["twap"] for p in route)
+        near(candidate["route_spot_price_loan_per_collateral"], route_spot, "Candidate route spot")
+        near(candidate["route_twap_price_loan_per_collateral"], route_twap, "Candidate route TWAP")
+        raw_input, current_token, valid_legs = amount, collateral, []
+        for target in route:
+            pool = pools[target]["raw"]
+            require(pool["token_in"] == current_token, "Discontinuous route token")
+            calldata = "0xc6a5026a" + "".join(word(v) for v in (int(pool["token_in"],16), int(pool["token_out"],16), raw_input, pool["fee"], 0))
+            returned = lookup.get((QUOTER, calldata))
+            if returned is None:
+                break
+            try:
+                values = words(returned, 4)
+                output, sqrt_after, ticks, gas = values
+                if not (output > 0 and MIN_SQRT+1 < sqrt_after < MAX_SQRT-1 and ticks < 2**32):
+                    break
+            except ValueError:
+                break
+            leg = candidate["legs"][len(valid_legs)]
+            require(int(leg["amount_in_raw"]) == raw_input and int(leg["amount_out_raw"]) == output,
+                    "Raw quote/leg amount or sequential leg input mismatch")
+            require((leg["pool"],leg["token_in"],leg["token_out"],leg["fee"]) ==
+                    (target,pool["token_in"],pool["token_out"],pool["fee"]), "Quote leg identity/fee mismatch")
+            require(int(leg["sqrt_price_x96_after"]) == sqrt_after and leg["initialized_ticks_crossed"] == ticks
+                    and int(leg["gas_estimate"]) == gas, "Raw quote metadata mismatch")
+            valid_legs.append(leg)
+            raw_input, current_token = output, pool["token_out"]
+            stats["quoter_legs_independently_checked"] += 1
+        require(len(candidate["legs"]) == len(valid_legs), "Claimed quote legs exceed raw valid legs")
+        is_complete = len(valid_legs) == len(route)
+        require((candidate["status"] == "ok") == is_complete, "Candidate completion status mismatch")
+        detail = {"route_kind":candidate["route_kind"], "route":route, "amount_in_raw":str(amount), "complete":is_complete}
+        if is_complete:
+            require(current_token == loan and int(candidate["amount_out_raw"]) == raw_input, "Final quote output mismatch")
+            execution = (Decimal(raw_input) * (Decimal(10) ** decimals[collateral])) / (Decimal(amount) * (Decimal(10) ** decimals[loan]))
+            impact, shortfall = (1-execution/route_spot)*10000, (1-execution/twap)*10000
+            near(candidate["execution_price_loan_per_collateral"], execution, "Human quote execution price")
+            near(candidate["price_impact_bps_vs_spot"], impact, "Fee-inclusive route-spot impact")
+            near(candidate["execution_shortfall_bps_vs_twap"], shortfall, "Fixed-reference TWAP shortfall")
+            complete.append((raw_input, candidate, impact, shortfall))
+            detail.update(amount_out_raw=str(raw_input), amount_out_human=format(Decimal(raw_input)/(Decimal(10)**decimals[loan]),'f'),
+                          impact_bps=format(impact,'f'), twap_shortfall_bps=format(shortfall,'f'))
+        else:
+            stats["incomplete_candidates"] += 1
+        details.append(detail)
+        stats["candidate_inputs_checked"] += 1
+    selected = max(complete, key=lambda value:value[0]) if complete else None
+    expected_choice = selected[1] if selected else candidates[0]
+    for key, value in expected_choice.items():
+        require(quote[key] == value, "Selected quote differs from maximum complete candidate: " + key)
+    require((quote["status"] == "ok") == bool(complete), "Unknown/failed quote selected as complete")
+    outcome.update(amount_in_raw=str(amount), amount_in_human=format(Decimal(amount)/(Decimal(10)**decimals[collateral]),'f'),
+                   selected_route=quote["route"], selected_route_kind=quote["route_kind"], candidates=details)
+    if selected:
+        outcome.update(independent_expected_exit="block" if max(selected[2],selected[3]) > 500 else "pass",
+                       selected_output_raw=str(selected[0]), selected_output_human=format(Decimal(selected[0])/(Decimal(10)**decimals[loan]),'f'))
+    if len(candidates) == 2:
+        stats["equal_input_two_route_markets"] += 1
+    return outcome
+
+
+def main():
+    inventory_sha = freeze_inventory()
+    data = INVENTORY.read_bytes()
+    require(hashlib.sha256(data).hexdigest() == inventory_sha, "Inventory SHA mismatch")
+    inventory = json.loads(data)
+    entries = inventory["checkpoints"]
+    require(inventory["selected_count"] == len(entries) == 697, "Inventory scope is not 697")
+    require(len({item["path"] for item in entries}) == 697, "Inventory duplicates paths")
+    require(not OUTPUT.exists(), "Audit proof already exists")
+    with localcontext() as context:
+        context.prec = 110
+        for index, entry in enumerate(entries):
+            try:
+                raw = Path(entry["path"]).read_bytes()
+                require(hashlib.sha256(raw).hexdigest() == entry["sha256"], "Checkpoint SHA mismatch")
+                snapshot = json.loads(gzip.decompress(raw))
+                require(snapshot["source"] == inventory["source"], "Checkpoint source differs from manifest")
+                rows.append(audit_snapshot(snapshot, entry, inventory["anchor"]))
+                stats["verified_checkpoints"] += 1
+            except (ValueError, KeyError, TypeError, IndexError, ArithmeticError, OSError) as error:
+                issue = {"file":entry["path"], "sha256":entry["sha256"], "error_type":type(error).__name__, "detail":str(error)}
+                issues.append(issue)
+                print(json.dumps({"ISSUE":issue}), flush=True)
+            if (index+1) % 100 == 0:
+                print(json.dumps({"read":index+1,"scope":697,"issues":len(issues)}), flush=True)
+    require(hashlib.sha256(Path(inventory["manifest_path"]).read_bytes()).hexdigest() == inventory["manifest_sha256"],
+            "Manifest changed before proof publication")
+    require(hashlib.sha256(INVENTORY.read_bytes()).hexdigest() == inventory_sha, "Frozen inventory changed")
+    require([p.name for p in sorted((RUN / "full").glob("*.json.gz"))] ==
+            [market + ".json.gz" for market in inventory["market_ids"]], "Checkpoint file set changed")
+    for entry in entries:
+        raw = Path(entry["path"]).read_bytes()
+        require(len(raw) == entry["bytes"] and hashlib.sha256(raw).hexdigest() == entry["sha256"],
+                "Checkpoint bytes changed before proof publication")
+    require(not NETWORK_ATTEMPTS, "Network was attempted")
+    require(not any(name == "mirage" or name.startswith("mirage.") for name in sys.modules),
+            "Production module imported into independent audit")
+    stats["unique_anchored_reference_calls"] = len(global_calls)
+    proof = {
+        "schema":"mirage-uniswap-independent-697-audit/1", "created_at_utc":datetime.now(timezone.utc).isoformat(),
+        "scope":"Exactly all 697 full per-market checkpoints from the manifest, with a newly frozen exact-ID/hash inventory; merged snapshot and terminal process state are outside this audit",
+        "inventory_path":str(INVENTORY), "inventory_sha256":inventory_sha, "anchor":inventory["anchor"],
+        "manifest_sha256":inventory["manifest_sha256"], "input_hashes_rechecked_after_audit":True,
+        "logic_origin":"Extended private uniswap-332-independent.py; original 332 script/proofs were preserved",
+        "script_sha256":hashlib.sha256(Path(__file__).read_bytes()).hexdigest(), "python":sys.version,
+        "interpreter":sys.executable, "native_threads":1, "new_rpc_calls":0,
+        "network_attempted_events":NETWORK_ATTEMPTS, "production_imports":False, "production_replay_performed":False,
+        "method":"Independent stdlib ABI word parsing and 110-digit Decimal arithmetic. Exact integer/identity/route checks; derived decimal tolerance 1e-68*max(1,abs(expected)) against stored 80-digit values.",
+        "exit_policy":"Independent expected outcome for the recorded 10000-USDC sale and 500-bps limits. Noncomplete/unknown quotes require insufficient. Checkpoints contain observations, not saved findings; root separately compares production replay outcomes.",
+        "statistics":dict(sorted(stats.items())), "independent_expected_exit_counts":dict(Counter(row["independent_expected_exit"] for row in rows)),
+        "issues":issues, "per_market":rows,
+        "limitations":["No new provider reread or chain authentication; consistency of the recorded evidence only.",
+                      "Pool selection is bounded to recorded v3 fee tiers and direct/WETH unsplit candidates, not global routing or total exit capacity.",
+                      "Usable pool observations are independently decoded; unusable pool error labels do not authenticate the reason for a missing or failed RPC return.",
+                      "Unknown quote errors are not evidence of zero liquidity; exact cause of type-only RPC/history failures is not recoverable.",
+                      "Legacy liquidation_size_not_specified with a specified notional and unavailable reference is counted by actual stored quote.reason, with underlying reference.reason broken out; no migration counts are inferred from this total.",
+                      "Nonstandard token transfer behavior, future fills, gas, MEV and liquidator profitability are outside this arithmetic audit."]}
+    publish_json(OUTPUT, proof)
+    print(json.dumps({"output":str(OUTPUT),"sha256":hashlib.sha256(OUTPUT.read_bytes()).hexdigest(),"statistics":proof["statistics"],"exit_counts":proof["independent_expected_exit_counts"],"issues":len(issues)}),flush=True)
+    return 1 if issues else 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

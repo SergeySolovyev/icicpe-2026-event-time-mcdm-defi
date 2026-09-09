@@ -1,0 +1,416 @@
+"""Verify the completed 697-market run and a diagnostics-v2 child, entirely offline.
+
+Uses product replay only for detector derivation. All coverage, checkpoint,
+accounting-byte, JSON-diff and provenance comparisons below use the stdlib.
+The caller must independently confirm that the capture process has exited.
+"""
+import sys
+
+NETWORK_ATTEMPTS = []
+
+
+def block_network(event, args):
+    if event == "socket.connect" or event in {
+        "socket.getaddrinfo", "socket.gethostbyname", "socket.gethostbyaddr", "socket.getnameinfo"
+    }:
+        NETWORK_ATTEMPTS.append(event)  # Never retain hostnames, URLs or credentials.
+        raise RuntimeError("Network access forbidden by final offline verifier")
+
+
+sys.addaudithook(block_network)  # Installed before stdlib and product imports below.
+
+import argparse
+from collections import Counter
+from datetime import datetime, timezone
+import gzip
+import hashlib
+import json
+import os
+from pathlib import Path
+import re
+import uuid
+
+for variable in ("OPENBLAS_NUM_THREADS", "OMP_NUM_THREADS", "MKL_NUM_THREADS", "NUMEXPR_NUM_THREADS"):
+    os.environ[variable] = "1"
+
+AUDIT_DIR = Path(__file__).resolve().parent
+REPO = AUDIT_DIR.parent / "mirage-followup-worktree"
+ACTIVE_REPO = AUDIT_DIR.parents[2] / "predictive-mcdm-defi"
+EXPECTED_ANCHOR = {
+    "chain_id": 1, "number": 25938815,
+    "hash": "0x6151b63f20f0f5fa115ccd736cf42d08759914eb60748c9b102d38a7ad9ffe00",
+    "timestamp": 1788944843,
+}
+EXPECTED_COUNTS = {"discovered": 697, "included": 697, "full_checked": 697,
+                   "accounting_only": 0, "failed_this_phase": 0, "missing": 0}
+GRAPH_URL = "https://api.studio.thegraph.com/query/1759002/mirage-morpho-markets/v0.0.1"
+DEPLOYMENT = "QmYkbwLirDouGqfRapedCcQ8YCbM8dzKA13agskDwGzJ6K"
+BYTECODE_FIELDS = {"diagnostics_version", "status", "interpretation",
+                   "truncated_push_offset", "linear_walk_note"}
+ALLOWED_CHANGE = re.compile(
+    r"/rows/\d+/(?:reference/(?:quote_reason_version|quote/reason)"
+    r"|oracle/bytecode/(?:diagnostics_version|status|interpretation|truncated_push_offset|linear_walk_note))\Z"
+)
+ENCODER = json.JSONEncoder(sort_keys=True, separators=(",", ":"), allow_nan=False)
+
+
+def require(condition, message):
+    if not condition:
+        raise ValueError(message)
+
+
+def digest_bytes(payload):
+    return hashlib.sha256(payload).hexdigest()
+
+
+def canonical_hash(value):
+    """Same UTF-8 JSON serialization as the migrator, streamed to avoid a large copy."""
+    digest = hashlib.sha256()
+    for chunk in ENCODER.iterencode(value):
+        digest.update(chunk.encode("utf-8"))
+    return digest.hexdigest()
+
+
+def unique_object(pairs):
+    result = {}
+    for key, value in pairs:
+        require(key not in result, "Duplicate JSON object key")
+        result[key] = value
+    return result
+
+
+def reject_constant(value):
+    raise ValueError("Non-finite JSON constant")
+
+
+class Inputs:
+    def __init__(self):
+        self.records = {}
+
+    def read(self, path):
+        path = Path(path).resolve(strict=True)
+        require(path.is_file(), "Input is not a regular file")
+        payload = path.read_bytes()
+        record = {"path": str(path), "bytes": len(payload), "sha256": digest_bytes(payload)}
+        if path in self.records:
+            require(self.records[path] == record, "An input changed during verification")
+        self.records[path] = record
+        return payload
+
+    def json(self, path):
+        payload = self.read(path)
+        if Path(path).suffix == ".gz":
+            payload = gzip.decompress(payload)
+        return json.loads(payload, object_pairs_hook=unique_object, parse_constant=reject_constant)
+
+    def unchanged(self):
+        for path, expected in self.records.items():
+            with path.open("rb") as stream:
+                actual = hashlib.file_digest(stream, "sha256").hexdigest()
+            require(path.stat().st_size == expected["bytes"] and actual == expected["sha256"],
+                    "An input changed before proof publication")
+
+
+def inside(path, directory):
+    return path == directory or directory in path.parents
+
+
+def no_running_lock(directory):
+    require(not any((directory / name).exists() for name in (".running.lock", "running.lock")),
+            "Capture lock still exists; do not verify an active run")
+
+
+def checkpoint_files(directory, phase, ids):
+    folder = (directory / phase).resolve(strict=True)
+    require(folder.parent == directory, "Checkpoint directory escapes the run directory")
+    paths = sorted(folder.glob("*.json.gz"))
+    require([p.name for p in paths] == [market + ".json.gz" for market in ids],
+            "Checkpoint filenames do not equal the exact 697-ID manifest")
+    for path in paths:
+        require(path.resolve(strict=True).parent == folder, "Checkpoint path escapes its phase directory")
+    return paths
+
+
+def differences(before, after, path=""):
+    """Independent JSON-pointer diff; missing keys remain distinct from JSON null."""
+    if isinstance(before, dict) and isinstance(after, dict):
+        for key in sorted(set(before) | set(after)):
+            pointer = path + "/" + key.replace("~", "~0").replace("/", "~1")
+            if key in before and key in after:
+                yield from differences(before[key], after[key], pointer)
+            else:
+                item = {"path": pointer, "before_present": key in before, "after_present": key in after}
+                if key in before:
+                    item["before"] = before[key]
+                if key in after:
+                    item["after"] = after[key]
+                yield item
+    elif isinstance(before, list) and isinstance(after, list) and len(before) == len(after):
+        for index, (left, right) in enumerate(zip(before, after)):
+            yield from differences(left, right, path + "/" + str(index))
+    elif type(before) is not type(after) or before != after:
+        yield {"path": path, "before_present": True, "after_present": True,
+               "before": before, "after": after}
+
+
+def protected_view(snapshot):
+    """Independent shallow-copy view; never mutate input or call production helpers."""
+    result = {key: value for key, value in snapshot.items() if key != "derivation"}
+    result["rows"] = []
+    for source_row in snapshot["rows"]:
+        row = dict(source_row)
+        if isinstance(row.get("reference"), dict):
+            reference = dict(row["reference"])
+            reference.pop("quote_reason_version", None)
+            if isinstance(reference.get("quote"), dict):
+                reference["quote"] = {key: value for key, value in reference["quote"].items()
+                                      if key != "reason"}
+            row["reference"] = reference
+        if isinstance(row.get("oracle", {}).get("bytecode"), dict):
+            oracle = dict(row["oracle"])
+            oracle["bytecode"] = {key: value for key, value in oracle["bytecode"].items()
+                                  if key not in BYTECODE_FIELDS}
+            row["oracle"] = oracle
+        result["rows"].append(row)
+    return result
+
+
+def evidence_counts(snapshot):
+    calls, codes, block_hashes = {}, {}, {}
+    call_records = code_records = 0
+    for row in snapshot["rows"]:
+        for component in (row, row["reference"], row["oracle"], row["rate"]):
+            for item in component.get("evidence", []):
+                call_records += 1
+                key = (item["method"], item["to"].lower(), item["data"].lower(),
+                       item["block"], item["block_hash"])
+                value = item["result"].lower()
+                require(key not in calls or calls[key] == value, "Conflicting anchored eth_call returns")
+                calls[key] = value
+                old = block_hashes.setdefault(item["block"], item["block_hash"])
+                require(old == item["block_hash"], "Conflicting hashes for a recorded block")
+        for item in row["oracle"].get("code_references", []):
+            code_records += 1
+            key = (item["method"], item["to"].lower(), item["block"], item["block_hash"])
+            value = (item["length"], item["sha256"])
+            require(key not in codes or codes[key] == value, "Conflicting anchored bytecode returns")
+            codes[key] = value
+            old = block_hashes.setdefault(item["block"], item["block_hash"])
+            require(old == item["block_hash"], "Conflicting code/evidence block hashes")
+    require(block_hashes.get(EXPECTED_ANCHOR["number"]) == EXPECTED_ANCHOR["hash"],
+            "Recorded current block differs from the expected anchor")
+    return {
+        "eth_call_records": call_records, "unique_eth_call_results": len(calls),
+        "runtime_code_records": code_records, "unique_runtime_code_results": len(codes),
+        "unique_saved_rpc_results": len(calls) + len(codes),
+        "count_scope": "Stored eth_call and eth_getCode records across accounting/reference/oracle/rate; unique results count distinct anchored method/target/calldata identities, with conflicting duplicates rejected; block-header requests are excluded",
+    }
+
+
+def report_signature(report, ids):
+    require([row["market_id"] for row in report["markets"]] == ids, "Replayed report ID/order mismatch")
+    return [{"market_id": row["market_id"], "severity": row["severity"], "rate": row["rate"],
+             "findings": [{"code": f["code"], "severity": f["severity"]} for f in row["findings"]]}
+            for row in report["markets"]]
+
+
+def verify(args):
+    for path in (args.run_dir, args.derived, args.output):
+        require(path.is_absolute(), "All three CLI paths must be absolute")
+    directory = args.run_dir.resolve(strict=True)
+    derived_path = args.derived.resolve(strict=True)
+    output_path = args.output.resolve()
+    require(directory.is_dir() and output_path.parent.is_dir(), "Run/output parent directory missing")
+    require(not output_path.exists(), "Proof output already exists")
+    require(not inside(output_path, directory) and not inside(output_path, REPO.resolve()) and
+            not inside(output_path, ACTIVE_REPO.resolve()), "Proof must be outside the run and both product checkouts")
+    no_running_lock(directory)
+    inputs = Inputs()
+    status = inputs.json(directory / "status.json")
+    require((status.get("phase"), status.get("state"), status.get("stage")) ==
+            ("full", "complete", "finished"), "Full capture is not terminal and complete")
+    manifest = inputs.json(directory / "manifest.json")
+    ids = manifest["market_ids"]
+    require(isinstance(ids, list) and len(ids) == 697 and ids == sorted(set(ids)) and
+            all(isinstance(m, str) and re.fullmatch(r"0x[0-9a-f]{64}", m) for m in ids),
+            "Manifest must contain exactly 697 unique sorted canonical market IDs")
+    require(manifest.get("schema") == "mirage-full-scan-run/1" and
+            manifest.get("amount_usdc") == "10000" and manifest.get("graph_url") == GRAPH_URL,
+            "Manifest schema/scenario/Graph URL mismatch")
+    require(canonical_hash(manifest["anchor"]) == canonical_hash(EXPECTED_ANCHOR), "Manifest anchor mismatch")
+    source = manifest["source"]
+    require(source.get("kind") == "the-graph" and source.get("deployment") == DEPLOYMENT and
+            type(source.get("market_count")) is int and source["market_count"] == 697 and
+            source.get("query_block") == EXPECTED_ANCHOR["number"] and
+            source.get("query_block_hash") == EXPECTED_ANCHOR["hash"], "Manifest source mismatch")
+    require(canonical_hash(status.get("counts")) == canonical_hash(EXPECTED_COUNTS) and
+            all(type(status.get(k)) is int and status[k] == v for k, v in
+                {"total": 697, "attempted": 697, "completed": 697, "failed": 0}.items()) and
+            status.get("failed_market_ids") == [] and status.get("amount_usdc") == "10000" and
+            status.get("block") == EXPECTED_ANCHOR["number"] and
+            status.get("block_hash") == EXPECTED_ANCHOR["hash"], "Terminal status coverage/anchor mismatch")
+    paths = []
+    for key in ("snapshot", "report"):
+        path = Path(status[key])
+        require(path.is_absolute(), "Status artifact path must be absolute")
+        path = path.resolve(strict=True)
+        require(path.parent == directory and path.is_file(), "Status artifact escapes the run directory")
+        paths.append(path)
+    original_path, feed_path = paths
+    require(re.fullmatch(r"full-merged-[0-9a-f]{32}\.json\.gz", original_path.name) and
+            feed_path.name == original_path.name.removesuffix(".json.gz") + ".feed.json",
+            "Status snapshot/feed do not form a full-merged artifact pair")
+    require(derived_path not in (original_path, feed_path) and args.derived.suffix == ".gz",
+            "Derived snapshot must be a distinct gzip file")
+    original = inputs.json(original_path)
+    require(set(original) == {"schema", "anchor", "source", "rows", "scenario_notional_loan"} and
+            original["schema"] == "mirage-snapshot/1" and
+            canonical_hash(original["anchor"]) == canonical_hash(EXPECTED_ANCHOR) and
+            original["scenario_notional_loan"] == "10000" and
+            [row["market_id"] for row in original["rows"]] == ids, "Original snapshot coverage/schema mismatch")
+    expected_source = {**source, "discovery_market_count": 697, "inspected_market_count": 697,
+                       "coverage_counts": EXPECTED_COUNTS, "failed_market_ids": [],
+                       "scope": "Full-checked means collection and replay completed, not all findings passed"}
+    require(canonical_hash(original["source"]) == canonical_hash(expected_source), "Merged source/count mismatch")
+    full_files = checkpoint_files(directory, "full", ids)
+    accounting_files = checkpoint_files(directory, "accounting", ids)
+    supply = borrow = 0
+    for market, row, full_path, accounting_path in zip(ids, original["rows"], full_files, accounting_files):
+        for phase, path in (("full", full_path), ("accounting", accounting_path)):
+            saved = inputs.json(path)
+            require(set(saved) == {"schema", "anchor", "source", "rows", "scenario_notional_loan"} and
+                    saved["schema"] == "mirage-snapshot/1" and
+                    canonical_hash(saved["anchor"]) == canonical_hash(EXPECTED_ANCHOR) and
+                    canonical_hash(saved["source"]) == canonical_hash(source) and len(saved["rows"]) == 1 and
+                    saved["rows"][0]["market_id"] == market and
+                    saved["scenario_notional_loan"] == ("10000" if phase == "full" else None),
+                    "Checkpoint identity/source/scenario mismatch")
+            checkpoint_row = saved["rows"][0]
+            if phase == "full":
+                require(all(k in checkpoint_row for k in ("oracle", "reference", "rate")) and
+                        checkpoint_row["reference"].get("scenario", {}).get("notional_loan") == "10000" and
+                        canonical_hash(checkpoint_row) == canonical_hash(row), "Full row differs from checkpoint")
+            else:
+                require(set(checkpoint_row) == {"market_id", "evidence"} and len(checkpoint_row["evidence"]) == 2 and
+                        canonical_hash(checkpoint_row["evidence"]) == canonical_hash(row["evidence"]),
+                        "Per-market accounting raw pair differs from its accounting checkpoint")
+        raw = row["evidence"][1]["result"]
+        require(isinstance(raw, str) and re.fullmatch(r"0x[0-9a-fA-F]{384}", raw), "Invalid six-word market() return")
+        words = [int(raw[2 + i * 64:2 + (i + 1) * 64], 16) for i in range(6)]
+        require(all(0 <= word < 2**128 for word in words) and words[0] >= words[2],
+                "Invalid uint128 market state or negative stored free balance")
+        supply += words[0]
+        borrow += words[2]
+
+    # Product code is imported only after terminal-run/coverage/raw-checkpoint checks.
+    for path in sorted((REPO / "mirage").rglob("*.py")):
+        inputs.read(path)
+    inputs.read(REPO / "scripts" / "mirage_rederive_snapshot.py")
+    inputs.read(Path(__file__))
+    sys.path.insert(0, str(REPO))
+    from mirage import scan
+    require(Path(scan.__file__).resolve() == (REPO / "mirage" / "scan.py").resolve(),
+            "Product replay imported from the wrong checkout")
+    original_report = scan.report_from_snapshot(original).to_dict()
+    original_report_hash = canonical_hash(original_report)
+    require(canonical_hash(inputs.json(feed_path)) == original_report_hash, "Original feed differs from product replay")
+    signature = report_signature(original_report, ids)
+    require(all(row["rate"] is not None for row in signature), "Missing replayed rate observation")
+    del original_report
+    child = inputs.json(derived_path)
+    provenance = child.get("derivation")
+    require(isinstance(provenance, dict), "Derived snapshot has no provenance")
+    plain_child = {key: value for key, value in child.items() if key != "derivation"}
+    changes = list(differences(original, plain_child))
+    require(changes and all(ALLOWED_CHANGE.fullmatch(item["path"]) for item in changes),
+            "Unexpected changed field outside diagnostic allowlist")
+    require(canonical_hash(changes) == canonical_hash(provenance.get("changed_derived_fields")),
+            "Provenance change-list differs from independent JSON diff")
+    protected_hash = canonical_hash(protected_view(original))
+    require(protected_hash == canonical_hash(protected_view(child)) == provenance.get("unchanged_content_sha256"),
+            "Protected raw/non-diagnostic content or its recorded hash changed")
+    parent_hash = inputs.records[original_path]["sha256"]
+    require(provenance.get("schema") == "mirage-snapshot-derivation/1" and
+            provenance.get("method") == "offline-versioned-diagnostics" and
+            provenance.get("parent_filename") == original_path.name and provenance.get("parent_sha256") == parent_hash and
+            type(provenance.get("quote_reason_version")) is int and provenance["quote_reason_version"] == 2 and
+            type(provenance.get("bytecode_diagnostics_version")) is int and provenance["bytecode_diagnostics_version"] == 2 and
+            type(provenance.get("new_network_calls")) is int and provenance["new_network_calls"] == 0 and
+            all(type(row["reference"].get("quote_reason_version")) is int and
+                row["reference"]["quote_reason_version"] == 2 for row in child["rows"]),
+            "Parent/version/network provenance mismatch")
+    counts = evidence_counts(original)
+    require(canonical_hash(counts) == canonical_hash(evidence_counts(child)) ==
+            canonical_hash(provenance.get("recorded_evidence")), "Recorded evidence counts changed or differ from provenance")
+    child_report = scan.report_from_snapshot(child).to_dict()
+    require(canonical_hash(report_signature(child_report, ids)) == canonical_hash(signature),
+            "Per-market finding codes/severities/rate changed after diagnostics migration")
+    child_report_hash = canonical_hash(child_report)
+    del child_report
+    no_running_lock(directory)
+    require([p.name for p in checkpoint_files(directory, "full", ids)] == [p.name for p in full_files] and
+            [p.name for p in checkpoint_files(directory, "accounting", ids)] == [p.name for p in accounting_files],
+            "Checkpoint inventory changed")
+    inputs.unchanged()
+    require(not NETWORK_ATTEMPTS, "A network attempt occurred during offline verification")
+    proof = {
+        "schema": "mirage-final-universe-offline-verification/1", "all_checks_passed": True,
+        "created_at": datetime.now(timezone.utc).isoformat(), "run_dir": str(directory),
+        "interpreter": {"executable": sys.executable, "version": sys.version, "native_threads": 1},
+        "product_checkout": str(REPO.resolve()), "anchor": EXPECTED_ANCHOR, "scenario_notional_loan": "10000",
+        "coverage": EXPECTED_COUNTS, "manifest_market_ids_sha256": canonical_hash(ids),
+        "original_snapshot": {"path": str(original_path), "sha256": parent_hash},
+        "derived_snapshot": inputs.records[derived_path], "original_feed": inputs.records[feed_path],
+        "original_replayed_report_canonical_sha256": original_report_hash,
+        "derived_replayed_report_canonical_sha256": child_report_hash,
+        "independent_checks": {
+            "full_checkpoint_rows_equal_original_rows": 697, "accounting_pairs_identical_per_market": 697,
+            "abi_uint128_words_checked": 697 * 6, "negative_supply_minus_borrow_markets": 0,
+            "stored_supply_assets_raw": str(supply), "stored_borrow_assets_raw": str(borrow),
+            "stored_supply_minus_borrow_raw": str(supply - borrow),
+            "protected_content_sha256": protected_hash, "changed_derived_field_count": len(changes),
+            "changed_path_counts": dict(sorted(Counter(re.sub(r"/rows/\d+/", "/rows/*/", c["path"]) for c in changes).items())),
+            "codes_severities_rates_unchanged_per_market": 697, "recorded_evidence": counts,
+        },
+        "network": {"attempted_events": list(NETWORK_ATTEMPTS), "new_network_calls": 0,
+                    "guard": "Python audit hook blocks socket.connect and DNS lookup audit events before product imports"},
+        "input_inventory": sorted(inputs.records.values(), key=lambda record: record["path"]),
+        "input_inventory_rehashed_before_publication": True,
+        "limits": ["Product detector replay is not an independent detector implementation.",
+                   "No RPC provider was queried; this does not constitute second-provider verification.",
+                   "Manifest identity is verified locally; Graph universe discovery was not repeated.",
+                   "697 full observations includes BLOCK/WARN/INSUFFICIENT; it does not mean all checks passed.",
+                   "Absence of lock and a stable terminal status do not prove process exit; the caller must check the original handle/PID.",
+                   "Input SHA-256/size are rechecked before publication; this is not a filesystem transaction against later external writes.",
+                   "The audit hook guards Python socket/DNS events, not an OS network sandbox."],
+    }
+    pending = output_path.with_name("." + output_path.name + "." + uuid.uuid4().hex + ".pending")
+    try:
+        with pending.open("x", encoding="utf-8") as stream:
+            json.dump(proof, stream, indent=2, sort_keys=True, allow_nan=False)
+            stream.write("\n")
+        no_running_lock(directory)
+        os.link(pending, output_path)
+    finally:
+        pending.unlink(missing_ok=True)
+    return {"output": str(output_path), "sha256": digest_bytes(output_path.read_bytes()),
+            "all_checks_passed": True, "markets": 697, "new_network_calls": 0}
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--run-dir", required=True, type=Path, help="Absolute completed mainnet-20260909-01 run directory")
+    parser.add_argument("--derived", required=True, type=Path, help="Absolute new diagnostics-v2 gzip snapshot")
+    parser.add_argument("--output", required=True, type=Path, help="New absolute proof file; existing parent, outside run/product")
+    args = parser.parse_args()
+    try:
+        print(json.dumps(verify(args), indent=2))
+    except Exception as error:
+        print(json.dumps({"all_checks_passed": False, "error_type": type(error).__name__,
+                          "error": str(error), "network_attempted_events": list(NETWORK_ATTEMPTS)}), file=sys.stderr)
+        return 1
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

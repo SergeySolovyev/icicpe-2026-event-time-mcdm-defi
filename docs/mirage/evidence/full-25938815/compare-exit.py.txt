@@ -1,0 +1,70 @@
+"""Compare independently derived exit findings with the completed original feed.
+
+The separately executed final verifier establishes original/child equivalence.
+This script does not claim to perform that equivalence check or a new RPC read.
+"""
+from collections import Counter
+from datetime import datetime, timezone
+import hashlib
+import json
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent
+RUN = ROOT.parent / "runs" / "mainnet-20260909-01"
+AUDIT = ROOT / "uniswap-697-final-audit-20260909.json"
+OUTPUT = ROOT / "exit-697-independent-production-comparison.json"
+
+
+def main():
+    files = {}
+
+    def read(path):
+        payload = path.read_bytes()
+        files[path] = hashlib.sha256(payload).hexdigest()
+        return json.loads(payload)
+
+    status = read(RUN / "status.json")
+    assert (status["phase"], status["state"], status["stage"]) == ("full", "complete", "finished")
+    ids = read(RUN / "manifest.json")["market_ids"]
+    assert len(ids) == 697 and ids == sorted(set(ids))
+    report_path = Path(status["report"]).resolve()
+    assert report_path.parent == RUN.resolve()
+    report, audit = read(report_path), read(AUDIT)
+    assert not audit["issues"] and audit["new_rpc_calls"] == 0
+    assert audit["input_hashes_rechecked_after_audit"] is True
+    assert report["block_hash"] == audit["anchor"]["hash"] == status["block_hash"]
+    assert report["block_number"] == audit["anchor"]["number"] == status["block"]
+    actual = {row["market_id"]: row for row in report["markets"]}
+    expected = {row["market_id"]: row for row in audit["per_market"]}
+    assert len(report["markets"]) == len(audit["per_market"]) == 697
+    assert sorted(actual) == sorted(expected) == ids
+    compared = []
+    for market in ids:
+        findings = actual[market]["findings"]
+        assert len(findings) == 4 and findings[3]["code"].startswith("exit_")
+        severity = findings[3]["severity"]
+        assert severity == expected[market]["independent_expected_exit"], market
+        compared.append({"market_id": market, "exit_code": findings[3]["code"], "severity": severity})
+    for path, digest in files.items():
+        assert hashlib.sha256(path.read_bytes()).hexdigest() == digest
+    proof = {
+        "schema": "mirage-independent-exit-comparison/1",
+        "created_at_utc": datetime.now(timezone.utc).isoformat(),
+        "matched_markets": 697, "mismatches": [],
+        "scope": "Independent raw Uniswap audit compared per ID with the completed original legacy feed. Child equivalence is established separately by final-universe-25938815-v2-verification.json.",
+        "exit_counts": dict(Counter(row["severity"] for row in compared)),
+        "overall_market_counts": dict(Counter(row["severity"] for row in report["markets"])),
+        "finding_counts": dict(Counter(f["code"] + ":" + f["severity"] for row in report["markets"] for f in row["findings"])),
+        "inputs": [{"path": str(path), "sha256": digest} for path, digest in files.items()],
+        "inputs_rehashed": True, "new_network_calls": 0, "per_market": compared,
+    }
+    with OUTPUT.open("x", encoding="utf-8") as stream:
+        json.dump(proof, stream, indent=2, sort_keys=True, allow_nan=False)
+        stream.write("\n")
+    print(json.dumps({"output": str(OUTPUT), "sha256": hashlib.sha256(OUTPUT.read_bytes()).hexdigest(),
+                      "matched_markets": 697, "exit_counts": proof["exit_counts"],
+                      "overall_market_counts": proof["overall_market_counts"]}))
+
+
+if __name__ == "__main__":
+    main()
