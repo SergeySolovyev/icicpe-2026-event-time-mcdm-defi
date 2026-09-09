@@ -1,0 +1,27 @@
+"""
+Один рынок Morpho Blue = одно событие CreateMarket.
+
+immutable: true — createMarket ревертит с MARKET_ALREADY_CREATED, если id
+уже занят, поэтому сущность пишется ровно один раз и никогда не читается
+обратно. Проверено на цепи 09.09.2026: 1763 события, 1763 уникальных id.
+"""
+type Market @entity(immutable: true) {
+  "marketId: indexed bytes32 из topic1 (bytes32 — фиксированный тип, в топике лежит значение, а не хэш)"
+  id: Bytes!
+  "marketParams.loanToken"
+  loanToken: Bytes!
+  "marketParams.collateralToken (0x0 для idle-рынков)"
+  collateralToken: Bytes!
+  "marketParams.oracle (0x0 для idle-рынков)"
+  oracle: Bytes!
+  "marketParams.irm"
+  irm: Bytes!
+  "marketParams.lltv в WAD: 1e18 = 100%, 945000000000000000 = 94.5%"
+  lltv: BigInt!
+  "блок создания рынка"
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  txHash: Bytes!
+  "tx.from создателя рынка (createMarket permissionless)"
+  creator: Bytes!
+}

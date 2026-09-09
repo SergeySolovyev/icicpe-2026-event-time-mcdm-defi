@@ -1,0 +1,33 @@
+specVersion: 1.0.0
+description: >-
+  MIRAGE market-discovery layer. Indexes ONLY Morpho Blue CreateMarket
+  (topic0 0xac4b2400f169220b0c0afdde7a0b32e775ba727ea1cb30b35f935cdaab8683ac).
+  Every field is carried by the log itself, so the mapping performs zero
+  eth_call. Supply / Withdraw / Borrow / Repay / AccrueInterest / Liquidate
+  are deliberately NOT indexed (~17.5M events, sync would not finish).
+repository: https://github.com/SergeySolovyev/icicpe-2026-event-time-mcdm-defi
+schema:
+  file: ./schema.graphql
+indexerHints:
+  prune: auto
+dataSources:
+  - kind: ethereum
+    name: MorphoBlue
+    network: mainnet
+    source:
+      address: "0xBBBBBbbBBb9cC5e90e3b3Af64bdAF62C37EEFFCb"
+      abi: MorphoBlue
+      startBlock: 18883124
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      file: ./src/morpho-blue.ts
+      entities:
+        - Market
+      abis:
+        - name: MorphoBlue
+          file: ./abis/MorphoBlue.json
+      eventHandlers:
+        - event: CreateMarket(indexed bytes32,(address,address,address,address,uint256))
+          handler: handleCreateMarket
