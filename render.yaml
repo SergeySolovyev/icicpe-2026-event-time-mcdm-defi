@@ -1,0 +1,17 @@
+# A single free web service. Applying this Blueprint is a separate deploy action.
+services:
+  - type: web
+    name: mirage-workbench
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: ./Dockerfile.mirage
+    dockerContext: .
+    autoDeployTrigger: "off"
+    # Static GET creates no visitor session. Startup validates the saved evidence.
+    healthCheckPath: /style.css
+    envVars:
+      - key: PORT
+        value: "10000"
+    # RENDER_EXTERNAL_URL is supplied by Render automatically; no deploy key needed.
+    # No persistent disk: live captures and visitor sessions are temporary.

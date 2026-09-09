@@ -8,8 +8,9 @@ with the exact contract calls behind it.
 
 Built for **ETHOnline 2026, Continuity Track** (selected in the event dashboard), using the existing allocator and
 [revert.pro](https://github.com/SergeySolovyev/icicpe-2026-defi-vuln-detection).
-The product is a local workbench with live Ethereum reads, a deployed Graph
-subgraph, an actual Uniswap v3 integration, and reproducible saved evidence.
+The product includes an interactive workbench, an MCP interface for agents,
+live Ethereum reads, a deployed Graph subgraph, an actual Uniswap v3 integration,
+and reproducible saved evidence.
 
 ## Run the workbench
 
@@ -34,6 +35,13 @@ Node build, or model weights are needed to run the workbench.
 5. Use **Check another market**, paste a full Morpho market ID, and press
    **Check ID** to inspect a market beyond the saved shortlist. The Graph must
    confirm it is a USDC market at the selected block before collection proceeds.
+6. **Load demo** restores the four committed cases and their saved-evidence label.
+
+[Temporary public demo](https://cologne-casting-layout-hill.trycloudflare.com)
+was checked through a browser on 9 September, including fresh Graph discovery,
+a WETH inspection and its allocation preview. This development tunnel requires
+the host computer and both processes to remain running; it is not permanent hosting.
+See [hosting configuration](docs/mirage/HOSTING.md) for the prepared Render deployment.
 
 The server binds to localhost. A failed refresh leaves the saved evidence visible
 and reports the failure. It does not relabel saved evidence as a successful live
@@ -231,6 +239,18 @@ Graph blocks unavailable; offline snapshots retain their recorded observations.
 
 ## Reproduction and limits
 
+The optional [MCP interface](docs/mirage/MCP.md) exposes `get_saved_report`,
+`inspect_market` and `preview_saved_allocation` through the official SDK:
+
+```console
+python -m pip install -r requirements-mirage.txt -r requirements-mirage-mcp.txt
+python -m mirage.mcp_server
+```
+
+Its real stdio transport was tested with saved evidence and a live PAXG check
+through Graph at block 25938274. No LLM or vulnerability classifier is required.
+The MCP test suite has 16 tests, including a fresh-process stdio regression.
+
 Each finding retains the target address, calldata, numeric block, raw return,
 block hash and method. Runtime bytecode lives in the snapshot; public findings
 use its hash and bounded diagnostics. Replay makes no network calls and
@@ -250,7 +270,7 @@ Offline tests and historical recorded mainnet fixtures are separate from a fresh
 live refresh. No historical P&L, state-changing transaction, universal oracle
 safety, complete liquidation capacity, or v2/v4/Pendle/Curve integration is claimed.
 
-On 9 September, the command above passed **148 tests**. The default four-market
+On 9 September, the command above passed **154 tests**. The default four-market
 snapshot was independently reread through Tenderly and dRPC: **185 eth_call
 returns and eight runtime-code reads matched on each provider**, with no JSON-RPC
 batching. See [the verification record](docs/mirage/VERIFICATION_2026-09-09.json).
