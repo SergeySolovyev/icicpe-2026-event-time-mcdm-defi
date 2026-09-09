@@ -249,7 +249,10 @@ python -m mirage.mcp_server
 
 Its real stdio transport was tested with saved evidence and a live PAXG check
 through Graph at block 25938274. No LLM or vulnerability classifier is required.
-The MCP test suite has 16 tests, including a fresh-process stdio regression.
+The MCP test suite has 21 tests, including compact and full responses through
+a fresh-process stdio session. Default reports omit raw blobs and are 93.1%
+smaller on the frozen four-market fixture; full evidence remains available
+with `include_evidence=true`.
 
 Each finding retains the target address, calldata, numeric block, raw return,
 block hash and method. Runtime bytecode lives in the snapshot; public findings
