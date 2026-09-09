@@ -40,7 +40,7 @@
   function marketName(market) { return market?.display?.collateral_symbol || KNOWN[market?.market_id?.toLowerCase()] || shortHex(market?.market_id, 5, 4); }
   function loanName(market) { return market?.display?.loan_symbol || "USDC"; }
   function metricValues(market) { return Object.assign({}, ...(market?.findings || []).map((finding) => finding.metrics || {})); }
-  function reportLive() { return state.report?.source?.kind === "the-graph" && state.status?.mode === "live"; }
+  function reportLive() { return state.report?.source?.kind === "the-graph" && state.report?.capture_mode === "live"; }
   function reportBlock() { return state.report?.block_number; }
   function utcTime(timestamp) { const value = Number(timestamp); if (timestamp === undefined || timestamp === null || !Number.isFinite(value)) return null; const date = new Date(value * 1000); return Number.isNaN(date.getTime()) ? null : date.toISOString().slice(0, 16).replace("T", " ") + " UTC"; }
   function validId(id) { return typeof id === "string" && /^0x[0-9a-fA-F]{64}$/.test(id); }
@@ -242,6 +242,18 @@
     if (kind) return String(kind);
     return "No decision returned";
   }
+  function actionExplanation(action, payload, gated) {
+    if (gated && action?.kind === "hold" && payload.original?.kind === "switch") {
+      const reasons = payload.admission?.findings?.filter((f) => ["block", "insufficient"].includes(f.severity));
+      if (reasons?.length) return reasons.map((f) => /[.!?]$/.test(f.summary) ? f.summary : `${f.summary}.`).join(" ");
+    }
+    if (gated && action?.kind === "switch") return "The available evidence permits this proposal for the checked amount.";
+    if (!gated && action?.kind === "switch") {
+      const rate = payload.candidates?.find((c) => c.market_id === payload.market_id)?.supply_apr;
+      if (rate !== null && rate !== undefined) return `The original policy proposes this market at a ${percentage(rate)} annualized accrual-rate indication. This is not a yield forecast.`;
+    }
+    return action?.rationale || action?.reason || "No rationale supplied by the policy.";
+  }
   async function evaluate() {
     const amount = $("allocation-amount").value.trim().replaceAll(",", "");
     if (!/^(?:0|[1-9]\d*)(?:\.\d{1,6})?$/.test(amount) || !/[1-9]/.test(amount)) {
@@ -258,9 +270,9 @@
       const gated = actionParts(payload, ["gated", "gated_action", "mirage", "after"]);
       $("preview-context").textContent = payload.block_number !== undefined ? `First allocation at block ${grouped(payload.block_number)}. No transactions.` : "First-allocation replay. No transactions.";
       $("original-action").textContent = actionLabel(original);
-      $("original-rationale").textContent = original?.rationale || original?.reason || "No rationale supplied by the allocator.";
+      $("original-rationale").textContent = actionExplanation(original, payload, false);
       $("gated-action").textContent = actionLabel(gated);
-      $("gated-rationale").textContent = gated?.rationale || gated?.reason || "No rationale supplied by the gate.";
+      $("gated-rationale").textContent = actionExplanation(gated, payload, true);
       document.querySelector(".gated-step").classList.toggle("is-blocked", gated?.kind === "hold" && original?.kind === "switch");
       $("allocator-json").textContent = JSON.stringify(payload, null, 2); $("allocator-raw").hidden = false;
       if (!original || !gated) { $("allocator-error").textContent = "The response did not contain both decisions. Inspect the response details."; $("allocator-error").hidden = false; }
@@ -285,6 +297,7 @@
     state.scanning = running;
     $("scan-button").disabled = running;
     $("new-market-submit").disabled = running;
+    $("load-demo-button").disabled = running;
     $("scan-button").querySelector("span").textContent = running ? "Checking evidence" : state.selected ? "Check market" : "Refresh evidence";
     document.querySelector(".scan-panel").classList.toggle("is-scanning", running);
     const message = typeof status?.message === "string" ? status.message : typeof status?.error === "string" ? status.error : running ? "Reading Graph discovery and contract evidence…" : "No scan running";
@@ -334,7 +347,11 @@
   }
   async function initialize() {
     hideNotice();
-    const results = await Promise.allSettled([loadReport(), api("/api/status")]);
+    // Read status first: a completed capture must precede the report read.
+    // If it was still running, polling will pick up its eventual report.
+    const statusResult = (await Promise.allSettled([api("/api/status")]))[0];
+    const reportResult = (await Promise.allSettled([loadReport()]))[0];
+    const results = [reportResult, statusResult];
     if (results[0].status === "rejected") {
       const message = results[0].reason?.message || "Evidence could not be loaded.";
       showNotice(message, true); $("source-label").textContent = "Evidence unavailable";
@@ -352,6 +369,13 @@
   $("allocation-amount").addEventListener("keydown", (event) => { if (event.key === "Enter") evaluate(); });
   $("evaluate-button").addEventListener("click", evaluate);
   $("scan-button").addEventListener("click", () => scan());
+  $("load-demo-button").addEventListener("click", async () => {
+    if (state.scanning) return;
+    try {
+      renderStatus(await api("/api/demo", {method: "POST", headers: {"Content-Type": "application/json"}, body: "{}"}));
+      await loadReport(); resetPreview(); hideNotice();
+    } catch (error) { showNotice(error.message); }
+  });
   $("add-market-toggle").addEventListener("click", () => {
     const open = $("add-market-form").hidden;
     $("add-market-form").hidden = !open;

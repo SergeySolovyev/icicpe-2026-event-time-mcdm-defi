@@ -32,13 +32,15 @@ def main(argv=None) -> int:
     demo.add_argument("--snapshot", type=Path)
     web = commands.add_parser("serve", help="Open the local MIRAGE workbench")
     web.add_argument("--port", type=int, default=8765)
+    web.add_argument("--bind", choices=["127.0.0.1", "0.0.0.0"], default="127.0.0.1")
     web.add_argument("--snapshot", type=Path)
     web.add_argument("--graph-url")
+    web.add_argument("--public-origin", help="One exact HTTPS demo origin behind a localhost reverse proxy")
     args = parser.parse_args(argv)
     try:
         if args.command == "serve":
             from .server import serve
-            serve(port=args.port, snapshot=args.snapshot, graph_url=args.graph_url)
+            serve(port=args.port, snapshot=args.snapshot, graph_url=args.graph_url, public_origin=args.public_origin, bind=args.bind)
             return 0
         if args.command == "demo":
             snapshot = args.snapshot

@@ -16,7 +16,7 @@ from mirage.chain.morpho import MarketParams, MarketState
 from mirage.chain.rates import BORROW_RATE_VIEW, collect_rate, replay_rate
 from mirage.chain.rpc import BlockAnchor, RpcClient
 from mirage.scan import load_snapshot
-from mirage.server import Application, handler_for
+from mirage.server import Application, Sessions, WorkbenchHTTPServer, handler_for, serve
 
 SNAPSHOT = Path(__file__).resolve().parents[1] / "mirage/snapshots/mainnet-25937912.json.gz"
 FULL_SNAPSHOT = SNAPSHOT.parent / "mainnet-full-25938082.json.gz"
@@ -177,6 +177,96 @@ class FullEvidenceTests(unittest.TestCase):
         snapshot = copy.deepcopy(self.snapshot)
         snapshot["rows"][3]["rate"]["supply_apr"] = "9999999"
         self.assertEqual(compare(snapshot)["market_id"], snapshot["rows"][0]["market_id"])
+
+
+class PublicSessionTests(unittest.TestCase):
+    def test_public_bind_requires_explicit_origin_before_loading_evidence(self):
+        with patch("mirage.server.Application") as application:
+            with self.assertRaises(ValueError):
+                serve(bind="0.0.0.0")
+            with self.assertRaises(ValueError):
+                serve(bind="0.0.0.0", public_origin="https://demo.example/path")
+            application.assert_not_called()
+
+    def test_report_provenance_is_bound_to_snapshot_not_background_status(self):
+        app = Application(SNAPSHOT)
+        app.status.update(state="complete", mode="live")
+        self.assertEqual(app.get_report()["capture_mode"], "saved")
+        app.snapshot_mode = "live"
+        app.status.update(state="running", mode="saved")
+        self.assertEqual(app.get_report()["capture_mode"], "live")
+        app.status["state"] = "complete"
+        app.reset_demo()
+        self.assertEqual(app.get_report()["capture_mode"], "saved")
+
+    def test_server_cannot_share_a_port_with_another_http_application(self):
+        app = Application(SNAPSHOT)
+        server = WorkbenchHTTPServer(("127.0.0.1", 0), handler_for(app))
+        try:
+            with self.assertRaises(OSError):
+                other = ThreadingHTTPServer(server.server_address, handler_for(app))
+                other.server_close()
+        finally:
+            server.server_close()
+
+    def test_distinct_visitors_cannot_replace_each_others_reports(self):
+        sessions = Sessions(lambda: Application(SNAPSHOT))
+        token_a, app_a = sessions.get(None)
+        token_b, app_b = sessions.get(None)
+        app_a.snapshot = {**app_a.snapshot, "rows": app_a.snapshot["rows"][:1]}
+        self.assertNotEqual(token_a, token_b)
+        self.assertEqual(len(sessions.get(token_a)[1].get_report()["markets"]), 1)
+        self.assertEqual(len(sessions.get(token_b)[1].get_report()["markets"]), 2)
+        app_a.reset_demo()
+        self.assertEqual(len(app_a.get_report()["markets"]), 2)
+
+    def test_reset_cannot_race_an_active_capture(self):
+        app = Application(SNAPSHOT)
+        app.status["state"] = "running"
+        with self.assertRaises(ValueError):
+            app.reset_demo()
+
+    def test_session_limit_never_evicts_a_running_capture(self):
+        sessions = Sessions(lambda: Application(SNAPSHOT), max_sessions=1)
+        token, app = sessions.get(None)
+        app.status["state"] = "running"
+        with self.assertRaises(RuntimeError):
+            sessions.get(None)
+        self.assertIs(sessions.get(token)[1], app)
+
+    def test_only_the_exact_public_origin_is_accepted(self):
+        app = Application(SNAPSHOT)
+        sessions = Sessions(lambda: Application(SNAPSHOT))
+        server = ThreadingHTTPServer(("127.0.0.1", 0), handler_for(app, public_origin="https://demo.example", sessions=sessions))
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        try:
+            connection = http.client.HTTPConnection("127.0.0.1", server.server_port, timeout=3)
+            connection.request("GET", "/", headers={"Origin": "https://demo.example"})
+            response = connection.getresponse()
+            response.read()
+            self.assertEqual(response.status, 200)
+            cookie = response.getheader("Set-Cookie")
+            self.assertIn("Secure", cookie)
+            self.assertIn("HttpOnly", cookie)
+            connection.close()
+            connection = http.client.HTTPConnection("127.0.0.1", server.server_port, timeout=3)
+            connection.request("GET", "/style.css", headers={"Host": "demo.example"})
+            response = connection.getresponse()
+            response.read()
+            self.assertEqual(response.status, 200)
+            self.assertIsNone(response.getheader("Set-Cookie"))
+            connection.close()
+            connection = http.client.HTTPConnection("127.0.0.1", server.server_port, timeout=3)
+            connection.request("POST", "/api/demo", "{}", {"Origin": "https://demo.example.attacker.invalid", "Cookie": cookie.split(";")[0]})
+            response = connection.getresponse()
+            response.read()
+            self.assertEqual(response.status, 403)
+            connection.close()
+        finally:
+            server.shutdown()
+            server.server_close()
+            thread.join(timeout=2)
 
 
 if __name__ == "__main__":

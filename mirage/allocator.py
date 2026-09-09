@@ -69,7 +69,11 @@ def compare(snapshot: dict, *, amount_usdc="10000", market_id=None) -> dict:
         report = MarketReport(report.chain_id, report.block_number, report.block_hash, report.source, verdicts)
     gated = MirageGatedPolicy(T1ThresholdPolicy(), report, venue_to_market=mapping).decide(state)
     selected = mapping.get(original.target_protocol)
+    admission = next((m for m in report.markets if m.market_id == selected), None)
     return {"original": asdict(original), "gated": asdict(gated), "amount_usdc": amount,
+            "admission": ({"severity": admission.severity.value,
+                           "findings": [{"code": f.code, "severity": f.severity.value, "summary": f.summary}
+                                        for f in admission.findings]} if admission else None),
             "market_id": selected, "block_number": report.block_number, "block_hash": report.block_hash,
             "mode": "evidence-block replay", "policy": "decision.t1_threshold.T1ThresholdPolicy",
             "scenario_matches": scenario_matches, "candidate_count": len(rows),

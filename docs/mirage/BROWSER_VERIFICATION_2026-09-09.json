@@ -1,0 +1,27 @@
+{
+  "checked_on": "2026-09-09",
+  "public_url": "https://cologne-casting-layout-hill.trycloudflare.com",
+  "hosting": "temporary Cloudflare Quick Tunnel; requires local processes and computer",
+  "browser_flow": [
+    "Saved four-market report rendered over HTTPS",
+    "PAXG saved preview: original switch, MIRAGE hold",
+    "Selected WETH and pressed Check market in browser",
+    "Live Graph discovery: 697 discovered, 1 inspected",
+    "Live WETH report: PASS; original and gated preview both switch",
+    "Load demo restored four saved cases and saved label"
+  ],
+  "live_anchor": {
+    "chain_id": 1,
+    "hash": "0x0fc988c0788b4c2f9c198354cfeb088e91b059057f50cc15f7cc96daa322eec4",
+    "number": 25938306,
+    "timestamp": 1788938711
+  },
+  "live_market_id": "0x94b823e6bd8ea533b4e33fbc307faea0b307301bc48763acc4d4aa4def7636cd",
+  "local_capture_file": "data/cached/mirage/live-25938306-1788939748207131100.json.gz",
+  "local_capture_sha256": "08ce8373075f54f80cb23f1d956bd9240abdb5bb2e64385a3fbbf67cbebd3a30",
+  "limitations": [
+    "Browser check is a functional integration check; it is not a second-provider verification of this fresh capture.",
+    "The separate default four-market snapshot has two-provider raw-call verification.",
+    "Permanent hosting and final event submissions are not completed by this record."
+  ]
+}

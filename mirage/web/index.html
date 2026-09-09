@@ -49,7 +49,7 @@
 
     <div class="workspace">
       <section class="market-section" id="markets" aria-labelledby="market-heading">
-        <div class="section-heading"><div><h2 id="market-heading">Market ledger</h2><p>Available liquidity, before you commit capital.</p></div><div class="ledger-actions"><span class="quiet-badge" id="visible-count">No report</span><button type="button" class="text-button add-market-button" id="add-market-toggle" aria-expanded="false" aria-controls="add-market-form">Check another market</button></div></div>
+        <div class="section-heading"><div><h2 id="market-heading">Market ledger</h2><p>Available liquidity, before you commit capital.</p></div><div class="ledger-actions"><button type="button" class="text-button" id="load-demo-button">Load demo</button><span class="quiet-badge" id="visible-count">No report</span><button type="button" class="text-button add-market-button" id="add-market-toggle" aria-expanded="false" aria-controls="add-market-form">Check another market</button></div></div>
         <form class="add-market-form" id="add-market-form" hidden novalidate>
           <label for="new-market-id">Morpho market ID</label>
           <div class="add-market-fields"><input id="new-market-id" name="market_id" type="text" placeholder="0x followed by 64 hexadecimal characters" autocomplete="off" spellcheck="false" aria-describedby="new-market-help new-market-message"><button class="button button-primary" id="new-market-submit" type="submit" aria-label="Check supplied market ID">Check ID</button></div>
