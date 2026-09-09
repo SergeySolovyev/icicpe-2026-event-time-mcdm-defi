@@ -113,7 +113,7 @@ flowchart LR
 | [Local server](mirage/server.py) and [workbench](mirage/web/) | Inspect findings, copy evidence, check a live market and compare actual policy responses |
 
 For Uniswap review, the [Ethereum contract addresses](mirage/chain/uniswap.py#L14)
-and [QuoterV2 call](mirage/chain/uniswap.py#L337) link directly to the integration.
+and [QuoterV2 call](mirage/chain/uniswap.py#L344) link directly to the integration.
 
 The gate calls the original policy **once on the complete state**. By default it
 vetoes `block` and `insufficient`, requires the same decision block, and rejects

@@ -34,6 +34,7 @@ class RederiveTests(unittest.TestCase):
         self.assertEqual(result["parent_sha256"], hashlib.sha256(before_bytes).hexdigest())
         self.assertEqual(after["derivation"]["parent_filename"], SOURCE.name)
         self.assertEqual(after["derivation"]["new_network_calls"], 0)
+        self.assertEqual(after["derivation"]["quote_reason_version"], 2)
         counts = after["derivation"]["recorded_evidence"]
         self.assertEqual(counts["unique_eth_call_results"], 185)
         self.assertEqual(counts["unique_runtime_code_results"], 8)
@@ -42,7 +43,7 @@ class RederiveTests(unittest.TestCase):
                          migration.encoded(migration.protected_content(after)))
         for old, new in zip(before["rows"], after["rows"]):
             self.assertEqual(replay_reference(old["reference"]), old["reference"])
-            self.assertEqual(new["reference"]["quote_reason_version"], 1)
+            self.assertEqual(new["reference"]["quote_reason_version"], 2)
             for component in ("reference", "oracle", "rate"):
                 self.assertEqual(old[component]["evidence"], new[component]["evidence"])
             for field in ("runtime_code", "previous_runtime_code", "code_references"):

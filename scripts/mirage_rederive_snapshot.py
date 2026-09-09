@@ -107,7 +107,7 @@ def rederive_snapshot(source_path: Path, output_path: Path):
     result = copy.deepcopy(source)
     for row in result["rows"]:
         if "reference" in row:
-            row["reference"]["quote_reason_version"] = 1
+            row["reference"]["quote_reason_version"] = 2
             row["reference"] = replay_reference(row["reference"])
         oracle = row.get("oracle")
         if oracle is not None:
@@ -129,7 +129,7 @@ def rederive_snapshot(source_path: Path, output_path: Path):
     result["derivation"] = {
         "schema": "mirage-snapshot-derivation/1", "method": "offline-versioned-diagnostics",
         "parent_filename": source_path.name, "parent_sha256": parent_hash,
-        "quote_reason_version": 1, "bytecode_diagnostics_version": 2,
+        "quote_reason_version": 2, "bytecode_diagnostics_version": 2,
         "changed_derived_fields": modified,
         "unchanged_content_sha256": hashlib.sha256(protected).hexdigest(),
         "unchanged_content_scope": "Entire snapshot except the listed diagnostic explanation fields and this provenance object",

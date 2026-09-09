@@ -117,3 +117,17 @@ Earlier planning treated those pool headings as amounts available to one team.
 Do not reuse that arithmetic or the resulting "$9,166 available" headline.
 The sponsors' $15,000 and $5,000 totals also span distinct nominations and tracks.
 The Graph remains the larger individual award among these two chosen targets.
+
+## 8. An unavailable token prerequisite is not a missing sale size
+
+The initial quote-reason correction handled an unavailable route but missed
+earlier returns for a zero token address or unreadable token decimals. Those
+observations could still say `liquidation_size_not_specified` while retaining a
+`10000` loan-token scenario. Their `INSUFFICIENT` verdict was correct; the
+explanation was not.
+
+Quote-reason version 2 reports the actual missing prerequisite when the size is
+recorded. Earlier versions remain reproducible, and the bounded
+[offline derivation](DIAGNOSTIC_REPLAY.md) preserves raw responses, amounts and
+per-market verdicts. A missing historical input is not invented. This correction
+does not turn unavailable evidence into a successful check.

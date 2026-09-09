@@ -137,7 +137,7 @@ def collect_reference(client: RpcClient, collateral_token: str, loan_token: str,
                       anchor: BlockAnchor, *, amount_in_raw: int | None = None,
                       window: int = 1800, scenario_notional_loan: str | None = None,
                       routing_policy: str = ROUTING_POLICY,
-                      quote_reason_version: int = 1) -> dict:
+                      quote_reason_version: int = 2) -> dict:
     """Collect TWAP and an optional exact-size exit scenario with raw evidence.
 
     Search four direct fee tiers. Select the usable pool with greatest harmonic
@@ -147,7 +147,8 @@ def collect_reference(client: RpcClient, collateral_token: str, loan_token: str,
     the reference. The reference and selected exit route may differ. Legacy
     replay explicitly retains the original direct-first routing behavior.
     Quote reason version 0 preserves the old no-route/notional placeholder;
-    version 1 distinguishes an unavailable reference from an unspecified size.
+    version 1 corrects missing-route reasons; version 2 also explains early
+    token-address/decimals failures when a scenario size is actually supplied.
     The returned evidence is JSON-safe and all amounts are decimal strings.
     """
     enc_addr(collateral_token)
@@ -155,7 +156,7 @@ def collect_reference(client: RpcClient, collateral_token: str, loan_token: str,
     encode_observe(window)
     if routing_policy not in (ROUTING_POLICY, LEGACY_ROUTING_POLICY):
         raise ValueError("Unsupported Uniswap routing policy")
-    if type(quote_reason_version) is not int or quote_reason_version not in (0, 1):
+    if type(quote_reason_version) is not int or quote_reason_version not in (0, 1, 2):
         raise ValueError("Unsupported Uniswap quote reason version")
     if amount_in_raw is not None and (_uint(amount_in_raw, 255) == 0):
         raise ValueError("Liquidation scenario amount must be positive")
@@ -208,16 +209,22 @@ def collect_reference(client: RpcClient, collateral_token: str, loan_token: str,
             observation["tokens"].append({"address": token, "decimals": decimals[token]})
         return decimals[token]
 
-    if ZERO in (collateral, loan):
-        observation["reason"] = "zero_token_address"
+    def early_failure(reason: str) -> dict:
+        observation["reason"] = reason
+        if quote_reason_version >= 2 and (scenario is not None or amount_in_raw is not None):
+            observation["quote"] = {"status": "insufficient", "reason": reason}
+            if amount_in_raw is not None:
+                observation["quote"]["amount_in_raw"] = str(amount_in_raw)
         return observation
+
+    if ZERO in (collateral, loan):
+        return early_failure("zero_token_address")
     try:
         observation["collateral_decimals"] = token_decimals(collateral)
         observation["loan_decimals"] = token_decimals(loan)
     except (RuntimeError, ValueError) as problem:
         error("token_decimals", problem)
-        observation["reason"] = "token_decimals_unavailable"
-        return observation
+        return early_failure("token_decimals_unavailable")
     if collateral == loan:
         observation.update(status="ok", source="token-identity", method="identity",
                            price_loan_per_collateral="1", spot_price_loan_per_collateral="1")
@@ -293,7 +300,7 @@ def collect_reference(client: RpcClient, collateral_token: str, loan_token: str,
             error("weth_route", problem)
     if not route:
         observation["reason"] = "no_usable_reference_route"
-        if amount_in_raw is not None or (quote_reason_version == 1 and scenario is not None):
+        if amount_in_raw is not None or (quote_reason_version >= 1 and scenario is not None):
             observation["quote"] = {"status": "insufficient", "reason": "no_usable_reference_route"}
             if amount_in_raw is not None:
                 observation["quote"]["amount_in_raw"] = str(amount_in_raw)

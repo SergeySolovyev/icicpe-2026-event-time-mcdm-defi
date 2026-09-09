@@ -21,7 +21,7 @@ targets. No third sponsor submission or unmarked Graph category is assumed eligi
 | Graph is required for live inspection | [Discovery](../../mirage/discovery/subgraph.py) and [MCP live inspection](../../mirage/mcp_server.py) require the selected market at a pinned block/hash. Graph failure does not silently substitute saved IDs. |
 | Live provider evidence | [Subgraph deployment](../../subgraph/DEPLOYMENT.json) and [dated live MCP call](MCP.md) at block 25938274. Current release browser verification used saved evidence. |
 | Reusable AI tooling and decisions | [MCP setup/client example](MCP.md); three typed tools, compact/full reports, actual original/gated previews. [Release CI](ROUTE_UI_VERIFICATION_2026-09-09.json) verifies the official SDK. No LLM integration is claimed. |
-| Uniswap implementation | [Contract addresses](../../mirage/chain/uniswap.py#L14), [QuoterV2 call](../../mirage/chain/uniswap.py#L337), [integration guide](UNISWAP.md). Specified-size simulation, not a submitted swap. |
+| Uniswap implementation | [Contract addresses](../../mirage/chain/uniswap.py#L14), [QuoterV2 call](../../mirage/chain/uniswap.py#L344), [integration guide](UNISWAP.md). Specified-size simulation, not a submitted swap. |
 | Inspectable routing effect | [Public route comparison and previews](ROUTE_UI_VERIFICATION_2026-09-09.json): exact common wstETH input, both quotes, separate exit and market verdicts. |
 | Public application | [Hosting proof](HOSTING.md): deployed commit, CI and actual browser observations. A free instance may sleep; wake it before judging. |
 | Repository feedback | [FEEDBACK.md](../../FEEDBACK.md) describes actual integration experience. This is distinct from sending the external feedback form. |

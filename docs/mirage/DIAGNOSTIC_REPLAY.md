@@ -1,7 +1,7 @@
 # Versioned diagnostic replay
 
-Two explanations in the original collection needed correction. Neither changes
-market accounting, quote math, route selection or the admission rules.
+Versioned explanations correct the original collection without changing market
+accounting, quote math, route selection or the admission rules.
 
 - A missing usable Uniswap reference route was described as a missing liquidation
   size even when a 10,000 USDC notional had been supplied. Quote-reason version 1
@@ -12,6 +12,12 @@ market accounting, quote math, route selection or the admission rules.
   retains the incomplete-walk diagnostic and explicitly disclaims EVM semantic
   validation. The entire original runtime still goes to the unchanged revert.pro
   extractor; its 70 features and digest do not change.
+- Quote-reason version 2 also handles returns before route discovery: a zero
+  token address or unavailable token decimals. When a sale size is recorded,
+  the quote names that missing prerequisite instead of saying the size was not
+  supplied. Version 1 corrected the later no-route branch but retained these
+  earlier placeholders. Version 0 and 1 observations still replay exactly.
+  A size missing from the saved evidence is never reconstructed by assumption.
 
 Unversioned saved observations retain their old interpretation when replayed.
 This keeps historical artifacts reproducible and preserves strict validation of
@@ -28,6 +34,7 @@ python scripts/mirage_rederive_snapshot.py --source mirage/snapshots/mainnet-ful
 python -m mirage demo --offline --snapshot data/cached/mirage/diagnostics-replay.json.gz
 ```
 
+New derivations use quote-reason version 2 and bytecode diagnostic version 2.
 The new file records its parent's filename and SHA-256, every changed JSON field
 with its before/after value, and a digest of the preserved content. A fixed
 allowlist permits only the diagnostic version/explanation fields. Changes to a
@@ -47,6 +54,9 @@ The [demo manifest](../../mirage/snapshots/demo.json) selects
 `3df5fa7330740453cf64464ff992e541b2095b01c952f34cd8c262afe888ed7b`.
 Its parent is `mainnet-full-25938082-routes-v2.json.gz`, SHA-256
 `91aa45a2134eb8757ff4dcd9a4e651447067fa55ba20c40f700ac4840c2385fa`.
+This existing four-market derivation uses quote-reason version 1. None of its
+markets needs the early-return correction, and its bytes and provenance remain
+unchanged. New derivations and captures use version 2.
 
 The derivation records 12 changed diagnostic fields. The unchanged inputs include
 263 stored call records representing 185 distinct contract calls, and eight
