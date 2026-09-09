@@ -10,6 +10,65 @@ and the public browser loaded the four-market saved-evidence workbench.
 | Item | Observed value |
 |---|---|
 | Service URL | https://mirage-workbench.onrender.com |
+| Platform | Existing Render Docker web service, free plan, Frankfurt |
+| Release commit | `66198ad3e97d647cc5bafad818bb83a00e3d668c` |
+| Deployment ID | `dep-dagjrku1egvs73bdmmlg` |
+| Dashboard timestamp | 9 September 2026, 14:06:59 Moscow |
+| Runtime live time | 9 September 2026, 14:08:12 Moscow |
+| Build/deploy duration | 1 minute 13 seconds |
+| Service state | Live |
+| Service automatic deploys | Disabled |
+| Blueprint Auto Sync | No; configuration unchanged |
+| Release selection | Manual deploy of the specific published commit on `mirage-diagnostics-replay` |
+| Default saved snapshot | `mainnet-full-25938082-diagnostics-v2.json.gz`, SHA-256 `3df5fa7330740453cf64464ff992e541b2095b01c952f34cd8c262afe888ed7b` |
+
+This release exposes the recorded direct and WETH-route quotes beside the exit verdict.
+In the public browser, the wstETH table showed the same sale amount,
+`3.220832145173417247` wstETH, for both candidates: `5927.556111` USDC through
+the direct pool and `10007.772538` USDC through WETH, marked **Selected in report**.
+The exit-size check passed; the aggregate market verdict remained insufficient.
+These are saved quotes for the explicit 10000-USDC scenario at block `25938082`,
+not a claim of maximum liquidation capacity or a comparison of every possible route.
+
+The hosted browser also replayed three saved allocation scenarios. PAXG at 10000 USDC
+showed **Allocate to destination** for the original allocator and **Keep capital unallocated**
+with MIRAGE. WETH at 10000 showed **Allocate to destination** for both. At 20000,
+the original allocator still proposed allocation, while MIRAGE kept capital unallocated
+and displayed the missing-size warning beside the recorded 10000-USDC scope. Returning
+the amount to 10000 cleared the previous preview. No **Check market** action or new
+live capture was used in this release verification. See the separate
+[route UI and release verification](ROUTE_UI_VERIFICATION_2026-09-09.json).
+
+The snapshot is an offline diagnostic derivation of the original routes-v2 artifact,
+SHA-256 `91aa45a2134eb8757ff4dcd9a4e651447067fa55ba20c40f700ac4840c2385fa`.
+Its raw evidence, numerical inputs and math are unchanged. The original proof remains
+historical evidence for those saved returns; the new artifact adds versioned diagnostic
+explanations and explicit parent provenance. See
+[diagnostic verification](DIAGNOSTIC_VERIFICATION_2026-09-09.json).
+
+[Clean Linux CI for this exact release](https://github.com/SergeySolovyev/icicpe-2026-event-time-mcdm-defi/actions/runs/34343610011)
+passed **218 tests with 2 warnings in 6.82 seconds** on Ubuntu 24 and Python 3.12.14.
+Its official SDK stdio example returned PAXG 10000 `switch` → `hold`, WETH 10000
+`switch` → `switch`, and WETH 20000 `switch` → `hold`. The Docker build and the
+offline container replay of four saved markets passed. The CI image ID was
+`sha256:d47676ec403a2ee46197a92c9d13357927019e51ce79873fef11224fa599e39f`;
+it is not a digest of Render's separately built image.
+
+Render's manual deployment selected the specific commit from the published branch.
+The main `master` checkout remained at `6af7790` for the ongoing capture. The service
+and free plan were retained, with automatic deploys disabled. Documentation commits
+after this release must not be presented as the deployed product commit.
+
+## Historical deployments and browser checks
+
+The following observations describe earlier releases and live captures on 9 September.
+They do not add a new live chain check to the current release verification.
+
+### Earlier c2ed741 deployment
+
+| Item | Observed value |
+|---|---|
+| Service URL | https://mirage-workbench.onrender.com |
 | Platform | Render Docker web service, free plan, Frankfurt |
 | Release commit | `c2ed7413f3d184d611b476f5fac678a78c98ecee` |
 | Deployment ID | `dep-dagig6v40ujc73fbk330` |
@@ -20,12 +79,16 @@ and the public browser loaded the four-market saved-evidence workbench.
 | Service automatic deploys | Disabled |
 | Blueprint Auto Sync | No; saved and verified |
 
-The cloud Docker build completed its saved-evidence and allocator replay checks. The public
-browser displayed the committed four-market demo and then completed a fresh Graph/RPC
-inspection through the hosted service. The live WETH check below passed the implemented
-checks, and both original T1 and the gated preview returned `switch` at its evidence block.
-Subsequent release records should distinguish the deployed commit from later documentation
-commits in the repository.
+This earlier deployment record is retained for provenance. The first public live
+inspection below preceded it and is recorded separately.
+
+### First public live inspection (historical)
+
+The first cloud deployment completed its saved-evidence and allocator replay checks.
+Its public browser displayed the committed four-market demo and then completed a fresh
+Graph/RPC inspection through the hosted service. The historical WETH check below passed
+the implemented checks, and both original T1 and the gated preview returned `switch`
+at its evidence block.
 
 | Public browser live check | Observed value |
 |---|---|
@@ -38,7 +101,7 @@ commits in the repository.
 | Displayed evidence timestamp | 9 September 2026, 08:03 UTC |
 | Request observation | Started approximately 08:21 UTC; complete by 08:22 UTC |
 
-Exact request latency was not measured. This browser check verifies the deployed live path;
+Exact request latency was not measured. This historical browser check verified that release's live path;
 the new capture has not been independently reread through two providers. The two-provider
 verification elsewhere in the repository applies to the frozen block `25938082` demo.
 See [public browser verification](RENDER_BROWSER_VERIFICATION_2026-09-09.json).
@@ -56,7 +119,7 @@ entry allowed again for the checked 10000. deUSD correctly shows that no complet
 sale quote is available. This follow-up used saved evidence; it is not a new live
 chain verification. That release left the backend and frozen observations unchanged.
 
-The current `c2ed741` release bounds failed RPC reads to one market. If a shared
+The earlier `c2ed741` release bounded failed RPC reads to one market. If a shared
 oracle read fails transiently, the next market can retry it; successful reads
 remain reusable at their exact numeric block. The deployed public browser loaded
 all four saved cases and replayed PAXG with original `switch` and gated `hold`.
@@ -150,9 +213,9 @@ curl.exe --fail -H "Host: mirage.example" http://127.0.0.1:18767/api/report
 ```
 
 Expect CSS and a JSON report with the committed block/hash and `capture_mode: saved`.
-An attacker Origin on an otherwise valid Host must return 403. The public page, saved-demo
-load, exact-size live capture and **Load demo** restoration were verified in the browser.
-Separate [HTTP checks](RENDER_HTTP_VERIFICATION_2026-09-09.json) passed for two independent
+An attacker Origin on an otherwise valid Host must return 403. Earlier browser releases
+verified the public page, saved-demo load, exact-size live capture and **Load demo** restoration.
+Historical [HTTP checks](RENDER_HTTP_VERIFICATION_2026-09-09.json) on the initial release passed for two independent
 cookie jars: resetting one visitor preserved the other's report and status; a hostile Origin
 received 403. Those 13 requests took 0.236–0.717 seconds each. They do not measure live-scan
 latency or peak memory, and are not a load test. Stop only the named local test container when done.

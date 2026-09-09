@@ -1,0 +1,147 @@
+{
+  "schema": "mirage-route-ui-verification/1",
+  "checked_on": "2026-09-09",
+  "scope": "Published route-table UI and versioned diagnostic snapshot release. The public browser checks used saved evidence only; no new chain capture was performed.",
+  "observation_provenance": "Compiled from the release operator/root agent's actual Render dashboard, public-browser, screenshot and exact-commit CI observations. The documentation pass did not repeat browser or network checks.",
+  "deployment": {
+    "public_url": "https://mirage-workbench.onrender.com",
+    "platform": "Existing Render Docker web service",
+    "plan": "free",
+    "region": "Frankfurt",
+    "head_sha": "66198ad3e97d647cc5bafad818bb83a00e3d668c",
+    "deployment_id": "dep-dagjrku1egvs73bdmmlg",
+    "dashboard_status": "Live",
+    "dashboard_timestamp": "2026-09-09T14:06:59+03:00",
+    "runtime_live_at": "2026-09-09T14:08:12+03:00",
+    "duration_seconds": 73,
+    "release_selection": "Manual deployment of the specific published commit from mirage-diagnostics-replay",
+    "service_auto_deploy": false,
+    "blueprint_auto_sync": false,
+    "service_configuration_changed": false,
+    "main_master_at_release": "6af7790",
+    "main_checkout_scope": "The master checkout remained unchanged for the ongoing capture; the release used a separately published branch and specific commit."
+  },
+  "saved_snapshot": {
+    "path": "mirage/snapshots/mainnet-full-25938082-diagnostics-v2.json.gz",
+    "sha256": "3df5fa7330740453cf64464ff992e541b2095b01c952f34cd8c262afe888ed7b",
+    "parent_path": "mirage/snapshots/mainnet-full-25938082-routes-v2.json.gz",
+    "parent_sha256": "91aa45a2134eb8757ff4dcd9a4e651447067fa55ba20c40f700ac4840c2385fa",
+    "chain_id": 1,
+    "block_number": 25938082,
+    "block_hash": "0x7647a0738f03a46dd0c957cca4664d73f9bcc7c981405a8ccb00e3bd08ede2cb",
+    "market_count": 4,
+    "scenario_notional_loan": "10000",
+    "loan_token": "USDC",
+    "capture_mode": "saved",
+    "derivation": "Offline versioned diagnostic explanations; raw evidence, rate inputs, numerical inputs and math unchanged",
+    "changed_derived_fields": 12,
+    "unique_preserved_eth_call_results": 185,
+    "unique_preserved_code_results": 8,
+    "new_rpc_results_in_derivation": 0,
+    "prior_diagnostic_proof": "DIAGNOSTIC_VERIFICATION_2026-09-09.json",
+    "original_capture_proof": "VERIFICATION_2026-09-09.json",
+    "proof_scope": "The original proof remains bound to its original parent artifact. Reusing those returns is not a fresh provider reread."
+  },
+  "public_route_table": {
+    "market": "wstETH/USDC",
+    "block_number": 25938082,
+    "capture_mode": "saved",
+    "scenario_notional_usdc": "10000",
+    "amount_basis": "Hypothetical collateral sale derived from the recorded reference TWAP; no funds moved",
+    "same_input_for_both_candidates": true,
+    "candidates": [
+      {
+        "route": "Direct",
+        "collateral_amount": "3.220832145173417247",
+        "collateral_token": "wstETH",
+        "quoted_loan_output": "5927.556111",
+        "loan_token": "USDC",
+        "selected_in_report": false
+      },
+      {
+        "route": "Via WETH",
+        "collateral_amount": "3.220832145173417247",
+        "collateral_token": "wstETH",
+        "quoted_loan_output": "10007.772538",
+        "loan_token": "USDC",
+        "selected_in_report": true,
+        "displayed_selection_label": "Selected in report"
+      }
+    ],
+    "exit_check_severity": "pass",
+    "aggregate_market_severity": "insufficient",
+    "visual_review": "Release operator inspected local and public screenshots; the route table was legible at its rendered 12px text size",
+    "coverage_limit": "Recorded bounded Uniswap v3 candidates at one specified size; not maximum exit capacity, every possible fee-tier combination, or every available liquidation route"
+  },
+  "public_saved_allocation_checks": {
+    "block_number": 25938082,
+    "capture_mode": "saved",
+    "cases": [
+      {
+        "market": "PAXG/USDC",
+        "amount_usdc": "10000",
+        "original_rendered_action": "Allocate to destination",
+        "mirage_rendered_action": "Keep capital unallocated"
+      },
+      {
+        "market": "WETH/USDC",
+        "amount_usdc": "10000",
+        "original_rendered_action": "Allocate to destination",
+        "mirage_rendered_action": "Allocate to destination"
+      },
+      {
+        "market": "WETH/USDC",
+        "amount_usdc": "20000",
+        "original_rendered_action": "Allocate to destination",
+        "mirage_rendered_action": "Keep capital unallocated",
+        "displayed_warning": "Exit depth has not been checked for this amount. Use Check market to collect matching evidence.",
+        "scope_label_observation": "20000 USDC not checked; recorded sale scope remains 10000 USDC"
+      }
+    ],
+    "restoration": "Changed the amount back to 10000; the previous preview cleared",
+    "check_market_pressed": false,
+    "new_live_capture": false,
+    "transaction_submitted": false,
+    "action_scope": "These are observed rendered UI labels. Literal switch/hold actions below were independently observed in the CI SDK example."
+  },
+  "linux_ci": {
+    "url": "https://github.com/SergeySolovyev/icicpe-2026-event-time-mcdm-defi/actions/runs/34343610011",
+    "head_sha": "66198ad3e97d647cc5bafad818bb83a00e3d668c",
+    "conclusion": "success",
+    "platform": "Ubuntu 24",
+    "python_version": "3.12.14",
+    "tests_passed": 218,
+    "warnings": 2,
+    "test_seconds": 6.82,
+    "sdk_transport": "Official SDK stdio example",
+    "sdk_saved_scenarios": [
+      {"market": "PAXG/USDC", "amount_usdc": "10000", "original": "switch", "gated": "hold"},
+      {"market": "WETH/USDC", "amount_usdc": "10000", "original": "switch", "gated": "switch"},
+      {"market": "WETH/USDC", "amount_usdc": "20000", "original": "switch", "gated": "hold"}
+    ],
+    "docker_build": "success",
+    "offline_container_replay": "pass; four saved markets at block 25938082 with --network=none",
+    "ci_image_sha256": "d47676ec403a2ee46197a92c9d13357927019e51ce79873fef11224fa599e39f",
+    "image_scope": "Image built by this CI run; not a claimed digest of Render's separately built image"
+  },
+  "local_ui_checks": {
+    "javascript_syntax": "passed",
+    "smoke_check": "passed",
+    "independent_review": "completed",
+    "local_and_public_screenshots": "visually inspected by the release operator",
+    "scope": "These local UI checks are distinct from the exact-commit Linux CI run and the public saved browser checks above"
+  },
+  "historical_records_preserved": [
+    "RENDER_BROWSER_VERIFICATION_2026-09-09.json",
+    "RENDER_HTTP_VERIFICATION_2026-09-09.json",
+    "VERIFICATION_2026-09-09.json",
+    "DIAGNOSTIC_VERIFICATION_2026-09-09.json"
+  ],
+  "limitations": [
+    "This release verification did not invoke Check market or collect new live RPC evidence.",
+    "Earlier WETH live captures at blocks 25938497 and 25938561 are historical checks of earlier releases.",
+    "A passing exit check at a recorded size does not make an unsupported oracle or the aggregate market pass.",
+    "The selected recorded quote is not a guarantee of future execution, total pool capacity, or a globally best route.",
+    "Public browser allocation observations and CI literal actions are recorded as separate observations."
+  ]
+}
