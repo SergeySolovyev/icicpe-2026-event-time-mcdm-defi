@@ -45,12 +45,12 @@ The applicable requirements are on the two linked sponsor pages above.
 
 | Item | Current evidence / next required result |
 |---|---|
-| ETHGlobal repository link | The 9 September browser inspection still offered only Add GitHub Account and disabled repository selection. Owner linking is pending; the prepared form remains unsaved. See [form state](SUBMISSION_FORM_STATE.md). |
 | Human demo video | [Script](DEMO_SCRIPT.md) is prepared, including the actual MCP client segment. No completed upload or accessible video URL has been verified. |
-| External Uniswap feedback | [Prepared answers](UNISWAP_FORM_DRAFT.md) include the public FEEDBACK.md URL. No successful external submission is recorded. |
-| Historical authorship and human contribution | [AI_USE.md](AI_USE.md) records observed direction and AI-generated files. Historical contributions still require owner confirmation. |
+| External Uniswap feedback | [Prepared answers](UNISWAP_FORM_DRAFT.md), the feedback URL and technical selections are now filled in the external browser form. Personal ratings, integration duration, future plans and consent remain unresolved. The form has not been submitted. |
+| Owner attribution wording and human contribution | The owner explicitly reserved the application's AI-use wording. That field remains untouched. [AI_USE.md](AI_USE.md) and the historical contribution record still require his review; no human authorship or review is inferred from commit dates. |
 | Original planning archive | [Specification](planning/BUILD_SPEC.md) and [selected provenance](planning/PROMPT_PROVENANCE.md) are explicitly partial/reconstructed. Archive completeness remains unresolved. |
-| Sponsor selection and final submission | [Submission text](SUBMISSION_DRAFT.md) is ready to paste. Final project/prize submission and any subsequent judging details require actual dashboard confirmation. |
+| Continuity declaration | Final uses from-scratch wording and flags the pre-event first commit, despite Continuity being selected. It permits flagged repositories to be submitted for manual review. The declaration remains unchecked pending clarification; preserve original history. |
+| Final submission | Both sponsor entries are already saved. The project still requires its final submission and an acceptance confirmation. Partner judging is asynchronous; the separate Uniswap feedback requirement remains applicable. |
 
 The [event's submission and AI rules](https://ethglobal.com/events/ethonline2026/info/details)
 require a 2–4 minute video, transparent reuse/AI attribution and meaningful team

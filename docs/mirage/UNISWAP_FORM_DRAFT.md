@@ -1,5 +1,29 @@
 # Uniswap feedback form — MIRAGE draft
 
+## Current state — 10 September 2026
+
+The actual external form is now filled with the technical answers below, event
+name, contact details from the owner's ETHGlobal profile and the public FEEDBACK.md
+URL. The selected technical options were read back:
+
+- Completed project: **Yes** (working prototype).
+- Project classification: **Yes: building AI tooling (Cursor/Claude Code plugins, MCP servers)**.
+- Successful Uniswap integration: **Yes**.
+- Support used: **Technical docs**.
+
+This is an **unsubmitted browser draft**. Personal ratings, integration duration,
+continuation plans, follow-up preference and legal consent remain for the owner.
+Do not reload or close the prepared tab before recording any subsequent changes.
+Contact values are intentionally omitted from this public document.
+
+The actual integration-time options are **<1 hour**, **1-4 hours**, **4-8 hours**,
+**8+ hours**, and **Didn't get there**. There is no Unknown option. If the duration
+is not known, do not infer it from commit times or falsely select a failed integration.
+The two personal ratings here use **1-5**, independently of ETHGlobal's saved 8/10
+and 7/10 integration scores. No response has been submitted or accepted yet.
+
+## Historical inspection — 9 September 2026
+
 Inspected read-only on 9 September 2026. The [actual form](https://developers.uniswap.org/hackathon-feedback?utm_campaign=20260904-ethglobal_online&utm_content=callout&utm_medium=eco&utm_source=platform&utm_term=self-serve) was readable through the official ETHGlobal resource link without logging in. No field was filled and nothing was submitted.
 
 The table follows the observed form order, using abbreviated labels. Required markers were visible. Dropdown choices were not exposed by the web reader: select the matching real option in the browser, rather than treating the semantic answers below as exact option labels.
@@ -66,7 +90,11 @@ We used canonical Ethereum Uniswap v3 contracts through individual RPC calls. We
 
 ## What still needs Sergey
 
-Contact details, dropdown selections, personal ratings, future plans and consent remain owner decisions. Do not infer an integration duration from commit timestamps, time spent on the entire project, or the live MCP call's 54.36-second runtime. The latter is a tool execution measurement, not development time.
+The owner should review the prefilled contact details and provide the remaining
+duration, personal ratings, future plans and consent. Technical selections are
+already prepared as recorded above. Do not infer an integration duration from
+commit timestamps, time spent on the entire project, or the live MCP call's
+54.36-second runtime. The latter is a tool execution measurement, not development time.
 
 The form exposes no separate URL field for the repository feedback file. Include its public URL in answer F: the [official Uniswap prize requirement](https://ethglobal.com/events/ethonline2026/prizes) requires the completed external response to contain that link. After Sergey submits, confirm the form's success state and record only the submission status or non-sensitive receipt. A local draft and a repository FEEDBACK.md do not establish completion.
 
@@ -76,4 +104,6 @@ The form exposes no separate URL field for the repository feedback file. Include
 - Technical answers: [FEEDBACK.md](../../FEEDBACK.md), [UNISWAP.md](UNISWAP.md), [MCP.md](MCP.md), and [verification record](VERIFICATION_2026-09-09.json).
 - Repository branch checked locally: `master`, tracking `origin/master`; the public feedback file was last changed in commit `a975436`.
 
-Only this local document was created. No login, external message, checkbox acceptance or form submission was performed.
+At the 9 September inspection only this document was created. The 10 September
+browser preparation is recorded above; no legal consent or form submission has
+been performed.
