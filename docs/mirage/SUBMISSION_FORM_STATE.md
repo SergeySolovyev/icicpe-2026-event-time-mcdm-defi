@@ -55,6 +55,11 @@ for Continuity. The declaration was **not checked**; its application to the new
 extension needs clarification before final submission.
 
 No Submit project button was pressed. The owner retains final submission.
+After saving and reading back the prize section, Final also flagged the repository
+because its first commit predates the event. The flag remained after **Rerun checks**.
+The page explicitly allows submission with flagged repositories subject to manual
+review. This is not a confirmed disqualification. Preserve the original history
+and clarify this flag together with the from-scratch declaration for Continuity.
 Stake Return currently says the project must be submitted; check-in alone does
 not confirm refund eligibility. Deadline: 13 September, 19:00 Moscow / 12:00 EDT.
 
