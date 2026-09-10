@@ -1,0 +1,33 @@
+{
+  "created": "2026-09-10",
+  "source_runtime_commit": "9aeb01c46d26865e95f95ac190168692d87bbf64",
+  "source_url": "https://mirage-workbench.onrender.com",
+  "evidence_block": 25938082,
+  "files": [
+    {
+      "file": "01-mirage-overview.png",
+      "bytes": 42778,
+      "sha256": "0fa77de2f8e8ad1a272a3bd75b116705f6a212a3842082c09b30fcd7057b44d3"
+    },
+    {
+      "file": "02-mirage-allocation-veto.png",
+      "bytes": 42276,
+      "sha256": "15028c98ec33398e281e7791f90a5180598c8193c8c111a7a7f631e03f6a2ff8"
+    },
+    {
+      "file": "03-mirage-uniswap-routes.png",
+      "bytes": 47223,
+      "sha256": "e9ac31cffe63cb3d263400d7f56710771d99f60065e36d5d7328e2aef4b35050"
+    },
+    {
+      "file": "mirage-cover-1600x900.png",
+      "bytes": 44310,
+      "sha256": "a1cb514236459a571e44a312eddcb0b4a40886f59918175d7e81113a1103ade6"
+    },
+    {
+      "file": "mirage-logo-512.png",
+      "bytes": 10209,
+      "sha256": "63f12155bcf113ebfc0f15fe75d168b5fae9a10dce216ee630ea40da2dc42cb2"
+    }
+  ]
+}

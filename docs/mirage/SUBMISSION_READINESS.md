@@ -1,4 +1,13 @@
-# MIRAGE submission readiness — 9 September 2026
+# MIRAGE submission readiness — updated 10 September 2026
+
+**10 September:** Check-in #2 is submitted. GitHub is connected; Project details,
+Images (logo, cover, three screenshots) and Tech stack are saved. Showcase:
+https://ethglobal.com/showcase/mirage-vbqty. Top 10 + Partner Prizes and the two
+partner entries are saved with owner ratings (Graph 8, Uniswap 7).
+Video, external Uniswap feedback, owner wording
+and final submission remain open. Final still uses from-scratch wording despite
+Continuity and was left unchecked pending clarification.
+[Current form state](SUBMISSION_FORM_STATE.md) supersedes older dashboard notes below.
 
 This checklist separates implemented evidence from unfinished submission steps.
 It does not claim that a project or prize submission has been accepted.

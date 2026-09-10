@@ -1,5 +1,10 @@
 # MIRAGE — submission draft
 
+**10 September:** The first application step is now saved with the primary GitHub
+repository. The owner will write the application's AI-use wording himself; do not
+automatically insert or overwrite that text from this historical draft.
+See [current form state](SUBMISSION_FORM_STATE.md) for the remaining steps.
+
 Prepared on 9 September 2026 from the implemented route-comparison demo, verified MCP integration and published 697-market capture. These are ready-to-paste drafts; preparing them does not save or submit an ETHGlobal form. The current observed form state is recorded in [SUBMISSION_FORM_STATE.md](SUBMISSION_FORM_STATE.md). The [submission readiness checklist](SUBMISSION_READINESS.md) separates implemented evidence from pending human and dashboard steps, including the corrected prize-pool amounts.
 
 ## First form fields

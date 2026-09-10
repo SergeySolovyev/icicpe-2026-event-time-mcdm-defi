@@ -1,4 +1,68 @@
-# ETHOnline form state — observed 9 September 2026
+# ETHOnline form state — observed 10 September 2026
+
+Verified in the authenticated ETHGlobal browser. Saving an editable section is
+distinct from submitting the final project or receiving a stake refund.
+
+## Saved successfully
+
+- **Check-in #2 submitted:** the site displayed “You've submitted the second check-in!”.
+  It names MIRAGE, the correct public repository, The Graph and Uniswap Foundation.
+  Live judging and being on track were answered Yes. The status uses the published
+  697-market report with explicit insufficient-evidence outcomes.
+- **Continuity Track selected**, confirmed on the dashboard and prize form.
+- **GitHub connected:** renewed the existing SergeySolovyev OAuth connection
+  through the actual profile link. ETHGlobal confirmed successful connection;
+  the project picker then enabled repository selection.
+- **Project details saved:** MIRAGE, DeFi, the public Render URL, description and
+  technical explanation, plus primary Monorepo
+  `SergeySolovyev/icicpe-2026-event-time-mcdm-defi`. Save & Continue advanced to Images.
+- **Showcase URL updated:** https://ethglobal.com/showcase/mirage-vbqty appeared
+  on the authenticated dashboard with Live demo and Source code links.
+- **Images saved:** logo, 16:9 cover and three actual workbench screenshots.
+  See [submission-assets](submission-assets/README.md) for files and provenance.
+- **Tech stack saved and read back:** The Graph; Ethereum; Python, JavaScript,
+  TypeScript and HTML/CSS; no separate web framework, database or design application;
+  MCP Python SDK, Docker, GraphQL, Uniswap v3 QuoterV2 and AssemblyScript.
+- **Prize section saved:** Top 10 Finalist & Partner Prizes, The Graph and Uniswap
+  Foundation; integration explanations, immutable source links and feedback.
+  Owner-provided usability ratings are Graph **8/10**, Uniswap **7/10**.
+  Save & Continue advanced to Video. This does not submit the final project.
+
+## Still open
+
+- **No demo video uploaded.** The live page requires `.mp4` or `.mov`, 2–4 minutes,
+  at least 720p, audio without music. The [script](DEMO_SCRIPT.md) is not a recording.
+- The dedicated AI-use text field remains untouched for the owner to complete,
+  as requested. Do not repaste the draft's attribution paragraph over owner wording.
+  Reuse of the owner's allocator and revert.pro is described.
+- External Uniswap feedback is not submitted. Public FEEDBACK.md and ETHGlobal's
+  feedback fields do not replace that external form.
+- Future Opportunities preferences remain for the owner. Event Discord still
+  appeared disconnected on the dashboard.
+
+## Final submission boundary
+
+After image uploads, Final's missing-fields list contained **only the demo video**.
+That technical validation result does not establish completed owner review or all
+judging requirements. Prize selection became editable after saving
+Images; choosing Top 10 separately displayed a video-requirement acknowledgement.
+
+Final also displayed an unchecked declaration that all submitted work was built
+during the event and none existed before it, alongside from-scratch wording,
+despite the selected Continuity track. The
+[official rules](https://ethglobal.com/rules) permit disclosed existing codebases
+for Continuity. The declaration was **not checked**; its application to the new
+extension needs clarification before final submission.
+
+No Submit project button was pressed. The owner retains final submission.
+Stake Return currently says the project must be submitted; check-in alone does
+not confirm refund eligibility. Deadline: 13 September, 19:00 Moscow / 12:00 EDT.
+
+The previous unsaved demo URL, Description and How it's made were empty when
+reopened on 10 September. They were restored from the verified draft, respecting
+owner wording, and actually saved after GitHub linking.
+
+## Historical observation — 9 September (superseded above)
 
 Read in the root task's internal Codex browser from rendered DOM. The name and
 three description fields and demonstration URL have been filled as an UNSAVED draft. No save or
