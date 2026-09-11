@@ -1,6 +1,8 @@
 # revert.pro source reused by MIRAGE
 
-- Repository: https://github.com/SergeySolovyev/icicpe-2026-defi-vuln-detection
+- Repository: https://github.com/SergeySolovyev/smart-contract-vuln-detection-from-bytecode
+  (formerly `icicpe-2026-defi-vuln-detection`; the old path still resolves
+  through GitHub's rename redirect, but cite the canonical name above)
 - Commit: `324431a514c5ebebbdbe620cb789f83ea78a231a`
 - Source: `features/evm_extractor.py`
 - SHA-256 of the exact vendored bytes: `d12773dda40ba781441b49ea7bda9542b037237c4b7216fce175c188e365f0bd`

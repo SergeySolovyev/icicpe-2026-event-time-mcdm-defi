@@ -8,14 +8,31 @@ The [ETHOnline rules, “Use of AI Tools”](https://ethglobal.com/events/ethonl
 
 - **Human direction observed in the supplied instructions:** Sergey supplied the two existing repositories, the MIRAGE problem framing and hackathon constraints; directed priorities, reuse and the requirement to check demonstration numbers through individual mainnet calls; and requested that errors be challenged before implementation.
 - **Human research reported by the owner:** the initial instructions describe personal mainnet checks. This disclosure does not independently establish who performed each historical check. Subsequent agent checks corrected several interpretations in the handoff; see [corrections](CORRECTIONS_2026-09-09.md).
-- **OpenAI Codex agents, 9 September:** generated and revised most of the new MIRAGE Python implementation, tests, web interface, deployment configuration and documentation. Agents also inspected the existing code, consulted primary documentation, ran RPC/browser/CLI verification and produced evidence reports. Passing an automated check is not a claim of human code review.
+- **OpenAI Codex agents, 9 September:** generated and revised nearly all of the new MIRAGE Python implementation, tests, web interface, deployment configuration and documentation — every file in the table below except the earlier Claude-authored subgraph scaffold and the standard MIT license text. The exact Codex model and version are not recorded in this repository. Agents also inspected the existing code, consulted primary documentation, ran RPC/browser/CLI verification and produced evidence reports. Passing an automated check is not a claim of human code review.
 - **Claude Code, earlier preparation:** the user-supplied history attributes the earlier handoff, initial README and creation-event subgraph preparation to Claude Code. This is reported provenance, not a reconstructed original session log. Exact historical model versions and the division of human/AI authorship of the older repositories remain unverified.
 
 ## Existing work is not new AI-generated MIRAGE work
 
 The allocator baseline is [commit 520b676](https://github.com/SergeySolovyev/icicpe-2026-event-time-mcdm-defi/commit/520b676). Its [decision policies](../../decision/), [replay engine](../../backtest/replay_per_block.py), research data and notebooks predate this extension. Their historical human/AI authorship is not determined here. The first hackathon commit is [e56cd7f](https://github.com/SergeySolovyev/icicpe-2026-event-time-mcdm-defi/commit/e56cd7f); it already existed when the current Codex continuation began.
 
-The second baseline is [revert.pro at 324431a514c5ebebbdbe620cb789f83ea78a231a](https://github.com/SergeySolovyev/icicpe-2026-defi-vuln-detection/tree/324431a514c5ebebbdbe620cb789f83ea78a231a). The vendored [evm_extractor.py](../../mirage/vendor/revert_pro/evm_extractor.py) retains its exact original bytes and upstream MIT license; [provenance](../../mirage/vendor/revert_pro/PROVENANCE.md) records its hash. Copying that source does not establish new authorship. MIRAGE's adapter and operand diagnostics are new Codex-assisted code.
+The second baseline is [revert.pro at 324431a514c5ebebbdbe620cb789f83ea78a231a](https://github.com/SergeySolovyev/smart-contract-vuln-detection-from-bytecode/tree/324431a514c5ebebbdbe620cb789f83ea78a231a). The vendored [evm_extractor.py](../../mirage/vendor/revert_pro/evm_extractor.py) retains its exact original bytes and upstream MIT license; [provenance](../../mirage/vendor/revert_pro/PROVENANCE.md) records its hash. Copying that source does not establish new authorship. MIRAGE's adapter and operand diagnostics are new Codex-assisted code.
+
+## Two pre-event files at the repository root
+
+[`LLM_TRANSCRIPT.md`](../../LLM_TRANSCRIPT.md) and [`CLAUDE.md`](../../CLAUDE.md) are
+artifacts of the pre-existing HSE coursework project that produced the allocator
+baseline described above. `CLAUDE.md` arrived in this repository's first commit
+`327cf6e` on 14 May 2026 and `LLM_TRANSCRIPT.md` in `3e3d189` the same day, so both
+predate the baseline commit `520b676` of 5 September 2026 and the first hackathon
+commit `e56cd7f` of 9 September 2026. `LLM_TRANSCRIPT.md` satisfies that course's own
+"Requirement 15" reproducibility rule; its recorded session is dated 14 May 2026, and
+neither file mentions MIRAGE or ETHOnline.
+
+They are therefore Continuity-track evidence that the reused repository existed before
+this event, not MIRAGE's AI-use disclosure. Do not read the May transcript as an
+incomplete log of this submission's AI use: MIRAGE's own attribution is this document
+plus [`planning/PROMPT_PROVENANCE.md`](planning/PROMPT_PROVENANCE.md), and the
+completeness limits of that archive are stated there and below.
 
 ## Affected files and assets
 

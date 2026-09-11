@@ -107,6 +107,24 @@ query DiscoveryPage($after: Bytes!) {
 }
 ```
 
+### One-command check for a reviewer
+
+The paginated query above takes a GraphQL variable. To confirm the deployment is
+live without setting one up, run this against the public query endpoint. It pins
+no block, so the pruning window described below cannot make it stale:
+
+```bash
+curl -s https://api.studio.thegraph.com/query/1759002/mirage-morpho-markets/v0.0.1 \
+  -H "Content-Type: application/json" \
+  -d '{"query":"{ _meta { deployment hasIndexingErrors block { number hash } } markets(first: 5, orderBy: blockNumber, orderDirection: desc, where: { loanToken: \"0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48\" }) { id collateralToken oracle irm lltv blockNumber } }"}'
+```
+
+Expect `hasIndexingErrors: false`, `deployment` equal to
+`QmYkbwLirDouGqfRapedCcQ8YCbM8dzKA13agskDwGzJ6K`, a recent block number and five
+Morpho Blue USDC markets. This confirms availability and indexing only. It is not
+a market-safety statement, and the entity fields are event parameters: this
+subgraph indexes `CreateMarket` and returns no supply, borrow or price values.
+
 Start with `{"after":"0x0000000000000000000000000000000000000000000000000000000000000000"}`.
 Continue with the last returned ID until a page contains fewer than 1,000
 entities. Check `hasIndexingErrors == false`, a plausible indexed block, and
@@ -130,6 +148,31 @@ An observed error on 9 September rejected block `19972938` after the retained
 range had moved to `21191522`. Wait for synchronization, then use a recent
 indexed/finalized block. Historical offline evidence remains in the chain
 snapshots; it is not guaranteed to be queryable from this pruned subgraph.
+
+Both evidence blocks documented in this repository are now outside that window.
+Checked on 11 September 2026, a query pinned to `block: {number: 25938082}` or
+`block: {number: 25938815}` returns:
+
+```text
+subgraph QmYkbwLirDouGqfRapedCcQ8YCbM8dzKA13agskDwGzJ6K only has data starting at
+block number 25949140 and data for block number 25938082 is therefore not available
+```
+
+This is expected `prune: auto` behaviour, not a broken or redeployed subgraph: the
+same endpoint answered `_meta` at block `25949547` with `hasIndexingErrors: false`,
+the original deployment CID and a real `Market` entity in the same minute. The
+retained range keeps moving forward as the chain advances, so any fixed historical
+block eventually falls out of it.
+
+What this does and does not affect:
+
+- **Live discovery is unaffected.** `discover_markets` resolves the current
+  finalized block through RPC and queries that, never a fixed historical number.
+- **The recorded evidence is unaffected.** The discovered market IDs behind both
+  reports are preserved in the committed snapshots under `mirage/snapshots/` and
+  replay offline.
+- **A pinned historical Graph query is affected.** Do not expect the live endpoint
+  to reproduce block `25938082` or `25938815`. Use the unpinned query below.
 
 ## ETHOnline evidence
 

@@ -250,7 +250,10 @@ async def test_stdio_full_snapshot_returns_report_and_closes(launcher, tmp_path)
     params = StdioServerParameters(command=sys.executable, args=args, cwd=str(cwd))
     # tee-sys capture supplies a stream without a native fileno on Windows.
     async with stdio_client(params, errlog=sys.__stderr__) as (read, write):
-        async with ClientSession(read, write, read_timeout_seconds=timedelta(seconds=40)) as client:
+        # The budget must exceed the stall this test exists to catch. Cold imports in a
+        # fresh child were measured at 54.3-79.3 s on a loaded Windows host, so the former
+        # 40 s limit failed there; Linux CI still finishes the file in about nine seconds.
+        async with ClientSession(read, write, read_timeout_seconds=timedelta(seconds=300)) as client:
             await client.initialize()
             compact_result = await client.call_tool("get_saved_report", {})
             full_result = await client.call_tool("get_saved_report", {"include_evidence": True})

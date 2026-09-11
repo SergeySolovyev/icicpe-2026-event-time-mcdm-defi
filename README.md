@@ -7,7 +7,7 @@ sale can be quoted within an explicit policy. The result is an admission decisio
 with the exact contract calls behind it.
 
 Built for **ETHOnline 2026, Continuity Track** (selected in the event dashboard), using the existing allocator and
-[revert.pro](https://github.com/SergeySolovyev/icicpe-2026-defi-vuln-detection).
+[revert.pro](https://github.com/SergeySolovyev/smart-contract-vuln-detection-from-bytecode).
 The product includes an interactive workbench, an MCP interface for agents,
 live Ethereum reads, a deployed Graph subgraph, an actual Uniswap v3 integration,
 and reproducible saved evidence.
@@ -227,6 +227,41 @@ A live Graph-to-report run completed for the inspected shortlist. The indexer
 had reached block 25,938,167 when the evidence block was queried. Unsupported
 data stays visible in individual findings.
 
+### Check the deployment in one command
+
+```bash
+curl -s https://api.studio.thegraph.com/query/1759002/mirage-morpho-markets/v0.0.1 \
+  -H "Content-Type: application/json" \
+  -d '{"query":"{ _meta { deployment hasIndexingErrors block { number hash } } markets(first: 5, orderBy: blockNumber, orderDirection: desc, where: { loanToken: \"0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48\" }) { id collateralToken oracle irm lltv blockNumber } }"}'
+```
+
+This query pins no block, so it keeps working as the chain advances. Do not pin a
+review query to the historical evidence blocks named elsewhere in this repository:
+the deployment uses `prune: auto`, and as of 11 September 2026 both `25938082` and
+`25938815` have fallen outside the retained range and return a pruning error while the
+deployment itself is healthy. Live discovery always resolves the current finalized
+block, and the historical evidence replays from the committed snapshots. See
+[the subgraph README](subgraph/README.md) for the exact error text.
+
+### See Graph discovery drive a live MCP capture
+
+```bash
+python scripts/mirage_mcp_demo.py --live --timeout 900
+```
+
+Without `--live` the example is a saved, offline replay. With it, the same official
+SDK client additionally calls `inspect_market` once: the server resolves a finalized
+block, requires the requested market to appear in live Graph discovery at that block
+hash, and only then reads contracts. A market absent from discovery returns
+`market_not_discovered` before any contract call. The live call uses the network and
+can take minutes, so raise the timeout; a failure there is reported without
+invalidating the saved replay printed above it.
+
+Verified on 11 September 2026: a completed run reported `mode=live_capture` at finalized block `25952011`,
+699 USDC markets discovered through The Graph and one inspected with severity `pass`. An earlier run the same
+hour failed at stage `full_capture` and printed that stage without touching the saved replay. The live path
+uses keyless public RPC endpoints, so a transient failure is an expected outcome, not a broken build.
+
 The workbench already uses the query endpoint. For the CLI, configure it explicitly:
 
 ```powershell
@@ -305,6 +340,15 @@ python -m pip install -r requirements-mirage.txt -r requirements-mirage-mcp.txt 
 
 Run the focused suite with plugin autoload disabled, as in CI. This loads AnyIO
 exactly once and avoids unrelated plugins from the research environment.
+
+A bare `pytest` from the repository root is **not** the MIRAGE suite and is expected
+to fail. `pytest.ini` sets `testpaths = tests`, so it also collects this repository's
+pre-existing research tests. Those need packages the MIRAGE requirements deliberately
+exclude, such as `fractal`, `torch` and `onnxruntime`; `tests/dossier/` uses a `slow`
+marker that `pytest.ini` does not register while `addopts` sets `--strict-markers`; and
+`data/cached/kink_params.json` is not committed. Use the explicit file list below,
+exactly as CI does. This is a Continuity repository: the research project and MIRAGE
+share a checkout but not a test environment.
 
 PowerShell:
 

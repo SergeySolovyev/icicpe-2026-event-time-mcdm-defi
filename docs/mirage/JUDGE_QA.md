@@ -53,6 +53,27 @@ comparison at one block. Fees are included; gas, future price changes and full
 liquidator economics are not. It does not prove that every position in the market
 can be liquidated or that this is the best route across every venue.
 
+## Why should I believe the low direct quote instead of assuming a bug?
+
+Because the quoter's own output explains it. Filling that input took **nine
+initialized ticks** on the direct hop and **one** on each WETH leg, which is what
+running out of concentrated liquidity looks like at the tick level. The route that
+wins is also the more expensive one: two hops at 100 and 500 pay 6 bps in fees
+against the direct pool's 5, and still return about 69 % more USDC, so a cheaper-fee
+explanation does not survive. Neither quote's `sqrtPriceX96After` approaches the
+QuoterV2 boundary, so both accepted the whole input rather than a partial fill. Of
+the four canonical fee tiers, only 500 and 3000 direct pools exist for this pair,
+and the quoted fee-500 pool held about 22 times the fee-3000 pool's harmonic mean
+liquidity, so the direct candidate is the best direct pool available.
+
+State the limit in the same breath: the scenario size is derived from the direct
+pool's own TWAP, so "the TWAP values this input near 10,000 USDC" is true by
+construction and proves nothing on its own. The evidence is quote against quote at
+one identical raw input. It does not establish that the pool is chronically thin,
+and it does not model MEV or a router splitting the sale across both pools.
+
+**Show:** the candidate table and the two scope sections in [UNISWAP.md](UNISWAP.md).
+
 ## What happens if an oracle cannot be understood?
 
 It remains insufficient. Supported templates use factory membership, configuration

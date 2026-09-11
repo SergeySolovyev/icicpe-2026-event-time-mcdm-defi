@@ -1,5 +1,16 @@
 # LLM_TRANSCRIPT — Reproducibility log (Task Requirement 15)
 
+> **Scope note, added 11 September 2026.** This transcript is the reproducibility log
+> for the pre-event HSE coursework project that produced this repository's allocator
+> baseline. It arrived in commit `3e3d189` on 14 May 2026, predates the baseline commit
+> `520b676` of 5 September 2026 and the first ETHOnline commit `e56cd7f` of 9 September
+> 2026, and does not mention MIRAGE. It is submitted as Continuity-track evidence that
+> the reused repository existed before the event, not as MIRAGE's AI-use disclosure.
+> MIRAGE's own file-level attribution is in
+> [`docs/mirage/AI_USE.md`](docs/mirage/AI_USE.md) and
+> [`docs/mirage/planning/PROMPT_PROVENANCE.md`](docs/mirage/planning/PROMPT_PROVENANCE.md).
+
+
 Per Project 2 Requirement 15: *"LLMs can be used for analysis and
 development, but the full chat transcript must be provided for
 reproducibility."*

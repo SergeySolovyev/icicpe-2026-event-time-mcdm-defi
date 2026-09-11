@@ -1,4 +1,32 @@
-# MIRAGE submission readiness — updated 10 September 2026
+# MIRAGE submission readiness — updated 11 September 2026
+
+**11 September, pre-recording pass.** Four things were found and fixed before the
+video was recorded, none of them cosmetic:
+
+- The MCP client example could not complete on a loaded machine. Its client read
+  timeout was 60 seconds while a cold import of the stdio child measured 48.9 seconds
+  alone and 178.8 seconds to a finished handshake, and the child's stderr went to
+  `os.devnull`, so a dying server was indistinguishable from a timeout. The default is
+  now 300 seconds with a `--timeout` / `MIRAGE_MCP_TIMEOUT` override, the child's error
+  output goes to a log whose tail is printed on failure, and the fresh-process stdio
+  test's 40-second budget was raised above the stall it exists to catch. Verified on
+  this host under full load: the demo completed in 164 seconds, exit code 0.
+- The deployed subgraph has pruned both documented evidence blocks. A pinned query for
+  25938082 or 25938815 now returns a retention error while the deployment itself is
+  healthy. This is disclosed in [the subgraph README](../../subgraph/README.md),
+  [ARCHITECTURE](ARCHITECTURE.md) and the Graph sponsor answer, together with an
+  unpinned query a reviewer can run today.
+- The vendored source repository had been renamed. Links now use the canonical
+  `smart-contract-vuln-detection-from-bytecode` path instead of relying on GitHub's
+  rename redirect.
+- `LLM_TRANSCRIPT.md` and `CLAUDE.md` at the repository root are pre-event coursework
+  artifacts that never mention MIRAGE. Both now carry a scope note, and
+  [AI_USE](AI_USE.md) states what they are, so neither reads as an incomplete AI
+  disclosure for this submission.
+
+The Uniswap answer, demo script and judge notes now carry the recorded tick and fee
+evidence behind the route gap, and state plainly that the scenario size is derived from
+the same TWAP, so the load-bearing comparison is quote against quote.
 
 **10 September:** Check-in #2 is submitted. GitHub is connected; Project details,
 Images (logo, cover, three screenshots) and Tech stack are saved. Showcase:

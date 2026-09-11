@@ -1,6 +1,6 @@
 # MIRAGE — three-minute demo
 
-Target: about three minutes and twenty-five seconds of human narration with normal-speed screen recording. Record at 1080p so the block, amount and evidence remain legible. The [Graph prize](https://ethglobal.com/events/ethonline2026/prizes/the-graph) asks for two to four minutes; the [observed project form](SUBMISSION_FORM_STATE.md) caps the video at four minutes and rejects accelerated video.
+Target: about three minutes and forty seconds of human narration with normal-speed screen recording. Record at 1080p so the block, amount and evidence remain legible. The [Graph prize](https://ethglobal.com/events/ethonline2026/prizes/the-graph) asks for two to four minutes; the [observed project form](SUBMISSION_FORM_STATE.md) caps the video at four minutes and rejects accelerated video.
 
 For the follow-up discussion, use [the judging questions and evidence links](JUDGE_QA.md).
 
@@ -27,6 +27,23 @@ For a ready-to-run terminal demonstration, use `python scripts/mirage_mcp_demo.p
 It launches the official SDK client and prints actual saved PAXG/WETH decisions,
 including the amount mismatch. It does not run an LLM or collect live observations.
 
+**Run this once before the recorder starts, not after.** The stdio child imports the
+scientific stack before it answers `initialize`, so the first run is slow and a screen
+recorder adds to that. On a fully loaded Windows host on 11 September 2026, importing
+`mirage.mcp_server` alone took 48.9 seconds, a completed handshake took 178.8 seconds,
+and the whole demo finished in 164 seconds. Wait for the closing line:
+
+```text
+MCP session closed. Evidence-block replay complete; no funds moved.
+```
+
+If the command prints `MCP demo failed.` instead, this segment is not recordable yet.
+The message now names the likely cause and prints the tail of the stdio server's own
+error log, which distinguishes a server-side exception from a slow or killed start.
+Close other applications and rerun; on a slower machine raise the wait with
+`--timeout 600` or `MIRAGE_MCP_TIMEOUT=600`. Do not open the recorder on the strength
+of a transcript from an earlier day.
+
 ## 0:00–0:35 — live Graph discovery
 
 **Screen:** Select WETH and `10000` USDC. Click **Check market**. Show progress, then the successful source label and block. Keep the application's status visible while speaking.
@@ -35,35 +52,57 @@ including the amount mismatch. It does not run an LLM or collect live observatio
 
 > MIRAGE checks the evidence before an allocator enters a lending market. We built it on our existing USDC allocator. This WETH check starts with live market discovery through The Graph, then reads contracts at one Ethereum block. When it finishes, the source label and block show exactly which evidence supports the decision.
 
-## 0:35–1:00 — three checks, explicit scope
+## 0:35–1:05 — three checks, explicit scope
 
 **Screen:** Click **Load demo**. Show the saved label and block `25938082`. Inspect PAXG and its three check sections; briefly show deUSD's oracle finding.
 
 **Say:**
 
-> Now I am loading our reproducible example: six hundred and ninety-seven Graph-discovered USDC market IDs, with four markets inspected. We check available liquidity, oracle credibility, and a specified collateral sale. PAXG has zero available USDC. deUSD has a constant oracle configuration; a constant alone is a warning, not proof of mispricing.
+> Now I am loading our reproducible example: six hundred and ninety-seven Graph-discovered USDC market IDs, with four markets inspected. We check available liquidity, oracle credibility, and a specified collateral sale. PAXG has zero available USDC, and its oracle price also diverges from our independent reference. deUSD has a constant oracle configuration; a constant alone is a warning, not proof of mispricing.
 
-## 1:00–1:35 — the same-size route counterexample
+## 1:05–1:50 — the same-size route counterexample
 
-**Screen:** Inspect wstETH → **Collateral exit depth**. Show the **Recorded route comparison** table: the exact common collateral input, Direct and Via WETH outputs, and **Selected in report**. Open **Inspect measurements** only if the underlying raw amounts or route addresses are needed. Keep the exit `PASS` and overall `INSUFFICIENT` distinguishable.
+**Screen:** Inspect wstETH → **Collateral exit depth**. Show the **Recorded route comparison** table: the exact common collateral input, Direct and Via WETH outputs, and **Selected in report**. Then open **Inspect measurements** once: the basis-point figures are metrics, not table columns, and the direct candidate's values sit inside the `candidate routes` JSON there. Keep the exit `PASS` and overall `INSUFFICIENT` distinguishable.
 
 **Say:**
 
-> One bad route can give the wrong answer. We use Uniswap v3's QuoterV2 to simulate selling the same three point two two wstETH on two routes, at the same block. Direct returns about five thousand nine hundred and twenty-eight USDC. Through WETH, about ten thousand and eight. The input and reference price stay unchanged. The better route passes the exit check. The market remains insufficient because its oracle template is unsupported.
+> One bad route can give the wrong answer. Using QuoterV2, we sell the same three point two two wstETH on two routes, at the same block. Direct returns about five thousand nine hundred and twenty-eight USDC. Through WETH, about ten thousand and eight. The direct hop crossed nine initialized ticks. Each WETH leg crossed one. That is concentrated liquidity running out, and the winning route even pays higher fees. Our exit check blocks above five hundred basis points. Direct is over four thousand. The better route passes. The oracle template is still unsupported, so the market stays insufficient.
 
-On-screen exact values, without reading every digit aloud:
+Visible in the **Recorded route comparison** table itself, without reading every
+digit aloud. The table has three columns, Route, Collateral input and USDC output,
+and the workbench groups thousands, so the screen reads `5,927.556111` where this
+document writes `5927.556111`:
 
-| Item | Value |
+| Item | Value on screen |
 |---|---:|
 | Common collateral input | 3.220832145173417247 wstETH |
-| Input in base units | 3220832145173417247 |
-| Direct output | 5927.556111 USDC |
-| WETH-route output | 10007.772538 USDC |
-| Selected route's fee-inclusive impact against its spot | 6.39 bps |
+| Direct output | 5,927.556111 USDC |
+| WETH-route output | 10,007.772538 USDC |
+| Selected route | marked `Selected in report` |
 
-The primary reference is the same direct-pool TWAP, approximately 3104.787691 USDC/wstETH, for both candidate sizes. This compares the implemented direct and WETH candidates; it does not establish the best route across every venue.
+The basis-point figures are **not** columns in that table. They are recorded
+metrics, so open **Inspect measurements** once to show them. The selected route's
+own values appear as named rows there; the direct candidate's appear inside the
+`candidate routes` JSON on the same panel:
 
-## 1:35–2:00 — original allocator versus admission gate
+| Item | Value | Where |
+|---|---:|---|
+| Selected route's fee-inclusive impact against its spot | 6.39 bps | named metric row |
+| WETH route's execution shortfall against the primary TWAP | -7.77 bps | named metric row |
+| Direct route's execution shortfall against the primary TWAP | 4072.44 bps | `candidate routes` JSON |
+| Exit policy's configured threshold | 500 bps | named metric row |
+| Direct route | 1 hop, fee 500, 9 initialized ticks crossed | `candidate routes` JSON |
+| WETH route | 2 hops, fees 100 and 500, 1 tick per leg | `candidate routes` JSON |
+
+The metrics panel prints these at full precision, for example
+`4072.4438889999999985662...`, not rounded. Say the rounded value and let the
+screen show the exact one; do not claim the screen displays a rounded number.
+
+The primary reference is the same direct-pool TWAP, approximately 3104.787691 USDC/wstETH, for both candidate sizes and for both route candidates. Both shortfalls are stored per candidate as `execution_shortfall_bps_vs_twap`, and [`exit_depth.detect`](../../mirage/detectors/exit_depth.py) recomputes them from the raw amounts at replay instead of trusting the stored display value.
+
+If a judge asks why the direct quote should be believed, the answer is in the quoter's own output rather than in the reference price: the direct hop crossed nine initialized ticks while each WETH leg crossed one, the winning route pays more in total fees (6 bps against 5), and neither quote's `sqrtPriceX96After` approaches the QuoterV2 boundary, so both accepted the whole input instead of returning a partial fill. State the scope honestly too: the scenario size is derived from the direct pool's own TWAP, so that TWAP valuing this input near 10,000 USDC is true by construction and is not independent confirmation. The load-bearing comparison is quote against quote at an identical raw input. This compares the implemented direct and WETH candidates; it does not establish the best route across every venue.
+
+## 1:50–2:15 — original allocator versus admission gate
 
 **Screen:** Select PAXG in the allocation panel, amount `10000`, and click **Preview allocation**. Show **Original allocator** and **With MIRAGE**; open **Response details** if needed to make the original T1 policy visible.
 
@@ -71,7 +110,7 @@ The primary reference is the same direct-pool TWAP, approximately 3104.787691 US
 
 > Here the original T1 policy evaluates the selected destination and proposes entry. MIRAGE receives that proposal and holds because the evidence fails admission. The policy is unchanged. Its rate input is an annualized accrual-rate indication. We are comparing decisions at this recorded block, without claiming historical profits or money saved.
 
-## 2:00–2:20 — a positive control and amount sensitivity
+## 2:15–2:35 — a positive control and amount sensitivity
 
 **Screen:** Select WETH, keep `10000`, and preview. Both decisions enter. Change the amount to `20000` and preview again to show that the saved quote does not cover the new amount. Restore `10000` afterward.
 
@@ -79,7 +118,7 @@ The primary reference is the same direct-pool TWAP, approximately 3104.787691 US
 
 > WETH passes the implemented checks for this amount, so the original entry stands. Changing the amount changes the question: the saved sale quote no longer covers the proposal. A fresh check is required.
 
-## 2:20–2:45 — real reuse of revert.pro
+## 2:35–3:00 — real reuse of revert.pro
 
 **Screen:** Inspect wstETH → **Oracle credibility** → **Inspect measurements**. Show the bytecode diagnostics: `features_extracted`, `feature_count: 70`, and the upstream commit. Briefly open `mirage/bytecode.py` at the `_extract_features_single` call, then the vendored provenance and MIT attribution.
 
@@ -87,7 +126,7 @@ The primary reference is the same direct-pool TWAP, approximately 3104.787691 US
 
 > Our second existing project is revert.pro. MIRAGE calls its actual open-source bytecode extractor: seventy features, with the source commit and license preserved. These are structural diagnostics. Address-shaped constants remain investigation candidates, and unsupported behavior stays explicit. The extractor does not certify an oracle as safe.
 
-## 2:45–3:15 — reusable MCP tools
+## 3:00–3:30 — reusable MCP tools
 
 **Screen:** Briefly show one call in **Reproduce the evidence**, including its block and raw return. Then show the real terminal command `python scripts/mirage_mcp_demo.py` and its completed output: all three discovered tools, saved block `25938082`, PAXG original `switch` versus gated `hold`, and WETH's amount-sensitive previews. This MCP segment is required for the Graph version of the video. Use actual command output, not a fabricated terminal transcript. If startup is slow, cut only the waiting interval and label it, preserving the command and its own completed result. End with the workbench and the README's BEFORE/AFTER link visible.
 
@@ -95,7 +134,7 @@ The primary reference is the same direct-pool TWAP, approximately 3104.787691 US
 
 > Agents can reuse this evidence through three verified MCP tools: saved reports, live inspection, and allocation previews. Exact calls explain the decisions. MIRAGE gives an existing allocator a clear boundary: evidence first, allocation second.
 
-## 3:15–3:25 — published coverage beyond the demo
+## 3:30–3:40 — published coverage beyond the demo
 
 **Screen:** Open the public [697-market report](https://github.com/SergeySolovyev/icicpe-2026-event-time-mcdm-defi/blob/master/docs/mirage/UNIVERSE_FULL_2026-09-09.md). Show block `25938815` and the aggregate table, including `INSUFFICIENT`. This is a separate saved capture, not the four-market workbench report or a fresh browser scan.
 

@@ -82,6 +82,19 @@ the hash check. Missing data, indexing errors or incompatible metadata abort
 discovery. The UI may keep showing its saved report after that failure, with
 the saved/live label unchanged.
 
+Because the deployment uses `prune: auto`, a query pinned to a fixed historical
+block stops working once the retained range moves past it. Checked on
+11 September 2026, both evidence blocks in this repository, `25938082` and
+`25938815`, are already outside that range, while the same endpoint answered
+`_meta` normally at block `25949547` with `hasIndexingErrors: false`. Live
+discovery is unaffected: it always resolves the current finalized block through
+RPC rather than pinning a historical number. The recorded discoveries are also
+unaffected, because the market IDs behind both reports are preserved in the
+committed snapshots and replay offline. What no longer works is reproducing
+either historical block from the live endpoint. See
+[the subgraph README](../../subgraph/README.md) for the exact error and an
+unpinned query that a reviewer can run today.
+
 The [universe capture tools](UNIVERSE_CAPTURE.md) preserve a discovery manifest
 and one raw checkpoint per market. They resume missing captures at the original
 block, report failures explicitly and retain an accounting-only row when its

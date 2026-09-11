@@ -1,5 +1,14 @@
 # Claude Code — Project Memory for `predictive-mcdm-defi`
 
+> **Scope note, added 11 September 2026.** This file records the conventions of the
+> pre-event HSE coursework project that produced this repository's allocator baseline
+> (commit `520b676` and earlier). It arrived in the repository's first commit `327cf6e`
+> on 14 May 2026 and does not cover the MIRAGE extension built for ETHOnline 2026,
+> whose first commit is `e56cd7f` on 9 September 2026. For MIRAGE see
+> [`docs/mirage/AI_USE.md`](docs/mirage/AI_USE.md) and
+> [`docs/mirage/ARCHITECTURE.md`](docs/mirage/ARCHITECTURE.md).
+
+
 This file is loaded automatically when Claude works in this repo. It captures
 project-specific conventions, blockers, and "do/don't" rules accumulated
 during development.

@@ -117,10 +117,40 @@ The first version's direct-first policy was too restrictive for the selected wst
 
 At Ethereum block **25938082**, hash `0x7647a0738f03a46dd0c957cca4664d73f9bcc7c981405a8ccb00e3bd08ede2cb`, both candidates sold exactly **3220832145173417247 wstETH base units** (3.220832145173417247 wstETH). This amount represents the declared 10,000-USDC scenario at the unchanged reference TWAP of 3104.7876912758 USDC per wstETH.
 
-| Candidate | Quoted output in USDC | Fee-inclusive impact against its own spot |
-|---|---:|---:|
-| Direct wstETH/USDC, fee 500 | 5927.556111 | 4084.05569 bps |
-| wstETH/WETH, fee 100 → WETH/USDC, fee 500 | 10007.772538 | 6.38730 bps |
+| Candidate | Quoted output in USDC | Fee-inclusive impact against its own spot | Shortfall against the primary TWAP | Hops and fees | Initialized ticks crossed |
+|---|---:|---:|---:|---|---:|
+| Direct wstETH/USDC, fee 500 | 5927.556111 | 4084.05569 bps | 4072.44389 bps | 1 hop, 500 | 9 |
+| wstETH/WETH, fee 100 → WETH/USDC, fee 500 | 10007.772538 | 6.38730 bps | -7.77254 bps | 2 hops, 100 + 500 | 1 per leg |
+
+### Why the direct quote is not simply wrong
+
+The reason to believe the low direct number is in the quoter's own output, not in
+the reference price:
+
+- The direct hop crossed **nine initialized ticks** to fill this input, while each
+  WETH leg crossed **one**. That is what exhausting concentrated liquidity looks
+  like at the tick level.
+- The route that wins is the **more expensive** one. Two hops at 100 and 500 pay
+  6 bps in pool fees against the direct pool's 5, and still return about 69 % more
+  USDC. "You compared a cheaper route" does not explain the gap.
+- Neither candidate's `sqrtPriceX96After` approaches the QuoterV2 default price
+  boundary, so both quotes accepted the entire input rather than returning a
+  truncated fill.
+- Of the four canonical fee tiers, only 500 and 3000 direct pools exist for this
+  pair, and the fee-500 pool held about 22 times the harmonic liquidity of the
+  fee-3000 pool. The direct candidate is the best direct pool available, not a
+  deliberately weak one.
+
+### What this comparison does not establish
+
+The scenario size is derived from the direct pool's own TWAP: `amount_in_raw =
+scenario / twap * 10 ** decimals` in [`uniswap.py`](../../mirage/chain/uniswap.py).
+So the statement "the TWAP values this input near 10,000 USDC" is true by
+construction and is **not** independent confirmation of anything. The load-bearing
+evidence is quote against quote at one identical raw input at one block. It does
+not establish that this pool is chronically thin, does not model MEV or sandwiching
+on a real execution, and does not consider a router splitting the sale across both
+pools at once, which could beat either single route.
 
 The WETH path uses `0x109830a1aaad605bbf02a9dfa7b0b92ec2fb7daa` and `0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640`. Its TWAP is 3109.1372205309 and its spot is 3109.1868293538 USDC per wstETH. The new policy selects this path and passes the specified-size exit check; the old direct-only policy blocks it. This difference describes supported route execution, not overall market safety.
 
