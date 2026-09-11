@@ -51,6 +51,26 @@ The release operator inspected the actual public DOM, screenshot and visible raw
 JSON containing the block hash. No funds moved. This one fresh capture has not been
 independently reread through two providers.
 
+### Later live check, 11 September 2026
+
+The same deployed release answered a second public live check, recorded because the
+previous one above was two days old. `POST /api/scan` for the WETH market
+`0x94b823e6bd8ea533b4e33fbc307faea0b307301bc48763acc4d4aa4def7636cd` at `10000` USDC
+returned HTTP 202, and `/api/status` moved from `Discovering USDC markets through The
+Graph` to `Live Graph discovery and block-pinned RPC checks complete` in under a
+minute. The resulting report was `the-graph` sourced with **699 discovered IDs and one
+inspected market** at block `25952873`, hash
+`0xa1a4b3af83e9a651d6ee0d70a2267abac70af7d80fd09cfb3102307463ac5b18`, indexed block
+`25952957`. The market returned **PASS** with `accounting_observed`,
+`oracle_reference_agreement`, `reference_observed` and `exit_size_quoted` all passing.
+
+Discovery returning 699 rather than the 697 of the saved captures is expected: markets
+are created as the chain advances. This is one visitor-session live capture on free
+public RPC endpoints; it is ephemeral, it does not replace the saved snapshots, and it
+has not been reread through a second provider. Before the same check, the idle instance
+served a cold first request that showed the `Evidence unavailable` banner; a reload
+after wake cleared it and the saved four-market report rendered normally.
+
 The operator then clicked **Load demo**. At 12:22 UTC, the public DOM confirmed
 **Saved evidence**, block `25938082`, 697 discovered IDs and four inspected markets:
 PAXG BLOCK, deUSD INSUFFICIENT, wstETH INSUFFICIENT and WETH PASS. The amount was

@@ -85,14 +85,18 @@ metrics, so open **Inspect measurements** once to show them. The selected route'
 own values appear as named rows there; the direct candidate's appear inside the
 `candidate routes` JSON on the same panel:
 
-| Item | Value | Where |
+| Item | Value | On-screen label |
 |---|---:|---|
-| Selected route's fee-inclusive impact against its spot | 6.39 bps | named metric row |
-| WETH route's execution shortfall against the primary TWAP | -7.77 bps | named metric row |
-| Direct route's execution shortfall against the primary TWAP | 4072.44 bps | `candidate routes` JSON |
-| Exit policy's configured threshold | 500 bps | named metric row |
-| Direct route | 1 hop, fee 500, 9 initialized ticks crossed | `candidate routes` JSON |
-| WETH route | 2 hops, fees 100 and 500, 1 tick per leg | `candidate routes` JSON |
+| Selected route's fee-inclusive impact against its spot | 6.39 bps | `price impact bps vs spot` |
+| WETH route's execution shortfall against the primary TWAP | -7.77 bps | `execution shortfall bps vs twap` |
+| Exit policy's configured threshold | 500 bps | `max price impact bps` |
+| Direct route's execution shortfall against the primary TWAP | 4072.44 bps | inside `candidate routes` |
+| Direct route | 1 hop, fee 500, 9 initialized ticks crossed | inside `candidate routes` |
+| WETH route | 2 hops, fees 100 and 500, 1 tick per leg | inside `candidate routes` |
+
+The labels render with spaces, not underscores. The exit-depth finding's panel is the
+one that opens as **Inspect measurements (17)**; `candidate routes` is the last entry
+in it and prints both candidates as pretty JSON.
 
 The metrics panel prints these at full precision, for example
 `4072.4438889999999985662...`, not rounded. Say the rounded value and let the
