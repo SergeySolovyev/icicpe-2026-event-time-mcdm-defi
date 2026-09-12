@@ -53,6 +53,41 @@ comparison at one block. Fees are included; gas, future price changes and full
 liquidator economics are not. It does not prove that every position in the market
 can be liquidated or that this is the best route across every venue.
 
+## Is the Chainlink part a real integration or a price display?
+
+It is inside contract logic and it changes contract state. `MirageGate.submitDecision`
+calls `latestRoundData()` itself, measures the deviation between the reference price
+MIRAGE used and the live answer, and writes a verdict to storage. Nothing is shown in a
+frontend and then called an integration.
+
+The direction is the part worth checking: the feed can only make the outcome stricter. A
+proposed `Allow` that disagrees beyond the bound is stored as `Blocked` and flagged
+`vetoedByFeed`; a proposed `Blocked` is always stored as `Blocked`. No feed answer turns
+a `Blocked` into an `Allow`. A stale feed reverts the call rather than recording a
+decision on a price of unknown age.
+
+`ExecutionGuard.enter` is what stops this being a log line: it reverts unless the gate
+holds a fresh `Allow` for that exact market and that exact amount. After publishing, an
+entry for 10,000 USDC succeeds and the same entry for 20,000 reverts, because the saved
+evidence does not cover the larger size.
+
+**Show:** [CHAINLINK.md](CHAINLINK.md), [MirageGate](../../contracts/src/MirageGate.sol),
+[ExecutionGuard](../../contracts/src/ExecutionGuard.sol). Limits: deployed to Sepolia,
+not mainnet; the evidence is read from mainnet while the feed is on Sepolia; the guard
+holds no funds; the MIRAGE engine itself is unchanged and still signs nothing.
+
+## Why does the publisher refuse some markets?
+
+Because a feed only describes one asset. An ETH/USD feed says nothing about wstETH, and
+comparing them would report the wstETH premium, roughly twenty percent, as a price
+disagreement. Every wstETH entry would be vetoed for a reason unrelated to risk.
+
+The publisher declares which collateral each feed covers and rejects anything outside it
+with an explanation instead of publishing a meaningless number. Widening coverage means
+adding the correct feed per collateral, not loosening the check.
+
+**Show:** `FEED_COVERAGE` in [the publisher](../../scripts/mirage_chainlink_publish.py).
+
 ## Why should I believe the low direct quote instead of assuming a bug?
 
 Because the quoter's own output explains it. Filling that input took **nine

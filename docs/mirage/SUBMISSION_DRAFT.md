@@ -85,6 +85,22 @@ The same discovery-and-evidence pipeline also completed a separate capture of al
 
 The [official Graph criteria](https://ethglobal.com/events/ethonline2026/prizes/the-graph) require a meaningful agent/application workflow using live Graph data, public documentation, and a two-to-four-minute demonstration. This entry supplies reusable MCP tools and demonstrates their decision effect in the existing allocator. It does not claim an integrated LLM or eligibility for the separate composable-products prize on the strength of this one subgraph.
 
+## Chainlink — sponsor answer
+
+**Prize:** Best Chainlink-Powered Upgrade (Continuity Track).
+
+MIRAGE decides offchain and stays read-only. The upgrade takes one finished verdict for one market at one exact sale size and records it in [`MirageGate`](../../contracts/src/MirageGate.sol) on Sepolia, where a Chainlink price feed checks it before it is stored. `submitDecision` calls `latestRoundData()` inside contract logic, measures the deviation between the reference price MIRAGE used and the live answer, and writes the verdict to storage. This is a state change driven by Chainlink data, not a feed value rendered in a frontend.
+
+The feed can only make the outcome stricter. A proposed `Allow` that disagrees beyond the configured bound is stored as `Blocked` and flagged `vetoedByFeed`; a proposed `Blocked` is always stored as `Blocked`. No feed answer converts a `Blocked` into an `Allow`. A stale feed reverts the call instead of recording a decision on a price of unknown age.
+
+[`ExecutionGuard`](../../contracts/src/ExecutionGuard.sol) makes the recorded flag load-bearing rather than decorative: `enter` reverts with `EntryNotAllowed` unless the gate holds a fresh `Allow` for that exact market and that exact amount. Published from the same recorded evidence, an entry for 10,000 USDC succeeds and the same entry for 20,000 reverts, because the saved sale quote does not cover the larger size. That is the offchain product's central property, carried into the contract and observable on a block explorer.
+
+How it improves the existing project: before this, the verdict lived only inside our process, and the price our reasoning rested on was never checked by anything independent. Now the decision is durable, readable by whatever executes next, and subject to a second opinion from a source we do not control.
+
+Relevant source: [MirageGate](../../contracts/src/MirageGate.sol), [ExecutionGuard](../../contracts/src/ExecutionGuard.sol), [tests](../../contracts/test/MirageGate.t.sol), [publisher](../../scripts/mirage_chainlink_publish.py), [deployment runbook and limits](CHAINLINK.md). 21 Foundry tests cover both veto directions, stale and non-positive answers, access control, the amount binding, decision ageing and each guard path, including a fuzz test asserting that a stored `Allow` implies the deviation stayed within the bound.
+
+Scope stated plainly: the contracts are on Sepolia, not mainnet; MIRAGE's evidence is read from mainnet while the consulted feed is on Sepolia, so the measured deviation includes ordinary movement between those two contexts; the guard holds no funds and this prototype never transfers or swaps value; and the publisher refuses any market whose collateral the feed does not describe, because an ETH/USD feed says nothing about wstETH.
+
 ## Uniswap Foundation — sponsor answer
 
 **Prize:** Best Uniswap Stack Contribution.

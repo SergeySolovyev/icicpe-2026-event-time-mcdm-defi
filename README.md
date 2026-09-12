@@ -125,6 +125,28 @@ future reports. It does not force liquidation of an existing position, rerank
 the candidates, or select an alternative destination. Unmapped venues are
 explicitly outside its coverage.
 
+## Recording the decision onchain with Chainlink
+
+The engine above decides offchain and stays read-only. A separate, optional step
+publishes one finished verdict to [`MirageGate`](contracts/src/MirageGate.sol) on
+Sepolia, where a **Chainlink price feed checks it independently** before it is stored.
+
+The feed can only make the outcome stricter. `submitDecision` reads
+`latestRoundData()` itself, measures the disagreement with the reference price MIRAGE
+used, and stores a proposed `Allow` as `Blocked` when that exceeds the bound. A proposed
+`Blocked` stays `Blocked`; no feed answer ever turns one into an `Allow`. A stale feed
+reverts the call instead of recording a decision on a price of unknown age.
+
+[`ExecutionGuard`](contracts/src/ExecutionGuard.sol) is what keeps this from being a log
+line: `enter` reverts unless the gate holds a fresh `Allow` for that exact market **and
+that exact amount**, so a decision taken for 10,000 USDC cannot authorise 20,000.
+
+Nothing in this repository stores or reads a private key. The publisher
+([scripts/mirage_chainlink_publish.py](scripts/mirage_chainlink_publish.py)) prints the
+transaction for the operator to send, and refuses outright when the feed does not
+describe the market's collateral. Details, the deployment runbook and the limits are in
+[docs/mirage/CHAINLINK.md](docs/mirage/CHAINLINK.md).
+
 See [the architecture and local API](docs/mirage/ARCHITECTURE.md) for the complete
 data path and the boundary between collected evidence, replay and policy.
 
