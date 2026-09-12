@@ -133,6 +133,34 @@ MIRAGE's recorded reference price for the WETH market at block 25938082 is
 `2500.66364819905311430` USDC per WETH, which the publisher scales to `250066364819` at
 the feed's eight decimals.
 
+## The whole sequence, rehearsed end to end
+
+Every step above was executed on 13 September 2026 against a local Anvil fork of Sepolia
+at block 11691510, using Anvil's own published development key. The fork serves the real
+aggregator at `0x694AA1769357215DE4FAC081bf1f309aDC325306`; `description()` returned
+`ETH / USD` and the contract read the answer `252210000000` itself inside `submitDecision`.
+
+| Step | Observed |
+|---|---|
+| Deploy both contracts | succeeded |
+| Publish 10,000 USDC | stored `Allow`, deviation **84 bps**, `vetoedByFeed` false |
+| Publish 20,000 USDC | stored `Blocked`, same evidence, same block |
+| `enter(marketId, 10000000000)` | succeeded, `entryCount` 1 |
+| `enter(marketId, 20000000000)` | reverted `EntryNotAllowed` |
+
+84 bps is the gap between MIRAGE's recorded mainnet reference of 2500.66 USDC per WETH
+and the live testnet answer of 2522.10 — ordinary movement between a recorded mainnet
+block and a live testnet feed, comfortably inside the 500 bps bound, so the `Allow`
+survived. The `Blocked` record carries `vetoedByFeed` false, which is the honest reading:
+the offchain gate refused that size, the feed did not disagree. The contract keeps those
+two reasons distinct rather than collapsing them into one flag.
+
+Full record: [CHAINLINK_FORK_REHEARSAL_2026-09-13.json](CHAINLINK_FORK_REHEARSAL_2026-09-13.json).
+
+This is a fork, not the live network: the addresses above are fork addresses and mean
+nothing onchain. What it establishes is that the contracts compile, deploy, read the real
+feed, and gate execution in the intended direction.
+
 ## Limits
 
 - The contracts are deployed to Sepolia, not to Ethereum mainnet.

@@ -147,6 +147,10 @@ transaction for the operator to send, and refuses outright when the feed does no
 describe the market's collateral. Details, the deployment runbook and the limits are in
 [docs/mirage/CHAINLINK.md](docs/mirage/CHAINLINK.md).
 
+The whole sequence — deploy, publish both verdicts, admit 10,000 and revert on 20,000 —
+was rehearsed against the real aggregator on a local fork of Sepolia before any public
+deployment: [the rehearsal record](docs/mirage/CHAINLINK_FORK_REHEARSAL_2026-09-13.json).
+
 See [the architecture and local API](docs/mirage/ARCHITECTURE.md) for the complete
 data path and the boundary between collected evidence, replay and policy.
 

@@ -1,0 +1,63 @@
+{
+  "recorded_at_moscow": "2026-09-13T00:35:00+03:00",
+  "what": "Full dry run of the Chainlink deployment on a local Anvil fork of Sepolia",
+  "why": "To prove the owner's runbook works before he spends his own gas and time on it",
+  "network": "anvil --fork-url https://ethereum-sepolia-rpc.publicnode.com, fork block 11691510",
+  "keys": "Anvil's published development key only. The owner's key was never involved.",
+  "chainlink_feed": {
+    "address": "0x694AA1769357215DE4FAC081bf1f309aDC325306",
+    "description_on_fork": "ETH / USD",
+    "answer_observed": 252210000000,
+    "note": "$2522.10, read by the contract itself during submitDecision"
+  },
+  "deployed_on_fork": {
+    "MirageGate": "0xe8a133308f421aba4C468A4eAA1b0bc88ADb674B",
+    "ExecutionGuard": "0x999D64A27aBf102b4409d32444702dfD6700ee02",
+    "publisher": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+    "maxDeviationBps": 500,
+    "maxFeedAge": 10800,
+    "maxDecisionAge": 3600
+  },
+  "decisions_recorded": [
+    {
+      "amount_usdc": 10000,
+      "amount_raw": 10000000000,
+      "verdict": "Allow",
+      "verdict_enum": 1,
+      "evidence_block": 25938082,
+      "reference_scaled": 250066364819,
+      "chainlink_answer": 252210000000,
+      "deviation_bps": 84,
+      "vetoed_by_feed": false,
+      "tx_status": "success",
+      "is_allowed": true
+    },
+    {
+      "amount_usdc": 20000,
+      "amount_raw": 20000000000,
+      "verdict": "Blocked",
+      "verdict_enum": 2,
+      "evidence_block": 25938082,
+      "reference_scaled": 250066364819,
+      "chainlink_answer": 252210000000,
+      "deviation_bps": 84,
+      "vetoed_by_feed": false,
+      "tx_status": "success",
+      "is_allowed": false,
+      "note": "Blocked by the offchain gate because the saved quote does not cover this size, NOT by the feed. The record distinguishes the two."
+    }
+  ],
+  "guard_behaviour": {
+    "enter_10000": "status 1 success, Entered event, entryCount 1",
+    "enter_20000": "reverted with EntryNotAllowed(0x94b823..., 20000000000)",
+    "entry_count_after": 1
+  },
+  "deviation_note": "84 bps between MIRAGE's recorded mainnet reference of 2500.66364819905 USDC per WETH and the live Sepolia feed answer of 2522.10. Well inside the 500 bps bound, so the Allow survived. This spread is ordinary price movement between a recorded mainnet block and a live testnet feed, not a disagreement about value.",
+  "defect_found": {
+    "symptom": "forge script and forge create both failed with 'No contract bytecode' / 'does not contain bytecode'",
+    "cause": "Running only `forge test` leaves artifacts in out/ that carry the ABI but no bytecode object, so a deployment cannot find code to send.",
+    "fix": "Run `forge build --force` before deploying. Added as an explicit step to the runbook.",
+    "impact_if_unfixed": "The owner would have hit an opaque error at deploy time with hours left."
+  },
+  "conclusion": "The runbook works end to end. Only the owner's key, gas and the real Sepolia network remain."
+}

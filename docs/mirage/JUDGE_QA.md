@@ -76,6 +76,19 @@ evidence does not cover the larger size.
 not mainnet; the evidence is read from mainnet while the feed is on Sepolia; the guard
 holds no funds; the MIRAGE engine itself is unchanged and still signs nothing.
 
+## Has any of this actually run, or is it unit tests and a plan?
+
+The full sequence ran on 13 September 2026 against a local Anvil fork of Sepolia at block
+11691510, which serves the real aggregator. Both contracts deployed, the 10,000 USDC
+decision stored `Allow` at 84 bps deviation, the 20,000 decision stored `Blocked`, and
+`ExecutionGuard.enter` then succeeded for the first and reverted with `EntryNotAllowed`
+for the second. The rehearsal also caught a real defect — a deployment from `forge test`
+artifacts fails with `No contract bytecode` — which is now a step in the runbook.
+
+**Show:** [fork rehearsal record](CHAINLINK_FORK_REHEARSAL_2026-09-13.json). State the
+limit plainly: a fork is not the live network, and those addresses exist only on the fork.
+It establishes that the mechanism works, not that it is live on a public chain.
+
 ## Why does the publisher refuse some markets?
 
 Because a feed only describes one asset. An ETH/USD feed says nothing about wstETH, and

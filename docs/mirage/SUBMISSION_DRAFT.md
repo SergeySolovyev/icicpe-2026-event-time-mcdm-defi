@@ -99,6 +99,10 @@ How it improves the existing project: before this, the verdict lived only inside
 
 Relevant source: [MirageGate](../../contracts/src/MirageGate.sol), [ExecutionGuard](../../contracts/src/ExecutionGuard.sol), [tests](../../contracts/test/MirageGate.t.sol), [publisher](../../scripts/mirage_chainlink_publish.py), [deployment runbook and limits](CHAINLINK.md). 21 Foundry tests cover both veto directions, stale and non-positive answers, access control, the amount binding, decision ageing and each guard path, including a fuzz test asserting that a stored `Allow` implies the deviation stayed within the bound.
 
+Deployment: `MirageGate` at `<ADDR_GATE>`, `ExecutionGuard` at `<ADDR_GUARD>` on Sepolia; the two decisions are transactions `<TX_ALLOW>` and `<TX_BLOCK>`, and the refused entry is `<TX_REVERT>`.
+
+Before any of that touched the public network, the whole sequence was rehearsed on a local Anvil fork of Sepolia at block 11691510, which serves the real aggregator. Both contracts deployed, the 10,000 decision stored `Allow` at 84 bps measured deviation, the 20,000 decision stored `Blocked`, and the guard then admitted the first and reverted `EntryNotAllowed` on the second. The record is [CHAINLINK_FORK_REHEARSAL_2026-09-13.json](CHAINLINK_FORK_REHEARSAL_2026-09-13.json). A fork is not the live network and those addresses exist only on it; what it establishes is that the mechanism behaves as described.
+
 Scope stated plainly: the contracts are on Sepolia, not mainnet; MIRAGE's evidence is read from mainnet while the consulted feed is on Sepolia, so the measured deviation includes ordinary movement between those two contexts; the guard holds no funds and this prototype never transfers or swaps value; and the publisher refuses any market whose collateral the feed does not describe, because an ETH/USD feed says nothing about wstETH.
 
 ## Uniswap Foundation — sponsor answer
