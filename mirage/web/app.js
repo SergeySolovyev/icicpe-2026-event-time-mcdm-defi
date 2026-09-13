@@ -79,8 +79,8 @@
   function reportBlock() { return state.report?.block_number; }
   function utcTime(timestamp) { const value = Number(timestamp); if (timestamp === undefined || timestamp === null || !Number.isFinite(value)) return null; const date = new Date(value * 1000); return Number.isNaN(date.getTime()) ? null : date.toISOString().slice(0, 16).replace("T", " ") + " UTC"; }
   function validId(id) { return typeof id === "string" && /^0x[0-9a-fA-F]{64}$/.test(id); }
-  function showNotice(message, retry = false) { $("notice-message").textContent = message; $("retry-button").hidden = !retry; $("notice").hidden = false; }
-  function hideNotice() { $("notice").hidden = true; }
+  function showNotice(message, retry = false) { $("notice-message").textContent = message; $("retry-button").hidden = !retry; $("restore-demo-button").hidden = true; $("notice").hidden = false; }
+  function hideNotice() { $("notice").hidden = true; $("restore-demo-button").hidden = true; }
   function toast(message) { $("toast").textContent = message; $("toast").hidden = false; clearTimeout(toast.timer); toast.timer = setTimeout(() => { $("toast").hidden = true; }, 2200); }
   async function copy(value) { try { await navigator.clipboard.writeText(value); toast("Copied to clipboard"); } catch { toast("Copy unavailable. Select the evidence text instead."); } }
   async function api(url, options = {}) {
@@ -461,37 +461,26 @@
     if (kind === "error") showNotice(message);
     renderProvenance();
   }
-  // A live check produces evidence at a NEW block. A snapshot is validated against one
-  // anchor, so that row cannot be merged into a saved report from an earlier block — the
-  // format refuses it, deliberately. So report the fresh verdict on its own terms and put
-  // the saved report back, instead of leaving the ledger holding a single row.
+    // A live check produces evidence at a new block, and a snapshot is validated against
+  // one anchor, so it cannot be merged into the saved report. Earlier this restored the
+  // saved report automatically, which threw away the very evidence the visitor asked for:
+  // a preview at their own amount then reported "not checked for this amount" again.
+  // So the live report stays active, and the way back is one visible click.
   async function finishRecheck() {
     const id = state.recheckId;
     state.recheckId = null;
     if (!id) return false;
-    // Keep the freshly checked market before the saved report replaces it. The visitor
-    // asked for this evidence; reporting only a one-line verdict and discarding the rest
-    // answers a question they did not ask.
-    const live = state.markets.find((market) => market.market_id === id);
-    const fresh = live ? JSON.parse(JSON.stringify(live)) : null;
-    const amount = $("allocation-amount").value.trim().replaceAll(",", "");
+    const fresh = state.markets.find((market) => market.market_id === id);
     const name = fresh ? marketName(fresh) : shortHex(id, 5, 4);
     const verdict = fresh ? safeSeverity(fresh.severity) : "unknown";
     const block = state.report && state.report.block_number;
-    try {
-      await api("/api/demo", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
-      await loadReport();
-      resetPreview();
-    } catch (error) {
-      showNotice(`Live re-check of ${name} finished, but the saved report could not be restored: ${error.message}`, true);
-      return true;
-    }
+    const amount = $("allocation-amount").value.trim().replaceAll(",", "");
     const at = block != null ? ` at block ${grouped(block)}` : "";
     const forAmount = amount ? ` for ${grouped(amount)} USDC` : "";
-    const back = state.report && state.report.block_number != null ? ` The ledger keeps the saved report at block ${grouped(state.report.block_number)}, because evidence from a newer block cannot be mixed into an earlier one.` : "";
-    showNotice(`Live re-check of ${name}${forAmount}${at}: ${verdict.toUpperCase()}. Its full evidence is open on the right.${back}`);
+    showNotice(`Live check of ${name}${forAmount}${at}: ${verdict.toUpperCase()}. This report holds that one market, so a preview at this amount now has matching evidence.`);
     $("retry-button").hidden = true;
-    if (fresh) openDrawer(fresh, null);
+    $("restore-demo-button").hidden = false;
+    if (fresh) { setDestination(fresh.market_id); openDrawer(fresh, null); }
     return true;
   }
 
@@ -555,13 +544,16 @@
   $("allocation-amount").addEventListener("keydown", (event) => { if (event.key === "Enter") evaluate(); });
   $("evaluate-button").addEventListener("click", evaluate);
   $("scan-button").addEventListener("click", () => scan());
-  $("load-demo-button").addEventListener("click", async () => {
+  async function restoreSavedReport() {
     if (state.scanning) return;
     try {
       renderStatus(await api("/api/demo", {method: "POST", headers: {"Content-Type": "application/json"}, body: "{}"}));
       await loadReport(); resetPreview(); hideNotice();
+      $("restore-demo-button").hidden = true;
     } catch (error) { showNotice(error.message); }
-  });
+  }
+  $("load-demo-button").addEventListener("click", restoreSavedReport);
+  $("restore-demo-button").addEventListener("click", restoreSavedReport);
   $("add-market-toggle").addEventListener("click", () => {
     const open = $("add-market-form").hidden;
     $("add-market-form").hidden = !open;
