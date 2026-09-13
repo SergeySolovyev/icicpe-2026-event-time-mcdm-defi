@@ -17,8 +17,23 @@ def ratio(numerator: int, denominator: int) -> str | None:
         return format(Decimal(numerator) / Decimal(denominator), ".12f")
 
 
+def entry_raw(scenario_notional_loan) -> int | None:
+    """The proposed entry in loan-token base units, or None when unstated."""
+    if scenario_notional_loan is None:
+        return None
+    try:
+        with localcontext() as context:
+            context.prec = 60
+            units = Decimal(str(scenario_notional_loan)) * 1_000_000
+        if units != units.to_integral_value() or units <= 0:
+            return None
+        return int(units)
+    except Exception:
+        return None
+
+
 def detect(state: MarketState, *, evidence: tuple[Evidence, ...] = (),
-           max_share_price_multiple: int = 2) -> Finding:
+           max_share_price_multiple: int = 2, scenario_notional_loan=None) -> Finding:
     if type(max_share_price_multiple) is not int or max_share_price_multiple < 1:
         raise ValueError("Share-rate threshold must be a positive integer")
     values = (state.total_supply_assets, state.total_supply_shares,
@@ -48,6 +63,22 @@ def detect(state: MarketState, *, evidence: tuple[Evidence, ...] = (),
     if supply > 0 and supply == borrow:
         return Finding("no_free_liquidity", Severity.BLOCK,
                        "No pre-existing free liquidity; entry veto under MIRAGE policy", metrics, evidence)
+    # A market smaller than the entry cannot be assessed at that size. This is absence of
+    # a market, not evidence of danger, so it is INSUFFICIENT rather than BLOCK — but it
+    # still vetoes, because admitting it would mean calling a market safe on the strength
+    # of checks that never looked at how much is in it.
+    entry = entry_raw(scenario_notional_loan)
+    if entry is not None:
+        metrics["proposed_entry_raw"] = str(entry)
+        metrics["entry_over_supply"] = ratio(entry, supply) if supply else None
+        if supply == 0:
+            return Finding("market_holds_nothing", Severity.INSUFFICIENT,
+                           "This market holds nothing at this block; there is no market to assess for the "
+                           "proposed entry", metrics, evidence)
+        if entry > supply:
+            return Finding("entry_exceeds_market_supply", Severity.INSUFFICIENT,
+                           "The proposed entry exceeds this market's entire supply; the checks do not cover "
+                           "a market smaller than the ticket", metrics, evidence)
     if numerator > max_share_price_multiple * denominator:
         return Finding("elevated_share_exchange_rate", Severity.WARN,
                        "Elevated share exchange rate requires investigation; principal is unknown", metrics, evidence)

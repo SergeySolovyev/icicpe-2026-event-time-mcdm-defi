@@ -24,7 +24,8 @@ def _validate_source(anchor: BlockAnchor, source: dict):
             raise ValueError("Graph and RPC disagree on block hash")
 
 
-def report_for_rows(anchor: BlockAnchor, source: dict, rows: list[dict]) -> MarketReport:
+def report_for_rows(anchor: BlockAnchor, source: dict, rows: list[dict],
+                    scenario_notional_loan=None) -> MarketReport:
     _validate_source(anchor, source)
     if not rows:
         raise ValueError("Snapshot contains no market evidence")
@@ -48,7 +49,7 @@ def report_for_rows(anchor: BlockAnchor, source: dict, rows: list[dict]) -> Mark
         state = MarketState.decode(evidence[1].result)
         if params.loan_token != USDC:
             raise ValueError("Only USDC markets supported in this release")
-        findings = [detect(state, evidence=evidence)]
+        findings = [detect(state, evidence=evidence, scenario_notional_loan=scenario_notional_loan)]
         if "oracle" in row and "reference" in row:
             from .detectors import frozen_price, reference_price, exit_depth
             from .chain.uniswap import replay_reference
@@ -132,7 +133,8 @@ def report_from_snapshot(snapshot: dict) -> MarketReport:
     anchor = BlockAnchor(**snapshot["anchor"])
     if anchor.chain_id != 1:
         raise ValueError("Only Ethereum mainnet snapshots supported")
-    return report_for_rows(anchor, snapshot["source"], snapshot["rows"])
+    return report_for_rows(anchor, snapshot["source"], snapshot["rows"],
+                           scenario_notional_loan=snapshot.get("scenario_notional_loan"))
 
 
 def save_snapshot(path: Path, snapshot: dict):

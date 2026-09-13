@@ -97,7 +97,7 @@
     else if (checked === null) scope.textContent = "No completed sale quote is recorded for this market. Use the Check this market live button to request evidence for it.";
     else if (proposed === null) scope.textContent = `Recorded sale check: ${saleAmountLabel(checked)}. Enter a valid amount to compare.`;
     else if (proposed !== checked) scope.textContent = `Recorded sale check: ${saleAmountLabel(checked)}. The proposed ${saleAmountLabel(proposed)} is not checked. Use the Check this market live button.`;
-    else scope.textContent = `Recorded sale check: ${saleAmountLabel(checked)} at this report's block; matches this amount. The amount is checked against the Uniswap sale, not against this market's own liquidity.`;
+    else scope.textContent = `Recorded sale check: ${saleAmountLabel(checked)} at this report's block; matches this amount.`;
   }
   function reportLive() { return state.report?.source?.kind === "the-graph" && state.report?.capture_mode === "live"; }
   function reportBlock() { return state.report?.block_number; }
@@ -132,10 +132,10 @@
     // The saved set is curated, not a sample: it holds every market that passed, so the
     // Blocked/insufficient tile above reads far milder than the universe it came from.
     // Saying so here is the difference between a curated demo and a cherry-picked one.
-    const curated = graph && discoveryCount === 697 && state.markets.length === 50;
+    const curated = graph && discoveryCount === 697 && state.markets.length === 47;
     $("origin-note").textContent = graph && discoveryCount !== undefined
       ? (curated
-          ? `697 discovered; 50 shown — every market that passed, plus the largest refusals. Across all 697: 32 pass, 3 warn, 95 blocked, 567 insufficient evidence.`
+          ? `697 discovered; 47 shown — every market that passed, plus the largest refusals. Across all 697 at a 10,000 USDC entry: 11 pass, 95 blocked, 591 insufficient evidence.`
           : `${grouped(discoveryCount)} discovered; ${grouped(state.markets.length)} inspected`)
       : graph ? "Graph discovery at the recorded block" : "Fixed-block chain observations";
     $("source-description").textContent = live
@@ -433,7 +433,7 @@
     // "for the checked amount" once implied a comparison no check performs: the amount
     // reaches the Uniswap sale and nothing else. Accounting and oracle are size-blind, so
     // a near-empty market passes. Say that here rather than let the sentence imply it.
-    if (gated && action?.kind === "switch") return "Accounting, oracle and exit-route checks passed for this sale size on Uniswap. MIRAGE does not compare the amount against this market's own liquidity or borrow demand — read the Available USDC column before you act.";
+    if (gated && action?.kind === "switch") return "Accounting, oracle and exit-route checks passed at this size, and the market is larger than the entry.";
     if (!gated && action?.kind === "switch") {
       const rate = payload.candidates?.find((c) => c.market_id === payload.market_id)?.supply_apr;
       if (rate !== null && rate !== undefined) return `The original policy proposes this market at a ${percentage(rate)} annualized accrual-rate indication. This is not a yield forecast.`;

@@ -1,6 +1,6 @@
 {
   "snapshot": "mainnet-top50-25938815-diagnostics-v2.json.gz",
-  "sha256": "844c2e9c866aaf00d02262cee3bd714cace0462a00f38cd14b01f9132a1e9e50",
+  "sha256": "e2ad2493d38fb66de17a4204f4d575804931bde45313344a8ace7e7eedeef3b7",
   "block": 25938815,
-  "scope": "50 inspected markets selected from the 697 Graph-discovered USDC universe at block 25938815: every market that passed (32), every warning (3), and the largest blocked (8) and insufficient (7) cases; hypothetical 10000 USDC sale"
+  "scope": "47 inspected markets selected from the 697 Graph-discovered USDC universe at block 25938815: every market that passed (11), every warning (0), and the largest blocked (20) and insufficient (16) cases; hypothetical 10000 USDC entry"
 }
