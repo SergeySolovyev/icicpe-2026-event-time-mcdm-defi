@@ -163,10 +163,24 @@
       const liquidity = node("td", `number market-value${String(metrics.available_liquidity_raw) === "0" ? " value-zero" : ""}`, usdc(metrics.available_liquidity_raw));
       liquidity.title = `${usdc(metrics.available_liquidity_raw, 6)} USDC available at this block`;
       const share = node("td", "number rate-value", ratio(metrics.share_price_multiple_vs_initial));
-      const actionCell = node("td"), inspect = node("button", "market-chevron", "›");
+      const actionCell = node("td", "market-actions");
+      // Re-checking one market is an action on that market, so it lives on its row
+      // rather than on the page-level button. It uses the amount currently proposed,
+      // because evidence is only valid for the size it was gathered for.
+      const recheck = node("button", "market-recheck", "↻");
+      recheck.type = "button";
+      recheck.setAttribute("aria-label", `Re-check ${marketName(market)} live at the proposed amount`);
+      recheck.title = "Re-check this market live at the amount proposed below";
+      recheck.disabled = !!state.scanning;
+      recheck.addEventListener("click", (event) => {
+        event.stopPropagation();
+        setDestination(market.market_id);
+        scan(market.market_id);
+      });
+      const inspect = node("button", "market-chevron", "›");
       inspect.type = "button"; inspect.setAttribute("aria-label", `Inspect ${marketName(market)} market evidence`); inspect.title = "Inspect evidence";
       inspect.addEventListener("click", (event) => { event.stopPropagation(); openDrawer(market, inspect); });
-      actionCell.append(inspect); row.append(nameCell, admission, liquidity, share, actionCell);
+      actionCell.append(recheck, inspect); row.append(nameCell, admission, liquidity, share, actionCell);
       row.addEventListener("click", () => openDrawer(market, inspect)); body.append(row);
     }
     $("table-empty").hidden = list.length > 0;
