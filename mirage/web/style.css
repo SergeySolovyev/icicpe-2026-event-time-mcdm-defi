@@ -52,3 +52,8 @@
 /* The provenance note carries the selection rule and the real 697-market distribution.
    Truncating it to an ellipsis hides exactly the part that keeps a curated demo honest. */
 .strip-source .strip-note{white-space:normal;overflow:visible;text-overflow:clip;line-height:1.55;max-width:34ch}
+
+/* The MCP strip sits directly above "Built with"; one shared band, not two boxes. */
+.agent-strip{border-bottom:0;padding-bottom:20px;margin-bottom:0}
+.agent-note{font-size:11px;line-height:1.65;color:#6e8174;max-width:78ch;margin:-6px 0 16px}
+.agent-strip .partner-list strong code{font-size:12px;padding:2px 6px}

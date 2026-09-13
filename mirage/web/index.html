@@ -47,6 +47,28 @@
       <div class="strip-item strip-source"><span class="strip-label">Evidence origin</span><strong id="origin-label">—</strong><span class="strip-note" id="origin-note">A block is required for every report</span></div>
     </section>
 
+    <section class="partner-strip agent-strip" aria-label="How an AI agent uses MIRAGE">
+      <h2 class="partner-title">For AI agents</h2>
+      <p class="agent-note">MIRAGE is a Model Context Protocol server. This page is its human face: the browser and an agent run the same code and receive the same evidence, pinned to the same block. Three read-only tools. No key, no signing, nothing to approve.</p>
+      <ul class="partner-list">
+        <li>
+          <strong><code>get_saved_report</code></strong>
+          <span>Replays the saved snapshot and returns a summary sized for a context window. Every verdict and metric survives; the raw call data is named and counted, then withheld until the agent asks for it.</span>
+          <a href="https://github.com/SergeySolovyev/icicpe-2026-event-time-mcdm-defi/blob/master/mirage/mcp_server.py#L145" rel="noreferrer noopener" target="_blank">tool definition</a>
+        </li>
+        <li>
+          <strong><code>inspect_market</code></strong>
+          <span>Checks one market live at any entry size: The Graph discovery first, then finalized mainnet RPC at a pinned block. When the evidence is missing it returns a refusal, never a guess.</span>
+          <a href="https://github.com/SergeySolovyev/icicpe-2026-event-time-mcdm-defi/blob/master/mirage/mcp_server.py#L164" rel="noreferrer noopener" target="_blank">tool definition</a>
+        </li>
+        <li>
+          <strong><code>preview_saved_allocation</code></strong>
+          <span>Replays the original allocator beside the MIRAGE entry gate on saved evidence, so an agent can see exactly which positions the gate refuses and on what grounds.</span>
+          <a href="https://github.com/SergeySolovyev/icicpe-2026-event-time-mcdm-defi/blob/master/mirage/mcp_server.py#L213" rel="noreferrer noopener" target="_blank">tool definition</a>
+        </li>
+      </ul>
+    </section>
+
     <section class="partner-strip" aria-label="Partner technologies and how this project uses them">
       <h2 class="partner-title">Built with</h2>
       <ul class="partner-list">
