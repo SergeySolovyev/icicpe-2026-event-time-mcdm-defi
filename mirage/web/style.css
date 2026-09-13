@@ -43,3 +43,8 @@
 .partner-list a{font-size:10px;color:#3d705f;margin-top:auto;padding-top:4px}
 .partner-list a:hover{text-decoration:underline}
 @media(max-width:850px){.partner-list{grid-template-columns:1fr;gap:18px}.partner-list li{padding-left:14px;border-left:1px solid #dfe5dc}.partner-list li:first-child{padding-left:14px;border-left:1px solid #dfe5dc}}
+
+/* A ticket that dwarfs the market it enters. The graded checks do not weigh size, so the
+   decision panel says it in words and marks it here. */
+.gated-step.is-outsized strong{color:#ffc6a7}
+.gated-step.is-outsized .step-marker{color:#ffc6a7;border-color:#8a5b46}

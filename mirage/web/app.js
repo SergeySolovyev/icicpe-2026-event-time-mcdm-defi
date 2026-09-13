@@ -39,6 +39,30 @@
   function percentage(value) { const parsed = Number(value); return value !== null && value !== undefined && Number.isFinite(parsed) ? `${(parsed * 100).toFixed(2)}%` : "—"; }
   function marketName(market) { return market?.display?.collateral_symbol || KNOWN[market?.market_id?.toLowerCase()] || shortHex(market?.market_id, 5, 4); }
   function loanName(market) { return market?.display?.loan_symbol || "USDC"; }
+  // No check compares the proposed amount to the market's size: the amount reaches only
+  // the Uniswap sale. That gap is real and is on the roadmap. Until it is a graded check,
+  // the product must at least SAY it, with the number, where the decision is made.
+  function ticketVsMarket(market, proposedUnits) {
+    const metrics = metricValues(market);
+    const supplyRaw = metrics.stored_supply_assets_raw;
+    if (supplyRaw === undefined || supplyRaw === null || proposedUnits === null) return null;
+    let supply, ticket;
+    try { supply = BigInt(String(supplyRaw)); ticket = BigInt(proposedUnits); } catch { return null; }
+    if (ticket <= 0n) return null;
+    if (supply === 0n) {
+      return { level: "severe", text: "This market holds nothing at all. Your deposit would be the entire market, and nobody has entered it before you." };
+    }
+    // integer ratio to one decimal, no floats on token units
+    const tenths = (ticket * 10n) / supply;
+    const ratio = Number(tenths) / 10;
+    if (ratio >= 100) return { level: "severe", text: `Your ${grouped(fromUnits(ticket))} USDC is about ${grouped(Math.round(ratio))}× this market's entire supply of ${usdc(supplyRaw)} USDC. You would be the market.` };
+    if (ratio >= 10) return { level: "severe", text: `Your ${grouped(fromUnits(ticket))} USDC is about ${ratio.toFixed(1)}× this market's entire supply of ${usdc(supplyRaw)} USDC.` };
+    if (ratio >= 1) return { level: "caution", text: `Your ${grouped(fromUnits(ticket))} USDC is about ${ratio.toFixed(1)}× this market's entire supply of ${usdc(supplyRaw)} USDC — you would dominate it.` };
+    if (ratio >= 0.2) return { level: "caution", text: `Your ${grouped(fromUnits(ticket))} USDC would be roughly ${Math.round(ratio * 100)}% of this market's supply.` };
+    return null;
+  }
+  function fromUnits(units) { return (Number(units) / 1e6).toString().replace(/\.0+$/, ""); }
+
   function metricValues(market) { return Object.assign({}, ...(market?.findings || []).map((finding) => finding.metrics || {})); }
   function usdcUnits(value) {
     const text = String(value ?? "");
@@ -434,7 +458,16 @@
       $("original-action").textContent = actionLabel(original);
       $("original-rationale").textContent = actionExplanation(original, payload, false);
       $("gated-action").textContent = actionLabel(gated);
-      $("gated-rationale").textContent = actionExplanation(gated, payload, true);
+      let gatedText = actionExplanation(gated, payload, true);
+      // State the ticket against the market's own size at the point of decision. The
+      // graded checks do not weigh it, so if the product stays silent the visitor is
+      // left to read a 204% APR on a market holding one dollar and draw their own
+      // conclusion. Naming the ratio is the least this can honestly do today.
+      const chosen = state.markets.find((market) => market.market_id === state.selected);
+      const scale = chosen ? ticketVsMarket(chosen, usdcUnits($("allocation-amount").value.trim().replaceAll(",", ""))) : null;
+      if (scale) gatedText += " " + scale.text;
+      $("gated-rationale").textContent = gatedText;
+      document.querySelector(".gated-step").classList.toggle("is-outsized", !!scale && scale.level === "severe");
       document.querySelector(".gated-step").classList.toggle("is-blocked", gated?.kind === "hold" && original?.kind === "switch");
       $("allocator-json").textContent = JSON.stringify(payload, null, 2); $("allocator-raw").hidden = false;
       if (!original || !gated) { $("allocator-error").textContent = "The response did not contain both decisions. Inspect the response details."; $("allocator-error").hidden = false; }
