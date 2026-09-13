@@ -48,3 +48,7 @@
    decision panel says it in words and marks it here. */
 .gated-step.is-outsized strong{color:#ffc6a7}
 .gated-step.is-outsized .step-marker{color:#ffc6a7;border-color:#8a5b46}
+
+/* The provenance note carries the selection rule and the real 697-market distribution.
+   Truncating it to an ellipsis hides exactly the part that keeps a curated demo honest. */
+.strip-source .strip-note{white-space:normal;overflow:visible;text-overflow:clip;line-height:1.55;max-width:34ch}
