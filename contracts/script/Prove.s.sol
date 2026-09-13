@@ -22,7 +22,7 @@ import {ExecutionGuard} from "../src/ExecutionGuard.sol";
 ///      Run with the operator's own key. Nothing in this repository stores or reads one.
 ///
 ///        forge script script/Prove.s.sol:Prove \
-///          --rpc-url $SEPOLIA_RPC_URL --broadcast --interactive 1
+///          --rpc-url $SEPOLIA_RPC_URL --broadcast --interactives 1
 ///
 ///      Environment:
 ///        CHAINLINK_FEED     aggregator address (Sepolia ETH/USD: 0x694AA1769357215DE4FAC081bf1f309aDC325306)

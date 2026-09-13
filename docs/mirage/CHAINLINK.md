@@ -103,7 +103,7 @@ export CHAINLINK_FEED=0x694AA1769357215DE4FAC081bf1f309aDC325306   # Sepolia ETH
 
 cd contracts
 forge script script/Deploy.s.sol:Deploy \
-  --rpc-url $SEPOLIA_RPC_URL --broadcast --interactive 1
+  --rpc-url $SEPOLIA_RPC_URL --broadcast --interactives 1
 ```
 
 The script prints both addresses. Then produce each transaction:
