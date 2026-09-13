@@ -469,7 +469,12 @@
     const id = state.recheckId;
     state.recheckId = null;
     if (!id) return false;
-    const fresh = state.markets.find((market) => market.market_id === id);
+    // Keep the freshly checked market before the saved report replaces it. The visitor
+    // asked for this evidence; reporting only a one-line verdict and discarding the rest
+    // answers a question they did not ask.
+    const live = state.markets.find((market) => market.market_id === id);
+    const fresh = live ? JSON.parse(JSON.stringify(live)) : null;
+    const amount = $("allocation-amount").value.trim().replaceAll(",", "");
     const name = fresh ? marketName(fresh) : shortHex(id, 5, 4);
     const verdict = fresh ? safeSeverity(fresh.severity) : "unknown";
     const block = state.report && state.report.block_number;
@@ -482,9 +487,11 @@
       return true;
     }
     const at = block != null ? ` at block ${grouped(block)}` : "";
-    const back = state.report && state.report.block_number != null ? ` The ledger below is the saved report at block ${grouped(state.report.block_number)}.` : "";
-    showNotice(`Live re-check of ${name}${at}: ${verdict.toUpperCase()}. Evidence from a newer block cannot be mixed into an earlier report, so it is reported here rather than in the table.${back}`);
+    const forAmount = amount ? ` for ${grouped(amount)} USDC` : "";
+    const back = state.report && state.report.block_number != null ? ` The ledger keeps the saved report at block ${grouped(state.report.block_number)}, because evidence from a newer block cannot be mixed into an earlier one.` : "";
+    showNotice(`Live re-check of ${name}${forAmount}${at}: ${verdict.toUpperCase()}. Its full evidence is open on the right.${back}`);
     $("retry-button").hidden = true;
+    if (fresh) openDrawer(fresh, null);
     return true;
   }
 
