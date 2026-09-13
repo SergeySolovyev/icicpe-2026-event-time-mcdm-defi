@@ -29,3 +29,17 @@
 .market-recheck:focus-visible{outline:2px solid #159c82;outline-offset:1px}
 .market-recheck:disabled{opacity:.35;cursor:default}
 @media(max-width:600px){.market-recheck{font-size:12px;padding:4px}}
+
+/* Partner technologies. A sponsor judge should see their own product named, with the
+   line of code that uses it, without reading the repository first. */
+.partner-strip{border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:22px 0 24px;margin:0 0 26px}
+.partner-title{font-size:10px;font-weight:400;letter-spacing:.12em;text-transform:uppercase;color:#6a7d73;margin-bottom:16px}
+.partner-list{list-style:none;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0 26px;margin:0;padding:0}
+.partner-list li{display:flex;flex-direction:column;gap:7px;padding-left:18px;border-left:1px solid #dfe5dc;min-width:0}
+.partner-list li:first-child{padding-left:0;border-left:0}
+.partner-list strong{font-size:14px;font-weight:500;letter-spacing:-.2px}
+.partner-list span{font-size:11px;line-height:1.65;color:#6e8174}
+.partner-list code{font-family:var(--mono);font-size:10px;background:#eaefe5;padding:1px 4px;border-radius:3px;overflow-wrap:anywhere}
+.partner-list a{font-size:10px;color:#3d705f;margin-top:auto;padding-top:4px}
+.partner-list a:hover{text-decoration:underline}
+@media(max-width:850px){.partner-list{grid-template-columns:1fr;gap:18px}.partner-list li{padding-left:14px;border-left:1px solid #dfe5dc}.partner-list li:first-child{padding-left:14px;border-left:1px solid #dfe5dc}}

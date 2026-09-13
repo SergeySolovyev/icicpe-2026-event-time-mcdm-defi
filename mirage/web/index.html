@@ -47,6 +47,27 @@
       <div class="strip-item strip-source"><span class="strip-label">Evidence origin</span><strong id="origin-label">—</strong><span class="strip-note" id="origin-note">A block is required for every report</span></div>
     </section>
 
+    <section class="partner-strip" aria-label="Partner technologies and how this project uses them">
+      <h2 class="partner-title">Built with</h2>
+      <ul class="partner-list">
+        <li>
+          <strong>The Graph</strong>
+          <span>Our own subgraph indexes Morpho Blue <code>CreateMarket</code> events. Every inspection discovers its market there, at a pinned block hash, before a single contract is read. A failed discovery aborts the check rather than falling back to a cached ID.</span>
+          <a href="https://github.com/SergeySolovyev/icicpe-2026-event-time-mcdm-defi/blob/master/mirage/discovery/subgraph.py#L16" rel="noreferrer noopener" target="_blank">discovery client</a>
+        </li>
+        <li>
+          <strong>Uniswap v3</strong>
+          <span>A geometric TWAP supplies the reference price and QuoterV2 simulates the exact proposed collateral sale, comparing the direct pool against a WETH route at the same raw input and the same block. This is the exit check that binds a verdict to one sale size.</span>
+          <a href="https://github.com/SergeySolovyev/icicpe-2026-event-time-mcdm-defi/blob/master/mirage/chain/uniswap.py#L344" rel="noreferrer noopener" target="_blank">QuoterV2 call</a>
+        </li>
+        <li>
+          <strong>Chainlink</strong>
+          <span><code>MirageGate.submitDecision</code> calls <code>latestRoundData()</code> inside contract logic on Sepolia, measures the deviation from the reference price used here, and stores the verdict. The feed can only make the outcome stricter — it can veto an Allow, never create one.</span>
+          <a href="https://sepolia.etherscan.io/address/0xe1b9031EeF64e376c37B4e3E849B35424f647901" rel="noreferrer noopener" target="_blank">MirageGate on Sepolia</a>
+        </li>
+      </ul>
+    </section>
+
     <div class="workspace">
       <section class="market-section" id="markets" aria-labelledby="market-heading">
         <div class="section-heading"><div><h2 id="market-heading">Market ledger</h2><p>Available liquidity, before you commit capital.</p></div><div class="ledger-actions"><button type="button" class="text-button" id="load-demo-button">Load demo</button><span class="quiet-badge" id="visible-count">No report</span><button type="button" class="text-button add-market-button" id="add-market-toggle" aria-expanded="false" aria-controls="add-market-form">Check another market</button></div></div>

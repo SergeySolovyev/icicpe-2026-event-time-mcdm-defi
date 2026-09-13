@@ -2,7 +2,7 @@
 
 (() => {
   const $ = (id) => document.getElementById(id);
-  const state = { report: null, status: null, markets: [], selected: null, drawerMarket: null, scanning: false, poll: null, previewToken: 0, lastFocus: null };
+  const state = { report: null, status: null, markets: [], selected: null, drawerMarket: null, scanning: false, poll: null, previewToken: 0, lastFocus: null, recheckId: null };
   const KNOWN = {
     "0x8eaf7b29f02ba8d8c1d7aeb587403dcb16e2e943e4e2f5f94b0963c2386406c9": "PAXG",
     "0xbd1ad3b968f5f0552dbd8cf1989a62881407c5cccf9e49fb3657c8731caf0c1f": "deUSD"
@@ -175,6 +175,7 @@
       recheck.addEventListener("click", (event) => {
         event.stopPropagation();
         setDestination(market.market_id);
+        state.recheckId = market.market_id;
         scan(market.market_id);
       });
       const inspect = node("button", "market-chevron", "›");
@@ -461,6 +462,33 @@
     if (kind === "error") showNotice(message);
     renderProvenance();
   }
+  // A live check produces evidence at a NEW block. A snapshot is validated against one
+  // anchor, so that row cannot be merged into a saved report from an earlier block — the
+  // format refuses it, deliberately. So report the fresh verdict on its own terms and put
+  // the saved report back, instead of leaving the ledger holding a single row.
+  async function finishRecheck() {
+    const id = state.recheckId;
+    state.recheckId = null;
+    if (!id) return false;
+    const fresh = state.markets.find((market) => market.market_id === id);
+    const name = fresh ? marketName(fresh) : shortHex(id, 5, 4);
+    const verdict = fresh ? safeSeverity(fresh.severity) : "unknown";
+    const block = state.report && state.report.block_number;
+    try {
+      await api("/api/demo", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
+      await loadReport();
+      resetPreview();
+    } catch (error) {
+      showNotice(`Live re-check of ${name} finished, but the saved report could not be restored: ${error.message}`, true);
+      return true;
+    }
+    const at = block != null ? ` at block ${grouped(block)}` : "";
+    const back = state.report && state.report.block_number != null ? ` The ledger below is the saved report at block ${grouped(state.report.block_number)}.` : "";
+    showNotice(`Live re-check of ${name}${at}: ${verdict.toUpperCase()}. Evidence from a newer block cannot be mixed into an earlier report, so it is reported here rather than in the table.${back}`);
+    $("retry-button").hidden = true;
+    return true;
+  }
+
   async function loadReport() {
     const payload = await api("/api/report"), report = payload?.report || payload;
     if (!report || !Array.isArray(report.markets)) throw new Error("No market report is available. Run a scan or load saved evidence on the server.");
@@ -475,7 +503,7 @@
       const wasRunning = state.scanning;
       const status = await api("/api/status"); renderStatus(status);
       if (state.scanning) state.poll = setTimeout(pollStatus, 2000);
-      else if (wasRunning) { await loadReport(); if (statusState(status) !== "error") hideNotice(); resetPreview(); }
+      else if (wasRunning) { await loadReport(); if (statusState(status) !== "error") hideNotice(); resetPreview(); if (statusState(status) !== "error") await finishRecheck(); else state.recheckId = null; }
     } catch (error) {
       state.scanning = false; renderStatus({ state: "error", message: error.message });
       showNotice(error.message, true);
@@ -491,10 +519,10 @@
     try {
       const requestedId = explicitMarketId === undefined ? state.selected : explicitMarketId;
       const result = await api("/api/scan", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ amount_usdc: amount, market_id: validId(requestedId) ? requestedId.toLowerCase() : null }) });
-      if (result?.report || Array.isArray(result?.markets)) { await loadReport(); renderStatus({ state: "complete", message: "Report updated from the completed scan." }); resetPreview(); }
+      if (result?.report || Array.isArray(result?.markets)) { await loadReport(); renderStatus({ state: "complete", message: "Report updated from the completed scan." }); resetPreview(); await finishRecheck(); }
       else { if (result?.message) $("scan-status").textContent = result.message; state.poll = setTimeout(pollStatus, 500); }
       return true;
-    } catch (error) { renderStatus({ state: "error", message: error.message }); showNotice(error.message, true); return false; }
+    } catch (error) { state.recheckId = null; renderStatus({ state: "error", message: error.message }); showNotice(error.message, true); return false; }
   }
   async function initialize() {
     hideNotice();
