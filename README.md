@@ -147,9 +147,16 @@ transaction for the operator to send, and refuses outright when the feed does no
 describe the market's collateral. Details, the deployment runbook and the limits are in
 [docs/mirage/CHAINLINK.md](docs/mirage/CHAINLINK.md).
 
-The whole sequence — deploy, publish both verdicts, admit 10,000 and revert on 20,000 —
-was rehearsed against the real aggregator on a local fork of Sepolia before any public
-deployment: [the rehearsal record](docs/mirage/CHAINLINK_FORK_REHEARSAL_2026-09-13.json).
+**Live on Sepolia since 13 September 2026.** `MirageGate` at
+[`0xe1b9031EeF64e376c37B4e3E849B35424f647901`](https://sepolia.etherscan.io/address/0xe1b9031EeF64e376c37B4e3E849B35424f647901),
+`ExecutionGuard` at [`0x17260e16672ABb8CAAe616F712997d59008F3034`](https://sepolia.etherscan.io/address/0x17260e16672ABb8CAAe616F712997d59008F3034).
+The contract read the feed itself and stored `Allow` for 10,000 USDC at a 12 bps deviation
+and `Blocked` for 20,000 from the same evidence; the guard then admitted the first entry
+and [refused the second](https://sepolia.etherscan.io/tx/0xedc5b8abb3a1fa126cb3ab079aedb6bc9eafe02f717a176f871b8a4e5132d6a0), reverting `EntryNotAllowed`. That failed
+transaction is the demonstration. Full record:
+[CHAINLINK_SEPOLIA_2026-09-13.json](docs/mirage/CHAINLINK_SEPOLIA_2026-09-13.json); the
+earlier [fork rehearsal](docs/mirage/CHAINLINK_FORK_REHEARSAL_2026-09-13.json) is kept
+because it caught two defects before they cost live gas.
 
 See [the architecture and local API](docs/mirage/ARCHITECTURE.md) for the complete
 data path and the boundary between collected evidence, replay and policy.

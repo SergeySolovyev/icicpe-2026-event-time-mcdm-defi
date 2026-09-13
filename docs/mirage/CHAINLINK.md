@@ -133,6 +133,47 @@ MIRAGE's recorded reference price for the WETH market at block 25938082 is
 `2500.66364819905311430` USDC per WETH, which the publisher scales to `250066364819` at
 the feed's eight decimals.
 
+## Live on Sepolia
+
+Deployed and exercised on 13 September 2026. These are real transactions on a public
+network, signed by the operator with his own key.
+
+| | |
+|---|---|
+| `MirageGate` | [`0xe1b9031EeF64e376c37B4e3E849B35424f647901`](https://sepolia.etherscan.io/address/0xe1b9031EeF64e376c37B4e3E849B35424f647901) |
+| `ExecutionGuard` | [`0x17260e16672ABb8CAAe616F712997d59008F3034`](https://sepolia.etherscan.io/address/0x17260e16672ABb8CAAe616F712997d59008F3034) |
+| Publisher | `0xbb6939f00F3db644A52CFaB604f70947Acec0Ff8` |
+| Feed | [`0x694AA1769357215DE4FAC081bf1f309aDC325306`](https://sepolia.etherscan.io/address/0x694AA1769357215DE4FAC081bf1f309aDC325306) |
+
+| Transaction | What it did |
+|---|---|
+| [`0xb914cccc…`](https://sepolia.etherscan.io/tx/0xb914cccc6f4f1c50681665d32b03f8f93c397584a344b19d9f29a99c82bedb6e) | stored `Allow` for 10,000 USDC; the contract read the feed itself and measured **12 bps** |
+| [`0xcf67edbe…`](https://sepolia.etherscan.io/tx/0xcf67edbe968449713aa5bfe637ac1fecd65b07af1a4dca80e110735b9a946aa0) | stored `Blocked` for 20,000 USDC from the same evidence at the same block |
+| [`0xb5520fa4…`](https://sepolia.etherscan.io/tx/0xb5520fa4a7343d2ebe5b38cb83234e480a56b173be527aa3d8111072044abdfb) | `enter(10000)` admitted, `entryCount` 1 |
+| [`0xedc5b8ab…`](https://sepolia.etherscan.io/tx/0xedc5b8abb3a1fa126cb3ab079aedb6bc9eafe02f717a176f871b8a4e5132d6a0) | `enter(20000)` **reverted `EntryNotAllowed`**, block 11694947, status 0 |
+
+The last row is a failed transaction, and that is the point. Its revert data is
+`0x67983185…`, which is the selector of `EntryNotAllowed(bytes32,uint128)` followed by the
+market id and `20000000000`. The contract refused an entry the evidence did not cover, in a
+block, with a hash anyone can open.
+
+At submission the feed answered `250373000000` — $2503.73 — against MIRAGE's recorded
+mainnet reference of 2500.66, a deviation of 12 bps inside the 500 bps bound, so the
+proposed `Allow` survived and `vetoedByFeed` is false on both records. The `Blocked` record
+also carries `vetoedByFeed` false, which is the honest reading: the offchain gate refused
+that size, the feed did not disagree.
+
+**Reading it back later.** `isAllowed` returns false for *both* amounts once
+`maxDecisionAge` of 3600 seconds has elapsed. That expiry is deliberate — an admission
+decision should not outlive the evidence behind it — so a judge checking the contract the
+next day sees false everywhere. The durable proof is the transactions above and the events
+they emitted, not a live `true`.
+
+Full record: [CHAINLINK_SEPOLIA_2026-09-13.json](CHAINLINK_SEPOLIA_2026-09-13.json).
+
+Cost of the whole sequence: 1,591,984 gas across five successful transactions plus 28,167
+for the refused one, about 0.002 ETH at 1.26 gwei.
+
 ## The whole sequence, rehearsed end to end
 
 Every step above was executed on 13 September 2026 against a local Anvil fork of Sepolia

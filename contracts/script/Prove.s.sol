@@ -50,9 +50,20 @@ contract Prove is Script {
         uint64 maxFeedAge = uint64(vm.envOr("MAX_FEED_AGE", uint256(10_800)));
         uint64 maxDecisionAge = uint64(vm.envOr("MAX_DECISION_AGE", uint256(3_600)));
 
+        // The publisher must be the address that will actually sign submitDecision, and
+        // the script cannot reliably discover it. Inside run(), msg.sender is the script's
+        // default sender; vm.readCallers() reports that same script sender, not the wallet
+        // forge signs with. When the key arrives through --interactives the two differ, so
+        // either guess names the wrong publisher and every submitDecision reverts
+        // NotPublisher. Passing --private-key makes forge set the script sender from the
+        // key, which is precisely why a fork rehearsal never sees this.
+        //
+        // So it is stated, not inferred. MIRAGE_PUBLISHER is required.
+        address publisher = vm.envAddress("MIRAGE_PUBLISHER");
+        require(publisher != address(0), "set MIRAGE_PUBLISHER to the address you will sign with");
+
         vm.startBroadcast();
 
-        address publisher = msg.sender;
         gate = new MirageGate(feed, publisher, maxDeviationBps, maxFeedAge);
         guard = new ExecutionGuard(address(gate), maxDecisionAge);
 

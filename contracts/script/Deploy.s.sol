@@ -22,12 +22,20 @@ import {ExecutionGuard} from "../src/ExecutionGuard.sol";
 contract Deploy is Script {
     function run() external returns (MirageGate gate, ExecutionGuard guard) {
         address feed = vm.envAddress("CHAINLINK_FEED");
-        address publisher = vm.envOr("MIRAGE_PUBLISHER", msg.sender);
+        address publisherOverride = vm.envOr("MIRAGE_PUBLISHER", address(0));
         uint32 maxDeviationBps = uint32(vm.envOr("MAX_DEVIATION_BPS", uint256(500)));
         uint64 maxFeedAge = uint64(vm.envOr("MAX_FEED_AGE", uint256(10_800)));
         uint64 maxDecisionAge = uint64(vm.envOr("MAX_DECISION_AGE", uint256(3_600)));
 
         vm.startBroadcast();
+
+        // Default the publisher to the address this broadcast actually signs with, read
+        // from readCallers rather than msg.sender: inside run(), msg.sender is the
+        // script's default sender, so naming it here makes every later submitDecision
+        // revert NotPublisher — and only when the key is supplied interactively.
+        (, address broadcaster,) = vm.readCallers();
+        address publisher = publisherOverride == address(0) ? broadcaster : publisherOverride;
+
         gate = new MirageGate(feed, publisher, maxDeviationBps, maxFeedAge);
         guard = new ExecutionGuard(address(gate), maxDecisionAge);
         vm.stopBroadcast();

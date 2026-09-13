@@ -1,0 +1,91 @@
+{
+  "recorded_at_moscow": "2026-09-13T12:15:00+03:00",
+  "what": "The MIRAGE admission decision recorded onchain on Ethereum Sepolia, with a Chainlink price feed consulted by the contract itself",
+  "network": "Ethereum Sepolia",
+  "chain_id": 11155111,
+  "keys": "The operator signed with his own key in his own terminal. No key was read, held, transmitted or stored by any part of this repository or by the agent that prepared the commands.",
+
+  "contracts": {
+    "MirageGate": "0xe1b9031EeF64e376c37B4e3E849B35424f647901",
+    "ExecutionGuard": "0x17260e16672ABb8CAAe616F712997d59008F3034",
+    "publisher": "0xbb6939f00F3db644A52CFaB604f70947Acec0Ff8",
+    "chainlink_feed": "0x694AA1769357215DE4FAC081bf1f309aDC325306",
+    "maxDeviationBps": 500,
+    "maxFeedAge": 10800,
+    "maxDecisionAge": 3600,
+    "deployed_in_block": 11694919
+  },
+
+  "transactions": {
+    "deploy_MirageGate": "0xd408722bcaf9d84ed04787db6dbf7fe8f766ae3d2913d111dd2c58f9f8a5b3e1",
+    "deploy_ExecutionGuard": "0x8985066a507cfd79cb617f694e9dab369155cf68acca7d927c4b1ab153b3072a",
+    "submitDecision_allow_10000": "0xb914cccc6f4f1c50681665d32b03f8f93c397584a344b19d9f29a99c82bedb6e",
+    "submitDecision_blocked_20000": "0xcf67edbe968449713aa5bfe637ac1fecd65b07af1a4dca80e110735b9a946aa0",
+    "enter_10000_admitted": "0xb5520fa4a7343d2ebe5b38cb83234e480a56b173be527aa3d8111072044abdfb",
+    "enter_20000_refused": "0xedc5b8abb3a1fa126cb3ab079aedb6bc9eafe02f717a176f871b8a4e5132d6a0"
+  },
+
+  "the_refusal": {
+    "transaction": "0xedc5b8abb3a1fa126cb3ab079aedb6bc9eafe02f717a176f871b8a4e5132d6a0",
+    "block": 11694947,
+    "status": "0 (failed)",
+    "gas_used": 28167,
+    "from": "0xbb6939f00F3db644A52CFaB604f70947Acec0Ff8",
+    "to": "0x17260e16672ABb8CAAe616F712997d59008F3034",
+    "revert_data": "0x6798318594b823e6bd8ea533b4e33fbc307faea0b307301bc48763acc4d4aa4def7636cd00000000000000000000000000000000000000000000000000000004a817c800",
+    "decoded": "EntryNotAllowed(0x94b823e6bd8ea533b4e33fbc307faea0b307301bc48763acc4d4aa4def7636cd, 20000000000)",
+    "selector_check": "0x67983185 == cast sig \"EntryNotAllowed(bytes32,uint128)\"",
+    "note": "This transaction is meant to fail. It is the evidence that the recorded verdict governs execution rather than being a log line. It is in a block, it has a hash, and a judge can open it."
+  },
+
+  "decisions_recorded": [
+    {
+      "amount_usdc": 10000,
+      "amount_raw": 10000000000,
+      "verdict": "Allow",
+      "verdict_enum": 1,
+      "evidence_block_mainnet": 25938082,
+      "reference_scaled": 250066364819,
+      "chainlink_answer": 250373000000,
+      "deviation_bps": 12,
+      "vetoed_by_feed": false,
+      "is_allowed_at_record_time": true
+    },
+    {
+      "amount_usdc": 20000,
+      "amount_raw": 20000000000,
+      "verdict": "Blocked",
+      "verdict_enum": 2,
+      "evidence_block_mainnet": 25938082,
+      "reference_scaled": 250066364819,
+      "chainlink_answer": 250373000000,
+      "deviation_bps": 12,
+      "vetoed_by_feed": false,
+      "is_allowed_at_record_time": false,
+      "note": "Blocked by the offchain gate because the saved sale quote does not cover this size, NOT by the feed. The record keeps those two reasons distinct."
+    }
+  ],
+
+  "deviation_note": "12 bps between MIRAGE's recorded mainnet reference of 2500.66364819905 USDC per WETH and the live Sepolia feed answer of 2503.73. Well inside the 500 bps bound, so the proposed Allow survived and vetoedByFeed is false. The contract read latestRoundData() itself inside submitDecision; the answer was not supplied to it.",
+
+  "reading_it_back_later": "isAllowed returns false for BOTH amounts once maxDecisionAge (3600 s) has passed. That is the designed behaviour, not a failure: an admission decision expires because the evidence behind it ages. The durable evidence is the transactions and their events, not a live isAllowed of true.",
+
+  "cost": {
+    "five_successful_transactions_eth": 0.00199919190397712,
+    "gas_total": 1591984,
+    "avg_gas_price_gwei": 1.25578643,
+    "refused_entry_gas": 28167
+  },
+
+  "prize_requirement": {
+    "text": "Integrate at least one Chainlink service directly within smart contract logic or onchain workflows. The Chainlink integration must contribute to a state change on a blockchain. Simply displaying Chainlink data in a frontend is not sufficient.",
+    "how_it_is_met": "MirageGate.submitDecision calls latestRoundData() on the Sepolia ETH/USD aggregator inside contract logic, computes the deviation against MIRAGE's reference price, and writes a verdict to storage. Two such state changes are transactions 0xb914cccc... and 0xcf67edbe... ExecutionGuard then reads that state and admits or refuses an entry, which is what the fourth and sixth transactions show."
+  },
+
+  "limits": [
+    "Sepolia, not Ethereum mainnet.",
+    "MIRAGE's evidence is read from mainnet while the consulted feed is on Sepolia, so the measured deviation includes ordinary price movement between the two contexts.",
+    "ExecutionGuard holds no funds and moves no value. It demonstrates control flow.",
+    "The MIRAGE engine itself is unchanged and remains read-only. Only the operator produced transactions."
+  ]
+}

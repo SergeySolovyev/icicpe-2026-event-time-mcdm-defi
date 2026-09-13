@@ -78,16 +78,23 @@ holds no funds; the MIRAGE engine itself is unchanged and still signs nothing.
 
 ## Has any of this actually run, or is it unit tests and a plan?
 
-The full sequence ran on 13 September 2026 against a local Anvil fork of Sepolia at block
-11691510, which serves the real aggregator. Both contracts deployed, the 10,000 USDC
-decision stored `Allow` at 84 bps deviation, the 20,000 decision stored `Blocked`, and
-`ExecutionGuard.enter` then succeeded for the first and reverted with `EntryNotAllowed`
-for the second. The rehearsal also caught a real defect — a deployment from `forge test`
-artifacts fails with `No contract bytecode` — which is now a step in the runbook.
+It is live on Ethereum Sepolia, deployed 13 September 2026. `MirageGate` is at
+`0xe1b9031EeF64e376c37B4e3E849B35424f647901` and `ExecutionGuard` at `0x17260e16672ABb8CAAe616F712997d59008F3034`. The contract called `latestRoundData()` itself
+and stored `Allow` for 10,000 USDC at a measured 12 bps deviation, then `Blocked` for
+20,000 from the same evidence. `ExecutionGuard.enter` admitted the first and refused the
+second, reverting `EntryNotAllowed` in block 11694947 — a failed transaction that is the
+demonstration, not a defect.
 
-**Show:** [fork rehearsal record](CHAINLINK_FORK_REHEARSAL_2026-09-13.json). State the
-limit plainly: a fork is not the live network, and those addresses exist only on the fork.
-It establishes that the mechanism works, not that it is live on a public chain.
+It was rehearsed twice on an Anvil fork first, which caught two real defects that would
+otherwise have surfaced during the live deploy: artifacts from `forge test` carry no
+bytecode, and `forge script` spells the flag `--interactives`.
+
+**Show:** [live record](CHAINLINK_SEPOLIA_2026-09-13.json) and the four transactions in it;
+[fork rehearsal](CHAINLINK_FORK_REHEARSAL_2026-09-13.json). State the limits plainly:
+Sepolia, not mainnet; the evidence is read from mainnet while the feed is on Sepolia; the
+guard holds no funds. And note that `isAllowed` reads false for both amounts after
+`maxDecisionAge` of 3600 s — decisions expire by design, so the evidence is the
+transactions, not a live `true`.
 
 ## Why does the publisher refuse some markets?
 
