@@ -175,7 +175,6 @@
       recheck.addEventListener("click", (event) => {
         event.stopPropagation();
         setDestination(market.market_id);
-        state.recheckId = market.market_id;
         scan(market.market_id);
       });
       const inspect = node("button", "market-chevron", "›");
@@ -518,6 +517,7 @@
     hideNotice(); renderStatus({ state: "running", message: "Requesting live Graph discovery…" });
     try {
       const requestedId = explicitMarketId === undefined ? state.selected : explicitMarketId;
+      state.recheckId = validId(requestedId) ? requestedId : null;
       const result = await api("/api/scan", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ amount_usdc: amount, market_id: validId(requestedId) ? requestedId.toLowerCase() : null }) });
       if (result?.report || Array.isArray(result?.markets)) { await loadReport(); renderStatus({ state: "complete", message: "Report updated from the completed scan." }); resetPreview(); await finishRecheck(); }
       else { if (result?.message) $("scan-status").textContent = result.message; state.poll = setTimeout(pollStatus, 500); }
