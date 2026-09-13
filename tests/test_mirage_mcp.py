@@ -291,7 +291,8 @@ async def test_compact_preserves_verified_facts_and_explicit_omissions():
     compact, full = payload(compact_result), payload(full_result)
     assert compact["schema"] == "mirage-agent-summary/1"
     assert compact["evidence_included"] is False
-    assert compact["market_count"] == len(full["markets"]) == 4
+    shipped = report_from_snapshot(load_snapshot(mcp_server.default_snapshot())).to_dict()
+    assert compact["market_count"] == len(full["markets"]) == len(shipped["markets"])
     for name in ("mode", "chain_id", "block_number", "block_hash", "block_timestamp", "source"):
         assert compact[name] == full[name]
     raw_evidence = []
