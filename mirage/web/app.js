@@ -170,7 +170,7 @@
     state.selected = state.markets.some((m) => m.market_id === previous) ? previous : state.markets[0]?.market_id || null;
     select.value = state.selected || "";
     $("evaluate-button").disabled = !state.selected;
-    if (!state.scanning) $("scan-button").querySelector("span").textContent = state.selected ? "Check this market live" : "Re-check the demo set live";
+    if (!state.scanning) $("scan-button").querySelector("span").textContent = state.selected ? "Check this market live" : "Re-check these markets live";
     renderAmountScope();
     renderMarkets();
   }
@@ -398,7 +398,7 @@
     const drawer = $("market-drawer"); if (!drawer.open) drawer.showModal();
   }
   function closeDrawer() { $("market-drawer").close(); state.lastFocus?.focus?.(); }
-  function setDestination(id) { state.selected = id; $("allocation-market").value = id; resetPreview(); renderMarkets(); if (!state.scanning) $("scan-button").querySelector("span").textContent = id ? "Check this market live" : "Re-check the demo set live"; }
+  function setDestination(id) { state.selected = id; $("allocation-market").value = id; resetPreview(); renderMarkets(); if (!state.scanning) $("scan-button").querySelector("span").textContent = id ? "Check this market live" : "Re-check these markets live"; }
   function resetPreview() {
     state.previewToken += 1;
     renderAmountScope();
@@ -493,7 +493,7 @@
     $("scan-button").disabled = running;
     $("new-market-submit").disabled = running;
     $("load-demo-button").disabled = running;
-    $("scan-button").querySelector("span").textContent = running ? "Checking evidence" : state.selected ? "Check this market live" : "Re-check the demo set live";
+    $("scan-button").querySelector("span").textContent = running ? "Checking evidence" : state.selected ? "Check this market live" : "Re-check these markets live";
     document.querySelector(".scan-panel").classList.toggle("is-scanning", running);
     const message = typeof status?.message === "string" ? status.message : typeof status?.error === "string" ? status.error : running ? "Reading Graph discovery and contract evidence…" : "No scan running";
     $("scan-status").textContent = message;

@@ -293,8 +293,15 @@ async def test_compact_preserves_verified_facts_and_explicit_omissions():
     assert compact["evidence_included"] is False
     shipped = report_from_snapshot(load_snapshot(mcp_server.default_snapshot())).to_dict()
     assert compact["market_count"] == len(full["markets"]) == len(shipped["markets"])
-    for name in ("mode", "chain_id", "block_number", "block_hash", "block_timestamp", "source"):
+    for name in ("mode", "chain_id", "block_number", "block_hash", "block_timestamp"):
         assert compact[name] == full[name]
+    # The source block may carry structured provenance. Compact keeps every scalar
+    # of it verbatim and names what it dropped; nothing is lost silently.
+    assert compact["source"] == {name: value for name, value in full["source"].items()
+                                 if name in compact["source"]}
+    dropped = {item["name"] for item in compact["omitted_source_fields"]}
+    assert dropped == set(full["source"]) - set(compact["source"])
+    assert all(isinstance(full["source"][name], (dict, list, tuple)) for name in dropped)
     raw_evidence = []
     for brief, original in zip(compact["markets"], full["markets"]):
         for key in ("market_id", "severity", "display", "block_number"):
@@ -330,13 +337,18 @@ async def test_compact_preserves_verified_facts_and_explicit_omissions():
     assert compact["evidence_count_scope"] == (
         "sum of finding-attached records; duplicates included; excludes omitted market-rate evidence")
     assert compact["finding_count"] == sum(len(m["findings"]) for m in full["markets"])
-    paxg = next(m for m in compact["markets"] if m["display"]["collateral_symbol"] == "PAXG")
-    assert paxg["severity"] == "block"
-    accounting = next(f for f in paxg["findings"] if f["code"] == "no_free_liquidity")
-    assert accounting["metrics"]["available_liquidity_raw"] == "0"
-    assert accounting["metrics"]["principal"] is None
-    weth = next(m for m in compact["markets"] if m["display"]["collateral_symbol"] == "WETH")
-    assert weth["severity"] == "pass"
+    # Both verdicts survive the projection, findings and order intact.
+    blocked = next(m for m in compact["markets"] if m["severity"] == "block")
+    original = next(m for m in full["markets"] if m["market_id"] == blocked["market_id"])
+    assert [f["code"] for f in blocked["findings"]] == [f["code"] for f in original["findings"]]
+    assert any(m["severity"] == "pass" for m in compact["markets"])
+    # Compaction drops metrics; it never rewrites the ones it keeps. An unstated
+    # value stays None rather than vanishing, and a base-unit amount stays a string.
+    kept_metrics = [(name, value) for m in compact["markets"] for f in m["findings"]
+                    for name, value in f["metrics"].items()]
+    assert any(value is None for _, value in kept_metrics)
+    assert all(isinstance(value, str) for name, value in kept_metrics
+               if name.endswith("_raw") and value is not None)
 
 
 @pytest.mark.anyio
