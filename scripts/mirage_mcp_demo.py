@@ -12,11 +12,29 @@ import tempfile
 
 
 REPO = Path(__file__).resolve().parents[1]
-CASES = (
-    ("PAXG", "0x8eaf7b29f02ba8d8c1d7aeb587403dcb16e2e943e4e2f5f94b0963c2386406c9", "10000"),
-    ("WETH", "0x94b823e6bd8ea533b4e33fbc307faea0b307301bc48763acc4d4aa4def7636cd", "10000"),
-    ("WETH", "0x94b823e6bd8ea533b4e33fbc307faea0b307301bc48763acc4d4aa4def7636cd", "20000"),
-)
+# The saved set is rebuilt whenever the evidence is recaptured, so the cases are
+# chosen from the report the server just returned rather than pinned to IDs that
+# outlive the snapshot they came from.
+SCENARIO_USDC = "10000"
+
+
+def symbol(market):
+    return (market.get("display") or {}).get("collateral_symbol") or market["market_id"][:10]
+
+
+def demo_cases(report, amount=SCENARIO_USDC):
+    """One refused market and one admitted one, then the admitted one at a size
+    the saved evidence does not cover, so the refusal-to-guess is visible too."""
+    def first(severity):
+        return next((m for m in report["markets"] if m["severity"] == severity), None)
+    refused, admitted = first("block") or first("insufficient"), first("pass")
+    cases = []
+    if refused:
+        cases.append((symbol(refused), refused["market_id"], amount))
+    if admitted:
+        cases.append((symbol(admitted), admitted["market_id"], amount))
+        cases.append((symbol(admitted), admitted["market_id"], str(int(amount) * 2)))
+    return tuple(cases)
 
 
 def safe_code(value):
@@ -102,7 +120,7 @@ async def run_demo(timeout, server_log, live_market=None):
                 print(f"Report: mode={report['mode']}; block={report['block_number']}; "
                       f"markets={len(report['markets'])}", flush=True)
                 print("Block hash: " + report["block_hash"], flush=True)
-                for label, market_id, amount in CASES:
+                for label, market_id, amount in demo_cases(report):
                     preview = await call(client, "preview_saved_allocation", {
                         "market_id": market_id, "amount_usdc": amount})
                     admission = preview.get("admission") or {}
