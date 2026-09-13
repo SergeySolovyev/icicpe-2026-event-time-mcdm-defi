@@ -70,9 +70,9 @@
     const scope = $("quote-scope");
     scope.classList.toggle("needs-check", Boolean(market) && (checked === null || proposed !== checked));
     if (!market) scope.textContent = "Select a market to see its recorded sale size.";
-    else if (checked === null) scope.textContent = "No completed sale quote is recorded for this market. Use Check market to request evidence.";
+    else if (checked === null) scope.textContent = "No completed sale quote is recorded for this market. Use the Check this market live button to request evidence for it.";
     else if (proposed === null) scope.textContent = `Recorded sale check: ${saleAmountLabel(checked)}. Enter a valid amount to compare.`;
-    else if (proposed !== checked) scope.textContent = `Recorded sale check: ${saleAmountLabel(checked)}. The proposed ${saleAmountLabel(proposed)} is not checked. Use Check market.`;
+    else if (proposed !== checked) scope.textContent = `Recorded sale check: ${saleAmountLabel(checked)}. The proposed ${saleAmountLabel(proposed)} is not checked. Use the Check this market live button.`;
     else scope.textContent = `Recorded sale check: ${saleAmountLabel(checked)} at this report's block; matches this amount.`;
   }
   function reportLive() { return state.report?.source?.kind === "the-graph" && state.report?.capture_mode === "live"; }
@@ -138,7 +138,7 @@
     state.selected = state.markets.some((m) => m.market_id === previous) ? previous : state.markets[0]?.market_id || null;
     select.value = state.selected || "";
     $("evaluate-button").disabled = !state.selected;
-    if (!state.scanning) $("scan-button").querySelector("span").textContent = state.selected ? "Check market" : "Refresh evidence";
+    if (!state.scanning) $("scan-button").querySelector("span").textContent = state.selected ? "Check this market live" : "Re-check the demo set live";
     renderAmountScope();
     renderMarkets();
   }
@@ -352,7 +352,7 @@
     const drawer = $("market-drawer"); if (!drawer.open) drawer.showModal();
   }
   function closeDrawer() { $("market-drawer").close(); state.lastFocus?.focus?.(); }
-  function setDestination(id) { state.selected = id; $("allocation-market").value = id; resetPreview(); renderMarkets(); if (!state.scanning) $("scan-button").querySelector("span").textContent = id ? "Check market" : "Refresh evidence"; }
+  function setDestination(id) { state.selected = id; $("allocation-market").value = id; resetPreview(); renderMarkets(); if (!state.scanning) $("scan-button").querySelector("span").textContent = id ? "Check this market live" : "Re-check the demo set live"; }
   function resetPreview() {
     state.previewToken += 1;
     renderAmountScope();
@@ -413,7 +413,7 @@
       document.querySelector(".gated-step").classList.toggle("is-blocked", gated?.kind === "hold" && original?.kind === "switch");
       $("allocator-json").textContent = JSON.stringify(payload, null, 2); $("allocator-raw").hidden = false;
       if (!original || !gated) { $("allocator-error").textContent = "The response did not contain both decisions. Inspect the response details."; $("allocator-error").hidden = false; }
-      else if (payload.scenario_matches === false) { $("allocator-error").textContent = "Exit depth has not been checked for this amount. Use Check market to collect matching evidence."; $("allocator-error").hidden = false; }
+      else if (payload.scenario_matches === false) { $("allocator-error").textContent = "Exit depth has not been checked for this amount. Use the Check this market live button to collect matching evidence."; $("allocator-error").hidden = false; }
     } catch (error) {
       if (token !== state.previewToken) return;
       $("original-action").textContent = "Preview unavailable"; $("gated-action").textContent = "No decision established";
@@ -435,7 +435,7 @@
     $("scan-button").disabled = running;
     $("new-market-submit").disabled = running;
     $("load-demo-button").disabled = running;
-    $("scan-button").querySelector("span").textContent = running ? "Checking evidence" : state.selected ? "Check market" : "Refresh evidence";
+    $("scan-button").querySelector("span").textContent = running ? "Checking evidence" : state.selected ? "Check this market live" : "Re-check the demo set live";
     document.querySelector(".scan-panel").classList.toggle("is-scanning", running);
     const message = typeof status?.message === "string" ? status.message : typeof status?.error === "string" ? status.error : running ? "Reading Graph discovery and contract evidence…" : "No scan running";
     $("scan-status").textContent = message;

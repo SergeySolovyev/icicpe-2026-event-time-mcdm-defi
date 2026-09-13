@@ -128,8 +128,18 @@ class Application:
             with self.lock:
                 self.snapshot = snapshot
                 self.snapshot_mode = "live"
+                # Name the scope. "Checks complete" beside "1 inspected" reads as a claim
+                # that the whole universe was checked; it never is. A live inspection costs
+                # about eighteen seconds per market, so this path deliberately checks the
+                # markets that were asked for and says exactly how many that was.
+                inspected = len(ids)
+                discovered = len(discovery.market_ids)
+                noun = "market" if inspected == 1 else "markets"
                 self.status = {"state": "complete", "mode": "live", "updated_at": int(time.time()),
-                               "message": "Live Graph discovery and block-pinned RPC checks complete",
+                               "message": (f"Live check complete: {inspected} {noun} inspected at block "
+                                           f"{anchor.number}. Graph discovery saw {discovered} USDC markets; "
+                                           f"inspecting every one live would take hours, so the saved report "
+                                           f"carries the full universe."),
                                "progress": {"done": len(ids), "total": len(ids)}}
         except Exception as error:
             # Avoid surfacing any URL/key from third-party transport exceptions.
