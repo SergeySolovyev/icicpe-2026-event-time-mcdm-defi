@@ -4,10 +4,15 @@ Closes the verify-equity-curves workflow's caveat: the 6 passive-hold +
 greedy curves were injected from an un-versioned _extra_curves.json with no
 generator. This script regenerates ALL comparison equity curves straight
 from the authoritative per-block equity parquets + the panel, sampled on the
-animation's existing eqAD day grid, so the animation, test_matrix.csv and the
-paper all agree.
+animation's eqAD day grid, so the animation, test_matrix.csv and the paper
+all agree.
 
-Emits (on the eqAD grid parsed from allocation_flow.html):
+Pipeline -- run this first, then scripts/make_allocation_widget.py, which
+embeds these curves into results/figures/allocation_flow.html.
+
+Emits (on the eqAD grid derived from allocation_flow.json exactly as the
+widget derives it -- read from the JSON, not from the HTML, so the two
+generators have no circular dependency):
   eqT2     -- T2 OU optimal-stopping  (equity_t2_optimal_stopping.parquet)
   eqGreedy -- b3 naive auto-router    (equity_b3_greedy_spot.parquet)
   eqHolds  -- 6 passive holds, GEOMETRIC per-block from the panel
@@ -19,8 +24,6 @@ Output: results/figures/allocation_widget_curves.json
 from __future__ import annotations
 
 import json
-import re
-import sys
 from pathlib import Path
 
 import numpy as np
@@ -30,17 +33,16 @@ ROOT = Path(__file__).resolve().parents[1]
 FIG = ROOT / "results" / "figures"
 EQ = ROOT / "results" / "tables" / "equity"
 PANEL = ROOT / "data" / "cached" / "per_block_panel.parquet"
-HTML = FIG / "allocation_flow.html"
+FLOW = FIG / "allocation_flow.json"
 BPY = 365 * 24 * 60 * 60 // 12  # 2,628,000 blocks/yr (12s/block)
 PROTO = ["aave_v3", "compound_v3", "spark", "morpho_blue", "euler_v2", "fluid"]
 START, END = "2026-01-01", "2026-05-01"
 
 
 def _eqAD() -> list[float]:
-    """The exact day grid the animation already uses (keep curves aligned)."""
-    html = HTML.read_text(encoding="utf-8")
-    m = re.search(r'"eqAD":(\[[^\]]*\])', html)
-    return json.loads(m.group(1))
+    """The animation's day grid: eq_days[::2] rounded to 0.01 day (same rule as the widget)."""
+    src = json.loads(FLOW.read_text(encoding="utf-8"))
+    return [round(d, 2) for d in src["eq_days"][::2]]
 
 
 def _sample(day: np.ndarray, val: np.ndarray, grid: list[float]) -> list[int]:

@@ -147,3 +147,16 @@ papers/icicpe-scopus-vol2-submission/main_hf.pdf
 data/cached/mirage/
 mirage/feed/latest.json
 .graph-deploy-key
+
+# Agent workspace
+.claude/
+
+# LaTeX build artifacts (the sources are tracked, the intermediates are not)
+papers/**/*.aux
+papers/**/*.bbl
+papers/**/*.blg
+papers/**/*.fls
+papers/**/*.fdb_latexmk
+papers/**/*.out
+papers/**/*.synctex.gz
+papers/**/Solovev_ICICPE2026_LaTeX_Source/icicpe.pdf
